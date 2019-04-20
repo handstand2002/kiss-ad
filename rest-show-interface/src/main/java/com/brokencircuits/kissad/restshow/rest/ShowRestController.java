@@ -54,5 +54,6 @@ public class ShowRestController {
         highestAssignedId.set(entry.key);
       }
     }
+    iter.close();
   }
 }
