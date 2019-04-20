@@ -1,0 +1,7 @@
+messaging:
+  application-id: stream-episode-fetch
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
+  topics:
+    episode: kissad-kiss-episode
+    episode-link: kissad-ext-episodelink

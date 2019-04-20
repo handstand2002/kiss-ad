@@ -10,6 +10,7 @@
     <module>core-message</module>
     <module>core</module>
     <module>stream-show-fetch</module>
+    <module>stream-episodelinks-fetch</module>
   </modules>
 
   <parent>

@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.streamshowfetch.config;
+package com.brokencircuits.kissad.streamepisodelink.config;
 
 import com.brokencircuits.kissad.kissweb.KissWebFetcher;
 import com.gargoylesoftware.htmlunit.BrowserVersion;

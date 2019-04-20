@@ -10,8 +10,11 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
@@ -46,7 +49,15 @@ public class ShowMessageProcessor implements Processor<Long, KissShowMessage> {
           .extract(new KeyValue<>(showMessage, htmlPage));
 
       // send all messages in order
-      episodeObjectList.forEach(episodeMessagePublisher::send);
+      for (KeyValue<KissEpisodePageKey, KissEpisodePageMessage> kissEpisodePageKeyKissEpisodePageMessageKeyValue : episodeObjectList) {
+        Future<RecordMetadata> recordFuture = episodeMessagePublisher
+            .send(kissEpisodePageKeyKissEpisodePageMessageKeyValue);
+        try {
+          recordFuture.get();   // wait for it to be inserted
+        } catch (InterruptedException | ExecutionException e) {
+          e.printStackTrace();
+        }
+      }
 
     } catch (IOException | URISyntaxException | IllegalArgumentException e) {
       log.error("Error Processing show page: {}", e.getMessage());

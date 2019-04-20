@@ -1,17 +1,12 @@
-package com.brokencircuits.kissad.streamshowfetch.config;
+package com.brokencircuits.kissad.streamepisodelink.config;
 
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
+import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
-import com.brokencircuits.kissad.messages.KissShowMessage;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
-import java.util.Collections;
 import java.util.Properties;
-import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,19 +14,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class KafkaConfig {
-
-  @Bean
-  Topic<Long, KissShowMessage> showTopic(
-      @Value("${messaging.topics.show}") String topic,
-      Serde<KissShowMessage> messageSerde) {
-    return new Topic<>(topic, Serdes.Long(), messageSerde);
-  }
-
-  @Bean
-  Serde<KissShowMessage> showMessageSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
-  }
 
   @Bean
   Topic<KissEpisodePageKey, KissEpisodePageMessage> episodeTopic(
@@ -53,6 +35,19 @@ public class KafkaConfig {
     return Util.createAvroSerde(schemaRegistryUrl, false);
   }
 
+  @Bean
+  Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> externalLinkTopic(
+      @Value("${messaging.topics.episode-link}") String topic,
+      Serde<KissEpisodePageKey> keySerde,
+      Serde<ExternalEpisodeLinkMessage> msgSerde) {
+    return new Topic<>(topic, keySerde, msgSerde);
+  }
+
+  @Bean
+  Serde<ExternalEpisodeLinkMessage> externalLinkMessageSerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return Util.createAvroSerde(schemaRegistryUrl, false);
+  }
 
   @Bean
   Properties streamProperties(
@@ -65,6 +60,4 @@ public class KafkaConfig {
 
     return props;
   }
-
-
 }

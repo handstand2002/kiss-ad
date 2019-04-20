@@ -6,4 +6,8 @@ protocol Simple {
     DUB
   }
 
+  enum VideoSource {
+    RAPIDVIDEO
+  }
+
 }

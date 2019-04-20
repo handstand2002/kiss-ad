@@ -2,18 +2,15 @@
 protocol Simple {
   import idl "Shared.avdl";
 
-  record KissEpisodePageKey {
-    string showName;
-    string episodeName;
-  }
-
-  record KissEpisodePageMessage {
+  record ExternalEpisodeLinkMessage {
     string url;
     string episodeName;
     string showName;
+    union{null, VideoSource} videoSource;
     union{null, int} episodeNumber;
     union{null, int} seasonNumber;
     union{null, SubOrDub} subOrDub;
     timestamp_ms retrieveTime;
   }
+
 }

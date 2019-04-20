@@ -1,10 +1,7 @@
 messaging:
-  state-dir: ./target/streams-state-dir
-  application-id: stream-show-fetch2
+  application-id: stream-show-fetch
   schema-registry-url: http://192.168.0.254:8081
   brokers: 192.168.0.254:29092
-  #  stores:
-  #    show: show-store
   topics:
     show: kissad-kiss-show
     episode: kissad-kiss-episode
