@@ -1,0 +1,9 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+
+  record ShowMessage {
+    string url;
+    string name;
+    boolean isActive;
+  }
+}
