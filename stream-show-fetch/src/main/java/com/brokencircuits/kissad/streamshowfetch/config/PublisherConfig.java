@@ -1,7 +1,9 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.streamshowfetch.config;
 
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.KissEpisodePageKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
@@ -14,7 +16,8 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<Long, KissShowMessage> showMessagePublisher(Topic<Long, KissShowMessage> topic,
+  Publisher<KissEpisodePageKey, KissEpisodePageMessage> episodeMessagePublisher(
+      Topic<KissEpisodePageKey, KissEpisodePageMessage> topic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, topic);
   }
@@ -31,5 +34,4 @@ public class PublisherConfig {
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     return props;
   }
-
 }

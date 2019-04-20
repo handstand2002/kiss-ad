@@ -9,6 +9,7 @@
     <module>rest-show-interface</module>
     <module>core-message</module>
     <module>core</module>
+    <module>stream-show-fetch</module>
   </modules>
 
   <parent>

@@ -1,11 +1,11 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.streamshowfetch.config;
 
-import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.KissEpisodePageKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
-import java.io.File;
 import java.util.Collections;
 import java.util.Properties;
 import org.apache.avro.specific.SpecificRecord;
@@ -15,7 +15,6 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.FileSystemUtils;
 
 @Configuration
 public class KafkaConfig {
@@ -34,9 +33,23 @@ public class KafkaConfig {
   }
 
   @Bean
-  KeyValueStore<Long, KissShowMessage> showMessageStore(
-      @Value("${messaging.stores.show}") String storeName) {
-    return new KeyValueStore<>(storeName);
+  Topic<KissEpisodePageKey, KissEpisodePageMessage> episodeTopic(
+      @Value("${messaging.topics.episode}") String topic,
+      Serde<KissEpisodePageKey> keySerde,
+      Serde<KissEpisodePageMessage> msgSerde) {
+    return new Topic<>(topic, keySerde, msgSerde);
+  }
+
+  @Bean
+  Serde<KissEpisodePageKey> episodeKeySerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return createSerde(schemaRegistryUrl, true);
+  }
+
+  @Bean
+  Serde<KissEpisodePageMessage> episodeMessageSerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return createSerde(schemaRegistryUrl, false);
   }
 
 
@@ -45,16 +58,15 @@ public class KafkaConfig {
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
       @Value("${messaging.application-id}") String applicationId,
       @Value("${messaging.brokers}") String brokers,
-      @Value("${messaging.state-dir}") String stateDir,
-      @Value("${messaging.purge-state-dir-before-start}") boolean purgeStateDir) {
+      @Value("${messaging.state-dir}") String stateDir) {
 
-    if (purgeStateDir) {
-      FileSystemUtils.deleteRecursively(new File(stateDir));
-    }
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
     props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
+
+    // TODO: Remove this config
+    props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, Long.MAX_VALUE);
     return props;
   }
 

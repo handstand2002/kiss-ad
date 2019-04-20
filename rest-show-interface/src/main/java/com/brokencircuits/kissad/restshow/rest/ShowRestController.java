@@ -2,9 +2,8 @@ package com.brokencircuits.kissad.restshow.rest;
 
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
-import com.brokencircuits.kissad.messages.ShowMessage;
+import com.brokencircuits.kissad.messages.KissShowMessage;
 import com.brokencircuits.kissad.restshow.rest.domain.AddShowRequest;
-import com.brokencircuits.kissad.restshow.rest.domain.AddShowResponse;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.KeyValue;
@@ -17,18 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ShowRestController {
 
-  private final Publisher<Long, ShowMessage> showMessagePublisher;
-  private final KeyValueStore<Long, ShowMessage> showMessageStore;
+  private final Publisher<Long, KissShowMessage> showMessagePublisher;
+  private final KeyValueStore<Long, KissShowMessage> showMessageStore;
 
   private final AtomicLong highestAssignedId = new AtomicLong(0);
 
   private static final String CONTENT_TYPE_JSON = "application/json";
 
   @PostMapping(path = "/addShow", consumes = CONTENT_TYPE_JSON, produces = CONTENT_TYPE_JSON)
-  public AddShowResponse addShow(@RequestBody AddShowRequest showRequest) {
-    ShowMessage message = ShowMessage.newBuilder()
+  public AddShowRequest addShow(@RequestBody AddShowRequest showRequest) {
+    KissShowMessage message = KissShowMessage.newBuilder()
         .setUrl(showRequest.getShowUrl())
         .setName(showRequest.getShowName())
+        .setSeasonNumber(showRequest.getSeasonNumber())
         .setIsActive(true).build();
 
     // if we haven't gone through the store to find the highest ID yet, do it now
@@ -42,14 +42,14 @@ public class ShowRestController {
     }
     showMessagePublisher.send(showId, message);
 
-    return new AddShowResponse(showRequest.getShowUrl(), showRequest.getShowName(), showId);
+    return showRequest;
   }
 
   private void findHighestAssignedId() {
-    KeyValueIterator<Long, ShowMessage> iter = showMessageStore.getStore().all();
+    KeyValueIterator<Long, KissShowMessage> iter = showMessageStore.getStore().all();
 
     while (iter.hasNext()) {
-      KeyValue<Long, ShowMessage> entry = iter.next();
+      KeyValue<Long, KissShowMessage> entry = iter.next();
       if (entry.key > highestAssignedId.get()) {
         highestAssignedId.set(entry.key);
       }

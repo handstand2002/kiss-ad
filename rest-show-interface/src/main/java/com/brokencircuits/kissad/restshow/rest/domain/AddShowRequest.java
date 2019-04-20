@@ -7,5 +7,6 @@ public class AddShowRequest {
 
   private String showUrl;
   private String showName;
+  private Integer seasonNumber;
   private Long showId;
 }

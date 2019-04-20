@@ -1,9 +1,10 @@
 @namespace("com.brokencircuits.kissad.messages")
 protocol Simple {
 
-  record ShowMessage {
+  record KissShowMessage {
     string url;
     string name;
+    union{null, int} seasonNumber;
     boolean isActive;
   }
 }
