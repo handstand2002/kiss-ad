@@ -6,6 +6,7 @@ import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import com.brokencircuits.kissad.messages.SubOrDub;
+import com.brokencircuits.kissad.streamshowfetch.extractor.EpisodeMessageExtractor;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -31,11 +32,10 @@ import sun.misc.Regexp;
 @RequiredArgsConstructor
 public class ShowMessageProcessor implements Processor<Long, KissShowMessage> {
 
-  private static final Pattern findEpisodeNumberPattern = Pattern.compile("Episode ([0-9]+)");
-  private static final Pattern findSubOrDubPattern = Pattern
-      .compile("\\((Sub)\\)", Pattern.CASE_INSENSITIVE);
+
   final private KissWebFetcher webFetcher;
   final private Publisher<KissEpisodePageKey, KissEpisodePageMessage> episodeMessagePublisher;
+  final private EpisodeMessageExtractor extractor;
 
   @Override
   public void init(ProcessorContext processorContext) {
@@ -52,76 +52,15 @@ public class ShowMessageProcessor implements Processor<Long, KissShowMessage> {
     try {
       HtmlPage htmlPage = webFetcher.fetchPage(url);
 
-      URI uri = new URI(url);
-      String rootPage = uri.getScheme() + "://" + uri.getHost();
-
-      log.info("Retrieved page:\n{}", htmlPage.asXml());
-      DomNodeList<DomNode> nodes = htmlPage.getBody()
-          .querySelectorAll(".barContent.episodeList table.listing");
-
-      if (nodes.isEmpty()) {
-        log.error("Unable to find episodeList on page");
-        return;
-      }
-      DomNode tableNode = nodes.get(0);
-      DomNodeList<DomNode> links = tableNode.querySelectorAll("tr td a");
-
-      log.info("Found {} kiss episode links", links.size());
-
-      List<KeyValue<KissEpisodePageKey, KissEpisodePageMessage>> pageList = new ArrayList<>();
-      links.forEach(link -> {
-        String episodeName = link.getTextContent().trim();
-        String episodeUrl = link.getAttributes().getNamedItem("href").getTextContent();
-
-        Integer episodeNumber = extractEpisodeNumberFromName(episodeName);
-        try {
-          KissEpisodePageKey pageKey = KissEpisodePageKey.newBuilder()
-              .setEpisodeName(episodeName)
-              .setShowName(showMessage.getName())
-              .build();
-
-          KissEpisodePageMessage pageMessage = KissEpisodePageMessage.newBuilder()
-              .setRetrieveTime(DateTime.now())
-              .setUrl(rootPage + episodeUrl)
-              .setEpisodeNumber(episodeNumber)
-              .setSubOrDub(extractSubOrDubFromName(episodeName))
-              .setEpisodeName(episodeName)
-              .setShowName(showMessage.getName())
-              .setSeasonNumber(showMessage.getSeasonNumber())
-              .build();
-
-          pageList.add(new KeyValue<>(pageKey, pageMessage));
-
-        } catch (NullPointerException e) {
-          log.info("Unable to create episodePageMessage: {} | {}", link.asXml(), e.getMessage());
-        }
-      });
-
-      // sort by episode number
-      pageList.sort(Comparator.comparing(o -> o.value.getEpisodeNumber()));
+      List<KeyValue<KissEpisodePageKey, KissEpisodePageMessage>> episodeObjectList = extractor
+          .extract(new KeyValue<>(showMessage, htmlPage));
 
       // send all messages in order
-      pageList.forEach(episodeMessagePublisher::send);
+      episodeObjectList.forEach(episodeMessagePublisher::send);
 
-    } catch (IOException | URISyntaxException e1) {
-      e1.printStackTrace();
+    } catch (IOException | URISyntaxException | IllegalArgumentException e) {
+      log.error("Error Processing show page: {}", e.getMessage());
     }
-  }
-
-  private SubOrDub extractSubOrDubFromName(String episodeName) {
-    Matcher matcher = findSubOrDubPattern.matcher(episodeName);
-    if (matcher.find()) {
-      return SubOrDub.valueOf(matcher.group(1).toUpperCase());
-    }
-    return null;
-  }
-
-  private Integer extractEpisodeNumberFromName(String episodeName) {
-    Matcher matcher = findEpisodeNumberPattern.matcher(episodeName);
-    if (matcher.find()) {
-      return Integer.parseInt(matcher.group(1));
-    }
-    return null;
   }
 
   @Override
