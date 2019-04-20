@@ -4,7 +4,6 @@ import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
-import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;

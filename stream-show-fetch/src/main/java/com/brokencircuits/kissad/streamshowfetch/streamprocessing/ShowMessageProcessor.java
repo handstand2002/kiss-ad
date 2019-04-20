@@ -5,27 +5,17 @@ import com.brokencircuits.kissad.kissweb.KissWebFetcher;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
-import com.brokencircuits.kissad.messages.SubOrDub;
 import com.brokencircuits.kissad.streamshowfetch.extractor.EpisodeMessageExtractor;
-import com.gargoylesoftware.htmlunit.html.DomNode;
-import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
-import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
-import sun.misc.Regexp;
 
 @Slf4j
 @Component
