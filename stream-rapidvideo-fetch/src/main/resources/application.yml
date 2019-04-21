@@ -1,0 +1,7 @@
+messaging:
+  application-id: stream-rapidvideo-fetch
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
+  topics:
+    episode-link: kissad-ext-episodelink
+    episode-download-link: kissad-download-episodelink

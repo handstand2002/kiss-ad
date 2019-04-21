@@ -11,6 +11,7 @@
     <module>core</module>
     <module>stream-show-fetch</module>
     <module>stream-episodelinks-fetch</module>
+    <module>stream-rapidvideo-fetch</module>
   </modules>
 
   <parent>

@@ -1,0 +1,24 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+  import idl "Shared.avdl";
+
+  record DownloadLink {
+    int resolution;
+    string url;
+  }
+
+  record ExternalDownloadLinkKey {
+    string showName;
+    string episodeName;
+    union{null, VideoSource} videoSource;
+  }
+
+  record ExternalDownloadLinkMessage {
+    array<DownloadLink> links;
+    union{null, int} episodeNumber;
+    union{null, int} seasonNumber;
+    union{null, SubOrDub} subOrDub;
+    timestamp_ms retrieveTime;
+  }
+
+}
