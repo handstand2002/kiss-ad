@@ -9,7 +9,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>stream-show-fetch</artifactId>
+  <artifactId>stream-episode-download</artifactId>
 
   <dependencies>
     <dependency>
@@ -23,9 +23,9 @@
       <version>0.0.1</version>
     </dependency>
     <dependency>
-      <groupId>net.sourceforge.htmlunit</groupId>
-      <artifactId>htmlunit</artifactId>
-      <version>2.19</version>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.6</version>
     </dependency>
   </dependencies>
 
@@ -37,5 +37,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

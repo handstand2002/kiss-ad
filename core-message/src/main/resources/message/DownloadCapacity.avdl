@@ -1,0 +1,9 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+  import idl "Shared.avdl";
+
+  record DownloadAvailability {
+    int availableCapacity;
+  }
+
+}

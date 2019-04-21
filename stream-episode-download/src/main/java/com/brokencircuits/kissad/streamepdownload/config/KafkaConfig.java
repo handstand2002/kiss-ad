@@ -1,15 +1,13 @@
-package com.brokencircuits.kissad.streamrvfetch.config;
+package com.brokencircuits.kissad.streamepdownload.config;
 
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
+import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkKey;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkMessage;
-import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
-import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,26 +15,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class KafkaConfig {
-
-  @Bean
-  Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> externalLinkTopic(
-      @Value("${messaging.topics.episode-link}") String topic,
-      Serde<KissEpisodePageKey> keySerde,
-      Serde<ExternalEpisodeLinkMessage> msgSerde) {
-    return new Topic<>(topic, keySerde, msgSerde);
-  }
-
-  @Bean
-  Serde<KissEpisodePageKey> episodeKeySerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, true);
-  }
-
-  @Bean
-  Serde<ExternalEpisodeLinkMessage> externalLinkMessageSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
-  }
 
   @Bean
   Topic<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> topic(
@@ -59,6 +37,19 @@ public class KafkaConfig {
   }
 
   @Bean
+  Topic<String, DownloadAvailability> downloadAvailabilityTopic(
+      @Value("${messaging.topics.downloader-availability}") String topic,
+      Serde<DownloadAvailability> msgSerde) {
+    return new Topic<>(topic, Serdes.String(), msgSerde);
+  }
+
+  @Bean
+  Serde<DownloadAvailability> downloadAvailabilitySerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return Util.createAvroSerde(schemaRegistryUrl, false);
+  }
+
+  @Bean
   Properties streamProperties(
       @Value("${messaging.application-id}") String applicationId,
       @Value("${messaging.brokers}") String brokers) {
@@ -69,4 +60,5 @@ public class KafkaConfig {
 
     return props;
   }
+
 }

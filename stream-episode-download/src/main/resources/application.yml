@@ -1,0 +1,15 @@
+messaging:
+  application-id: stream-episode-download
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
+  topics:
+    episode-download-link: kissad-download-episodelink
+    downloader-availability: kissad-downloader-availability
+
+download:
+  destination: ./downloaded/
+
+javax:
+  net:
+    ssl:
+      trustStrore: "/Users/grant/IdeaProjects/kiss-ad/keystore.123456"

@@ -1,9 +1,9 @@
 package com.brokencircuits.kissad.streamepisodelink.streamprocessing;
 
-import avro.shaded.com.google.common.collect.Lists;
+import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
-import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kissweb.KissWebFetcher;
+import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
@@ -16,9 +16,13 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
+import org.apache.kafka.streams.state.KeyValueIterator;
+import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -32,13 +36,29 @@ public class EpisodeMessageProcessor implements
   final private Publisher<KissEpisodePageKey, ExternalEpisodeLinkMessage> episodeLinkPublisher;
   final private KissWebFetcher webFetcher;
 
-  @Override
-  public void init(ProcessorContext processorContext) {
+  @Value("${messaging.stores.download-availability}")
+  private String downloadAvailabilityStoreName;
+  private ReadOnlyKeyValueStore<String, DownloadAvailability> availabilityStore;
 
+  @Override
+  public void init(ProcessorContext context) {
+    availabilityStore = (ReadOnlyKeyValueStore<String, DownloadAvailability>) context
+        .getStateStore(downloadAvailabilityStoreName);
   }
 
   @Override
   public void process(KissEpisodePageKey key, KissEpisodePageMessage msg) {
+    if (!downloaderIsAvailable()) {
+      log.info("Waiting until downloader is available before processing more");
+      while (!downloaderIsAvailable()) {
+        try {
+          Thread.sleep(30000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
     log.info("Processing {} | {}", key, msg);
 
     String newUrl = msg.getUrl() + "&s=rapidvideo";
@@ -87,5 +107,16 @@ public class EpisodeMessageProcessor implements
   @Override
   public void close() {
 
+  }
+
+  private boolean downloaderIsAvailable() {
+    KeyValueIterator<String, DownloadAvailability> iterator = availabilityStore.all();
+    while (iterator.hasNext()) {
+      KeyValue<String, DownloadAvailability> entry = iterator.next();
+      if (entry.value.getAvailableCapacity() > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
