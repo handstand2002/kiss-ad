@@ -48,6 +48,8 @@ public class ShowMessageProcessor implements Processor<Long, KissShowMessage> {
       List<KeyValue<KissEpisodePageKey, KissEpisodePageMessage>> episodeObjectList = extractor
           .extract(new KeyValue<>(showMessage, htmlPage));
 
+      // TODO: use globalKTable of the topic this produces to in order to deduplicate messages
+
       // send all messages in order
       for (KeyValue<KissEpisodePageKey, KissEpisodePageMessage> kissEpisodePageKeyKissEpisodePageMessageKeyValue : episodeObjectList) {
         Future<RecordMetadata> recordFuture = episodeMessagePublisher
