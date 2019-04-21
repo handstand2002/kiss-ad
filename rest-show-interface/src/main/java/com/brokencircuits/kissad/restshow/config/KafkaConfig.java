@@ -42,7 +42,6 @@ public class KafkaConfig {
 
   @Bean
   Properties streamProperties(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
       @Value("${messaging.application-id}") String applicationId,
       @Value("${messaging.brokers}") String brokers,
       @Value("${messaging.state-dir}") String stateDir,

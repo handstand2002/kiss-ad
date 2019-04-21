@@ -2,6 +2,8 @@ package com.brokencircuits.kissad.streamshowfetch.config;
 
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
@@ -53,6 +55,28 @@ public class KafkaConfig {
     return Util.createAvroSerde(schemaRegistryUrl, false);
   }
 
+  /**
+   * Topic for storing the episodes that have been downloaded
+   */
+  @Bean
+  Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodeTopic(
+      @Value("${messaging.topics.downloaded-episode}") String topic,
+      Serde<DownloadedEpisodeKey> keySerde,
+      Serde<DownloadedEpisodeMessage> msgSerde) {
+    return new Topic<>(topic, keySerde, msgSerde);
+  }
+
+  @Bean
+  Serde<DownloadedEpisodeKey> downloadedEpisodeKeySerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return Util.createAvroSerde(schemaRegistryUrl, true);
+  }
+
+  @Bean
+  Serde<DownloadedEpisodeMessage> downloadedEpisodeMessageSerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return Util.createAvroSerde(schemaRegistryUrl, false);
+  }
 
   @Bean
   Properties streamProperties(

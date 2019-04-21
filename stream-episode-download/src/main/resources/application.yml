@@ -1,10 +1,12 @@
 messaging:
+  state-dir: ./target/streams-state-dir
   application-id: stream-episode-download
   schema-registry-url: http://192.168.0.254:8081
   brokers: 192.168.0.254:29092
   topics:
     episode-download-link: kissad-download-episodelink
     downloader-availability: kissad-downloader-availability
+    downloaded-episode: kissad-download-finished
 
 download:
   destination: ./downloaded/

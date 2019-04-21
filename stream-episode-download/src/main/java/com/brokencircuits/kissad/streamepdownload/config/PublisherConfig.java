@@ -3,6 +3,8 @@ package com.brokencircuits.kissad.streamepdownload.config;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.DownloadAvailability;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -12,6 +14,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class PublisherConfig {
+
+  @Bean
+  Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodePublisher(
+      Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> topic,
+      Properties producerProperties) {
+    return new Publisher<>(producerProperties, topic);
+  }
 
   @Bean
   Publisher<String, DownloadAvailability> availabilityPublisher(

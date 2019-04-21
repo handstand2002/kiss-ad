@@ -1,0 +1,16 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+  import idl "Shared.avdl";
+
+  record DownloadedEpisodeKey {
+    string showName;
+    string episodeName;
+    union{null, int} episodeNumber;
+    union{null, int} seasonNumber;
+    union{null, SubOrDub} subOrDub;
+  }
+
+  record DownloadedEpisodeMessage {
+    timestamp_ms retrieveTime;
+  }
+}

@@ -3,6 +3,8 @@ package com.brokencircuits.kissad.streamepdownload.streamprocessing;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.DownloadLink;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkKey;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkMessage;
 import java.io.File;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +29,7 @@ public class DownloadLinkProcessor implements
     Processor<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> {
 
   final private Publisher<String, DownloadAvailability> availabilityPublisher;
+  final private Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodePublisher;
   final private static Pattern dirHasTrailingSlashPattern = Pattern.compile("(\\|/)$");
 
   @Value("${messaging.application-id}")
@@ -80,8 +84,19 @@ public class DownloadLinkProcessor implements
     try {
       URL toDownload = new URL(downloadUrl);
       log.info("Downloading {} to {}", toDownload, destFile);
-      FileUtils.copyURLToFile(toDownload, new File(destFile));
+//      FileUtils.copyURLToFile(toDownload, new File(destFile));
       log.info("Finished downloading {}", destFile);
+
+      // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
+      downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
+              .setEpisodeName(key.getEpisodeName())
+              .setEpisodeNumber(msg.getEpisodeNumber())
+              .setSeasonNumber(msg.getSeasonNumber())
+              .setSubOrDub(msg.getSubOrDub())
+              .setShowName(key.getShowName())
+              .build(),
+          DownloadedEpisodeMessage.newBuilder()
+              .setRetrieveTime(DateTime.now()).build());
 
     } catch (IOException e) {
       e.printStackTrace();
