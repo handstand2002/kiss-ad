@@ -9,4 +9,5 @@ public class AddShowRequest {
   private String showName;
   private Integer seasonNumber;
   private Long showId;
+  private Boolean isActive = true;
 }

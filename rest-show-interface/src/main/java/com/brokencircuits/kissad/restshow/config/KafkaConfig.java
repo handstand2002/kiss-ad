@@ -39,7 +39,6 @@ public class KafkaConfig {
     return new KeyValueStore<>(storeName);
   }
 
-
   @Bean
   Properties streamProperties(
       @Value("${messaging.application-id}") String applicationId,

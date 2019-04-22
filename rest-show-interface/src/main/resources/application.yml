@@ -11,3 +11,6 @@ messaging:
 
 server:
   port: 15000
+
+new-episode-poll:
+  schedule: 0 * 21 * * *

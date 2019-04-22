@@ -29,7 +29,7 @@ public class ShowRestController {
         .setUrl(showRequest.getShowUrl())
         .setName(showRequest.getShowName())
         .setSeasonNumber(showRequest.getSeasonNumber())
-        .setIsActive(true).build();
+        .setIsActive(showRequest.getIsActive()).build();
 
     // if we haven't gone through the store to find the highest ID yet, do it now
     if (highestAssignedId.get() == 0) {

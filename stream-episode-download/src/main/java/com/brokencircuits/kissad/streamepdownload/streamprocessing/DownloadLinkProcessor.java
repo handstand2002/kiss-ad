@@ -84,7 +84,7 @@ public class DownloadLinkProcessor implements
     try {
       URL toDownload = new URL(downloadUrl);
       log.info("Downloading {} to {}", toDownload, destFile);
-//      FileUtils.copyURLToFile(toDownload, new File(destFile));
+      FileUtils.copyURLToFile(toDownload, new File(destFile));
       log.info("Finished downloading {}", destFile);
 
       // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again

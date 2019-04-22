@@ -7,7 +7,6 @@ import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 
 @RequiredArgsConstructor
-
 public class KeyValueStore<K, V> {
 
   @Getter
