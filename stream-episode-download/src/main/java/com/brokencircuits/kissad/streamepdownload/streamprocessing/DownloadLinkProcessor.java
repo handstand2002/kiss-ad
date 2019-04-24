@@ -30,7 +30,7 @@ public class DownloadLinkProcessor implements
 
   final private Publisher<String, DownloadAvailability> availabilityPublisher;
   final private Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodePublisher;
-  final private static Pattern dirHasTrailingSlashPattern = Pattern.compile("(\\|/)$");
+  final private static Pattern dirHasTrailingSlashPattern = Pattern.compile("([\\\\/])$");
 
   @Value("${messaging.application-id}")
   private String applicationId;
