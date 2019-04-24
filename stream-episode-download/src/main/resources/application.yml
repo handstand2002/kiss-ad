@@ -10,6 +10,7 @@ messaging:
 
 download:
   destination: ./downloaded/
+  attempts: 2
 
 javax:
   net:

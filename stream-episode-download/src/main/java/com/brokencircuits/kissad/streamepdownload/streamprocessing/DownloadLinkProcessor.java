@@ -36,6 +36,8 @@ public class DownloadLinkProcessor implements
   private String applicationId;
   @Value("${download.destination}")
   private String destinationFolder;
+  @Value("${download.attempts}")
+  private int downloadAttempts;
 
   @Override
   public void init(ProcessorContext processorContext) {
@@ -59,6 +61,7 @@ public class DownloadLinkProcessor implements
   public void process(ExternalDownloadLinkKey key, ExternalDownloadLinkMessage msg) {
     log.info("Processing {} | {}", key, msg);
 
+    int moreAttempts = downloadAttempts;
     availabilityPublisher
         .send(applicationId, DownloadAvailability.newBuilder().setAvailableCapacity(0).build());
 
@@ -82,21 +85,29 @@ public class DownloadLinkProcessor implements
         .format("S%02dE%02d.mp4", msg.getSeasonNumber(), msg.getEpisodeNumber());
 
     try {
+
       URL toDownload = new URL(downloadUrl);
       log.info("Downloading {} to {}", toDownload, destFile);
-      FileUtils.copyURLToFile(toDownload, new File(destFile));
-      log.info("Finished downloading {}", destFile);
+      while (moreAttempts > 0) {
+        try {
+          moreAttempts--;
+          FileUtils.copyURLToFile(toDownload, new File(destFile));
+          log.info("Finished downloading {}", destFile);
 
-      // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
-      downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
-              .setEpisodeName(key.getEpisodeName())
-              .setEpisodeNumber(msg.getEpisodeNumber())
-              .setSeasonNumber(msg.getSeasonNumber())
-              .setSubOrDub(msg.getSubOrDub())
-              .setShowName(key.getShowName())
-              .build(),
-          DownloadedEpisodeMessage.newBuilder()
-              .setRetrieveTime(DateTime.now()).build());
+          // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
+          downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
+                  .setEpisodeName(key.getEpisodeName())
+                  .setEpisodeNumber(msg.getEpisodeNumber())
+                  .setSeasonNumber(msg.getSeasonNumber())
+                  .setSubOrDub(msg.getSubOrDub())
+                  .setShowName(key.getShowName())
+                  .build(),
+              DownloadedEpisodeMessage.newBuilder()
+                  .setRetrieveTime(DateTime.now()).build());
+        } catch (Exception e) {
+          log.info("Failed to download {}; trying {} more times", destFile, moreAttempts);
+        }
+      }
 
     } catch (IOException e) {
       e.printStackTrace();
