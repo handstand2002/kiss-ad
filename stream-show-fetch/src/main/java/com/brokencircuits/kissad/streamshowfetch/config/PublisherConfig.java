@@ -30,6 +30,7 @@ public class PublisherConfig {
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
     props.put(ProducerConfig.CLIENT_ID_CONFIG, applicationId);
     props.put(ProducerConfig.ACKS_CONFIG, "all");
+    props.put(ProducerConfig.BATCH_SIZE_CONFIG, "1");
     props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
     return props;
   }
