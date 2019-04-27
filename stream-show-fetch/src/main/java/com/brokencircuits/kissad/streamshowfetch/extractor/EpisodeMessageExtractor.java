@@ -83,7 +83,16 @@ public class EpisodeMessageExtractor implements
     });
 
     // sort by episode number
-    pageList.sort(Comparator.comparing(o -> o.value.getEpisodeNumber()));
+    pageList.sort((o1, o2) -> {
+      if (o1.value.getEpisodeNumber() != null && o2.value.getEpisodeNumber() != null) {
+        return o1.value.getEpisodeNumber().compareTo(o2.value.getEpisodeNumber());
+      } else if (o1.value.getEpisodeNumber() == null) {
+        return -1;
+      } else if (o2.value.getEpisodeNumber() == null) {
+        return 1;
+      }
+      return 0;
+    });
 
     return pageList;
   }

@@ -6,5 +6,6 @@ protocol Simple {
     string name;
     union{null, int} seasonNumber;
     boolean isActive;
+    union{null, string} skipEpisodeString = null;
   }
 }
