@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.KeyValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,6 +62,20 @@ public class ShowRestController {
 
     return showMessage != null ? showMessageToLocalTranslator
         .translate(new KeyValue<>(id, showMessage)) : null;
+  }
+
+  @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
+  public ShowObject deleteShow(@PathVariable final Long id) {
+    KissShowMessage showMessage = showMessageStore.asMap().get(id);
+    ShowObject showObject = null;
+    if (showMessage != null) {
+      showObject = showMessageToLocalTranslator
+          .translate(new KeyValue<>(id, showMessage));
+    }
+    if (showObject != null) {
+      showMessagePublisher.send(id, null);
+    }
+    return showObject;
   }
 
   private void findHighestAssignedId() {
