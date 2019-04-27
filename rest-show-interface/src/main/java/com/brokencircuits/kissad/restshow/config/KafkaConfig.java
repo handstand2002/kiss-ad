@@ -1,6 +1,5 @@
 package com.brokencircuits.kissad.restshow.config;
 
-import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
@@ -31,12 +30,6 @@ public class KafkaConfig {
   Serde<KissShowMessage> showMessageSerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return createSerde(schemaRegistryUrl, false);
-  }
-
-  @Bean
-  KeyValueStore<Long, KissShowMessage> showMessageStore(
-      @Value("${messaging.stores.show}") String storeName) {
-    return new KeyValueStore<>(storeName);
   }
 
   @Bean
