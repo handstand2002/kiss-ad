@@ -61,12 +61,8 @@ public class KafkaConfig {
   Properties streamProperties(
       @Value("${messaging.application-id}") String applicationId,
       @Value("${messaging.brokers}") String brokers,
-      @Value("${messaging.state-dir}") String stateDir,
-      @Value("${messaging.purge-state-dir-before-start}") boolean purgeStateDir) {
+      @Value("${messaging.state-dir}") String stateDir) {
 
-    if (purgeStateDir) {
-      FileSystemUtils.deleteRecursively(new File(stateDir));
-    }
     Properties props = new Properties();
     props.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
