@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.restshow.config;
 
+import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
@@ -27,9 +28,33 @@ public class KafkaConfig {
   }
 
   @Bean
+  Topic<Long, KissShowMessage> showPrivateTopic(
+      @Value("${messaging.topics.show-private}") String topic,
+      Serde<KissShowMessage> messageSerde) {
+    return new Topic<>(topic, Serdes.Long(), messageSerde);
+  }
+
+  @Bean
   Serde<KissShowMessage> showMessageSerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return createSerde(schemaRegistryUrl, false);
+  }
+
+  @Bean
+  Topic<String, Long> urlToShowIdTopic(@Value("${messaging.topics.url-to-show-id}") String topic) {
+    return new Topic<>(topic, Serdes.String(), Serdes.Long());
+  }
+
+  @Bean
+  KeyValueStore<String, Long> showIdLookupStore(
+      @Value("${messaging.stores.url-to-show-id}") String storeName) {
+    return new KeyValueStore<>(storeName);
+  }
+
+  @Bean
+  KeyValueStore<Long, KissShowMessage> showMessageStore(
+      @Value("${messaging.stores.show}") String storeName) {
+    return new KeyValueStore<>(storeName);
   }
 
   @Bean

@@ -25,6 +25,7 @@ public class ShowRestController {
   private final Translator<ShowObject, KissShowMessage> showLocalToMessageTranslator;
   private final Translator<KeyValue<Long, KissShowMessage>, ShowObject> showMessageToLocalTranslator;
   private final KeyValueStore<Long, KissShowMessage> showMessageStore;
+  private final KeyValueStore<String, Long> showIdLookupStore;
 
   private final AtomicLong highestAssignedId = new AtomicLong(0);
 
@@ -32,23 +33,32 @@ public class ShowRestController {
 
   @PostMapping(path = "/addShow", consumes = CONTENT_TYPE_JSON, produces = CONTENT_TYPE_JSON)
   public ShowObject addShow(@RequestBody ShowObject newShowObject) {
+    if (newShowObject.getIsActive() == null) {
+      newShowObject.setIsActive(true);
+    }
     KissShowMessage message = showLocalToMessageTranslator.translate(newShowObject);
 
-    // if we haven't gone through the store to find the highest ID yet, do it now
-    if (highestAssignedId.get() == 0) {
-      findHighestAssignedId();
+    Long showId;
+    if (newShowObject.getShowId() != null) {
+      showId = newShowObject.getShowId();
+    } else {
+      Long existingShowId = showIdLookupStore.asMap().get(message.getUrl());
+      if (existingShowId != null) {
+        showId = existingShowId;
+      } else {
+        // if we haven't gone through the store to find the highest ID yet, do it now
+        if (highestAssignedId.get() == 0) {
+          findHighestAssignedId();
+        }
+        showId = highestAssignedId.incrementAndGet();
+      }
     }
 
-    Long showId = newShowObject.getShowId();
-    if (showId == null) {
-      showId = highestAssignedId.incrementAndGet();
-    }
     showMessagePublisher.send(showId, message);
-
-    return newShowObject;
+    return newShowObject.toBuilder().showId(showId).build();
   }
 
-  @GetMapping(path = "/getShow/all", consumes = CONTENT_TYPE_JSON, produces = CONTENT_TYPE_JSON)
+  @GetMapping(path = "/getShow", produces = CONTENT_TYPE_JSON)
   public List<ShowObject> getShowList() {
     List<ShowObject> outputList = new ArrayList<>();
     showMessageStore.asMap().forEach((showId, showMsg) -> outputList
@@ -56,7 +66,7 @@ public class ShowRestController {
     return outputList;
   }
 
-  @GetMapping(path = "/getShow/{id}")
+  @GetMapping(path = "/getShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject getShow(@PathVariable final Long id) {
     KissShowMessage showMessage = showMessageStore.asMap().get(id);
 

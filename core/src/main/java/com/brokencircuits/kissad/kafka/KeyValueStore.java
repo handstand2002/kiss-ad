@@ -4,12 +4,14 @@ import avro.shaded.com.google.common.collect.Maps;
 import java.util.Map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 
+@Slf4j
 @RequiredArgsConstructor
 public class KeyValueStore<K, V> {
 
@@ -36,6 +38,7 @@ public class KeyValueStore<K, V> {
   }
 
   public void initialize(KafkaStreams streams) {
+    log.info("Initializing store {}", name);
     store = streams.store(name, QueryableStoreTypes.keyValueStore());
   }
 }

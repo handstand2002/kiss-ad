@@ -14,9 +14,9 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<Long, KissShowMessage> showMessagePublisher(Topic<Long, KissShowMessage> topic,
+  Publisher<Long, KissShowMessage> showMessagePublisher(Topic<Long, KissShowMessage> showTopic,
       Properties producerProperties) {
-    return new Publisher<>(producerProperties, topic);
+    return new Publisher<>(producerProperties, showTopic);
   }
 
   @Bean

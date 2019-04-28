@@ -6,8 +6,11 @@ messaging:
   brokers: 192.168.0.254:29092
   stores:
     show: show-store
+    url-to-show-id: url-to-showid-store
   topics:
     show: kissad-kiss-show
+    show-private: kissad-private-restapi-show
+    url-to-show-id: kissad-private-restapi-urltoshowid
 
 server:
   port: 15000
