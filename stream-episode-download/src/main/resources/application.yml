@@ -16,3 +16,9 @@ javax:
   net:
     ssl:
       trustStrore: "/Users/grant/IdeaProjects/kiss-ad/keystore.123456"
+
+logging:
+  level:
+    com:
+      gargoylesoftware:
+        htmlunit: ERROR

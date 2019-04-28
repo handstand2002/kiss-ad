@@ -9,3 +9,9 @@ messaging:
     show: kissad-kiss-show
     episode: kissad-kiss-episode
     downloaded-episode: kissad-download-finished
+
+logging:
+  level:
+    com:
+      gargoylesoftware:
+        htmlunit: ERROR

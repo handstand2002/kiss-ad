@@ -9,3 +9,9 @@ messaging:
     episode: kissad-kiss-episode
     episode-link: kissad-ext-episodelink
     downloader-availability: kissad-downloader-availability
+
+logging:
+  level:
+    com:
+      gargoylesoftware:
+        htmlunit: ERROR

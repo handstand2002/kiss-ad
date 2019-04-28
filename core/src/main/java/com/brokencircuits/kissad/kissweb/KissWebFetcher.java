@@ -25,6 +25,7 @@ public class KissWebFetcher implements WebFetcher {
       page = webClient.getPage(url);
       log.info("Page size: {}", page.asXml().length());
     }
+    webClient.close();
 
     return page;
   }
