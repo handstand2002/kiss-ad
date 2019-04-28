@@ -86,7 +86,7 @@ public class DownloadLinkProcessor implements
       destFile = destFolder + String
           .format("S%02dE%03d.mp4", msg.getSeasonNumber(), msg.getEpisodeNumber());
     } else {
-      destFile = key.getEpisodeName() + ".mp4";
+      destFile = destFolder + key.getEpisodeName() + ".mp4";
     }
 
     try {
