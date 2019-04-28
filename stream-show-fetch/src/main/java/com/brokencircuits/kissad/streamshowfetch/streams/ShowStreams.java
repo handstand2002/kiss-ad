@@ -33,7 +33,7 @@ public class ShowStreams extends StreamsService {
 
   private Topology buildTopology() {
     streamsBuilder.stream(showTopic.getName(), showTopic.consumed())
-        .filter((key, msg) -> msg.getIsActive())
+        .filter((key, msg) -> msg != null && msg.getIsActive())
         .process(() -> showMessageProcessor);
 
     streamsBuilder.globalTable(downloadedEpisodeTopic.getName(), downloadedEpisodeTopic.consumed(),
