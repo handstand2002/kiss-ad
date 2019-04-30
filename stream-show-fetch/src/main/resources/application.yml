@@ -1,8 +1,5 @@
 messaging:
-  state-dir: ./target/streams-state-dir
   application-id: stream-show-fetch
-  schema-registry-url: http://192.168.0.254:8081
-  brokers: 192.168.0.254:29092
   stores:
     downloaded-episode: kissad-download-finished-store
   topics:
@@ -10,8 +7,14 @@ messaging:
     episode: kissad-kiss-episode
     downloaded-episode: kissad-download-finished
 
-logging:
-  level:
-    com:
-      gargoylesoftware:
-        htmlunit: ERROR
+logging.level.com.gargoylesoftware.htmlunit: ERROR
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  state-dir: ./target/streams-state-dir
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
