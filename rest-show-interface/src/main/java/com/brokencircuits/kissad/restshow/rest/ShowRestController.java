@@ -4,6 +4,7 @@ import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.KissShowMessage;
+import com.brokencircuits.kissad.restshow.poll.PollNewEpisodeScheduleController;
 import com.brokencircuits.kissad.restshow.rest.domain.ShowObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ public class ShowRestController {
   private final Translator<KeyValue<Long, KissShowMessage>, ShowObject> showMessageToLocalTranslator;
   private final KeyValueStore<Long, KissShowMessage> showMessageStore;
   private final KeyValueStore<String, Long> showIdLookupStore;
+  private final PollNewEpisodeScheduleController pollNewEpisodeScheduleController;
 
   private final AtomicLong highestAssignedId = new AtomicLong(0);
 
@@ -72,6 +74,15 @@ public class ShowRestController {
 
     return showMessage != null ? showMessageToLocalTranslator
         .translate(new KeyValue<>(id, showMessage)) : null;
+  }
+
+  @GetMapping(path = "/poll")
+  public String submitPoll() {
+    if (pollNewEpisodeScheduleController.trySendPoll(false)) {
+      return "Successfully send poll request";
+    } else {
+      return "Scheduled poll";
+    }
   }
 
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)

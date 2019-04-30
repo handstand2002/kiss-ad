@@ -58,7 +58,7 @@ public class PollNewEpisodeScheduleController {
    * poll pending. The next time the downloader changes to available (and idle), it will send the
    * poll
    */
-  private void trySendPoll(boolean overrideSend) {
+  public boolean trySendPoll(boolean overrideSend) {
     log.info("Trying to send poll for new episodes. {}", overrideSend ? "OVERRIDE" : "");
 
     boolean isRequestDelayedEnough = LocalDateTime.now()
@@ -70,12 +70,14 @@ public class PollNewEpisodeScheduleController {
       log.info("Sending poll request. Reason: {}", overrideSend ? "Override" : "Idle");
       // send poll
       submitPollForNewEpisodes();
+      return true;
     } else {
       log.info("Can't send poll request, queueing it");
       pollQueued.set(true);
       if (!isRequestDelayedEnough) {
         schedulePoll(Instant.now().plus(singleRequestAllowedPerTime));
       }
+      return false;
     }
   }
 
