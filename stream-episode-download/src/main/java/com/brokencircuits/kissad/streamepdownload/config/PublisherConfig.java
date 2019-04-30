@@ -31,7 +31,6 @@ public class PublisherConfig {
 
   @Bean
   Properties producerProperties(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
       @Value("${messaging.brokers}") String brokers,
       @Value("${messaging.application-id}") String applicationId) {
     Properties props = new Properties();
