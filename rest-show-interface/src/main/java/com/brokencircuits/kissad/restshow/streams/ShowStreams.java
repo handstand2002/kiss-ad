@@ -3,7 +3,9 @@ package com.brokencircuits.kissad.restshow.streams;
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.KissShowMessage;
+import com.brokencircuits.kissad.restshow.poll.PollNewEpisodeScheduleController;
 import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -24,9 +26,11 @@ public class ShowStreams extends StreamsService {
   private final Properties streamProperties;
   private final Topic<Long, KissShowMessage> showTopic;
   private final Topic<Long, KissShowMessage> showPrivateTopic;
+  private final Topic<String, DownloadAvailability> downloadAvailabilityTopic;
   private final KeyValueStore<Long, KissShowMessage> showMessageStore;
   private final Topic<String, Long> urlToShowIdTopic;
   private final KeyValueStore<String, Long> showIdLookupStore;
+  private final PollNewEpisodeScheduleController pollNewEpisodeScheduleController;
 
   @Override
   protected void afterStreamsStart(KafkaStreams streams) {
@@ -43,7 +47,7 @@ public class ShowStreams extends StreamsService {
 
     KStream<Long, KissShowMessage> showStream = streamsBuilder
         .stream(showTopic.getName(), showTopic.consumed())
-        .peek((id, msg)-> log.info("Show Added: {} : {}",id, msg));
+        .peek((id, msg) -> log.info("Show Added: {} : {}", id, msg));
 
     // write all records from show topic to urlToShowId topic, so we can look up ID by url
     showStream.flatMap((showId, showMsg) -> {
@@ -68,6 +72,11 @@ public class ShowStreams extends StreamsService {
     // since we already consumed the show topic in stream, we can't do it again for GKT
     // redirect the show topic to new private topic, which will be consumed with GKT
     showStream.to(showPrivateTopic.getName(), showPrivateTopic.produced());
+
+    // listen to downloaderAvailability topic, and notify the scheduleController of changes
+    streamsBuilder.stream(downloadAvailabilityTopic.getName(), downloadAvailabilityTopic.consumed())
+        .peek((key, msg) -> pollNewEpisodeScheduleController
+            .setDownloaderBusy(msg.getAvailableCapacity() == 0));
 
     // Create GKT with <URL>:<ShowId> mapping
     streamsBuilder.globalTable(urlToShowIdTopic.getName(), urlToShowIdTopic.consumed(),

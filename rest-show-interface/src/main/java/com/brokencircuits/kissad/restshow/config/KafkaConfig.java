@@ -2,20 +2,16 @@ package com.brokencircuits.kissad.restshow.config;
 
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.kafka.Util;
+import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.KissShowMessage;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
-import java.io.File;
-import java.util.Collections;
 import java.util.Properties;
-import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.FileSystemUtils;
 
 @Configuration
 public class KafkaConfig {
@@ -37,7 +33,7 @@ public class KafkaConfig {
   @Bean
   Serde<KissShowMessage> showMessageSerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return createSerde(schemaRegistryUrl, false);
+    return Util.createAvroSerde(schemaRegistryUrl, false);
   }
 
   @Bean
@@ -57,6 +53,22 @@ public class KafkaConfig {
     return new KeyValueStore<>(storeName);
   }
 
+  /**
+   * Topic for communicating whether or not the downloader can accept new download requests
+   */
+  @Bean
+  Topic<String, DownloadAvailability> downloadAvailabilityTopic(
+      @Value("${messaging.topics.downloader-availability}") String topic,
+      Serde<DownloadAvailability> msgSerde) {
+    return new Topic<>(topic, Serdes.String(), msgSerde);
+  }
+
+  @Bean
+  Serde<DownloadAvailability> downloadAvailabilitySerde(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return Util.createAvroSerde(schemaRegistryUrl, false);
+  }
+
   @Bean
   Properties streamProperties(
       @Value("${messaging.application-id}") String applicationId,
@@ -69,15 +81,5 @@ public class KafkaConfig {
     props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
     return props;
   }
-
-  private <T extends SpecificRecord> Serde<T> createSerde(String schemaRegistryUrl,
-      boolean forKey) {
-    final SpecificAvroSerde<T> serde = new SpecificAvroSerde<>();
-    serde.configure(Collections
-            .singletonMap(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl),
-        forKey);
-    return serde;
-  }
-
 
 }
