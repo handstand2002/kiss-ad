@@ -11,14 +11,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -61,6 +65,11 @@ public class DownloadLinkProcessor implements
   public void process(ExternalDownloadLinkKey key, ExternalDownloadLinkMessage msg) {
     log.info("Processing {} | {}", key, msg);
 
+    if (msg.getRetrieveTime().isBefore(DateTime.now().minusMinutes(5))) {
+      log.info("Discarding link as expired");
+      return;
+    }
+
     int moreAttempts = downloadAttempts;
     availabilityPublisher
         .send(applicationId, DownloadAvailability.newBuilder().setAvailableCapacity(0).build());
@@ -100,15 +109,28 @@ public class DownloadLinkProcessor implements
           log.info("Finished downloading {}", destFile);
 
           // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
-          downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
-                  .setEpisodeName(key.getEpisodeName())
-                  .setEpisodeNumber(msg.getEpisodeNumber())
-                  .setSeasonNumber(msg.getSeasonNumber())
-                  .setSubOrDub(msg.getSubOrDub())
-                  .setShowName(key.getShowName())
-                  .build(),
-              DownloadedEpisodeMessage.newBuilder()
-                  .setRetrieveTime(DateTime.now()).build());
+          Future<RecordMetadata> sendFuture = downloadedEpisodePublisher
+              .send(DownloadedEpisodeKey.newBuilder()
+                      .setEpisodeName(key.getEpisodeName())
+                      .setEpisodeNumber(msg.getEpisodeNumber())
+                      .setSeasonNumber(msg.getSeasonNumber())
+                      .setSubOrDub(msg.getSubOrDub())
+                      .setShowName(key.getShowName())
+                      .build(),
+                  DownloadedEpisodeMessage.newBuilder()
+                      .setRetrieveTime(DateTime.now()).build());
+          log.info("Initial Future: {}", sendFuture);
+          new Thread(() -> {
+            while (!sendFuture.isDone()) {
+              log.info("Future: {}", sendFuture);
+              trySleep(10000);
+            }
+          }).start();
+          trySleep(5000);
+          log.info("Trying to get future...");
+          RecordMetadata recordMetadata = sendFuture.get();
+          log.info("Record meta: {}", recordMetadata);
+
         } catch (Exception e) {
           log.info("Failed to download {}; trying {} more times", destFile, moreAttempts);
         }
@@ -120,6 +142,14 @@ public class DownloadLinkProcessor implements
     log.info("Finished processing {}", key);
     availabilityPublisher
         .send(applicationId, DownloadAvailability.newBuilder().setAvailableCapacity(1).build());
+  }
+
+  private void trySleep(long ms) {
+    try {
+      Thread.sleep(ms);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
