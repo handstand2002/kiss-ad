@@ -8,6 +8,7 @@ messaging:
     show-private: kissad-private-restapi-show
     url-to-show-id: kissad-private-restapi-urltoshowid
     downloader-availability: kissad-downloader-availability
+    downloaded-episode: kissad-download-finished
 
 ---
 

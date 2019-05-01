@@ -2,6 +2,8 @@ package com.brokencircuits.kissad.restshow.config;
 
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
@@ -17,6 +19,13 @@ public class PublisherConfig {
   Publisher<Long, KissShowMessage> showMessagePublisher(Topic<Long, KissShowMessage> showTopic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, showTopic);
+  }
+
+  @Bean
+  Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> completedEpisodePublisher(
+      Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodeTopic,
+      Properties producerProperties) {
+    return new Publisher<>(producerProperties, downloadedEpisodeTopic);
   }
 
   @Bean

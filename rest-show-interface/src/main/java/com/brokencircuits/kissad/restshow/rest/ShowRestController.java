@@ -3,8 +3,11 @@ package com.brokencircuits.kissad.restshow.rest;
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
+import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.KissShowMessage;
 import com.brokencircuits.kissad.restshow.poll.PollNewEpisodeScheduleController;
+import com.brokencircuits.kissad.restshow.rest.domain.EpisodeKey;
 import com.brokencircuits.kissad.restshow.rest.domain.ShowObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShowRestController {
 
   private final Publisher<Long, KissShowMessage> showMessagePublisher;
+  private final Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> completedEpisodePublisher;
   private final Translator<ShowObject, KissShowMessage> showLocalToMessageTranslator;
   private final Translator<KeyValue<Long, KissShowMessage>, ShowObject> showMessageToLocalTranslator;
   private final KeyValueStore<Long, KissShowMessage> showMessageStore;
@@ -97,6 +101,22 @@ public class ShowRestController {
       showMessagePublisher.send(id, null);
     }
     return showObject;
+  }
+
+  @PostMapping(path = "/requestEpisode", consumes = CONTENT_TYPE_JSON, produces = CONTENT_TYPE_JSON)
+  public EpisodeKey requestReDownload(@RequestBody EpisodeKey episodeKey) {
+
+    DownloadedEpisodeKey key = DownloadedEpisodeKey.newBuilder()
+        .setSubOrDub(episodeKey.getSubOrDub())
+        .setSeasonNumber(episodeKey.getSeasonNumber())
+        .setEpisodeNumber(episodeKey.getEpisodeNumber())
+        .setEpisodeName(episodeKey.getEpisodeName())
+        .setShowName(episodeKey.getShowName())
+        .build();
+    completedEpisodePublisher.send(key, null);
+    submitPoll();
+
+    return episodeKey;
   }
 
   private void findHighestAssignedId() {
