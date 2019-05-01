@@ -71,6 +71,7 @@ public class DownloadLinkProcessor implements
     }
 
     int moreAttempts = downloadAttempts;
+    boolean downloadSuccessful = false;
     availabilityPublisher
         .send(applicationId, DownloadAvailability.newBuilder().setAvailableCapacity(0).build());
 
@@ -102,15 +103,14 @@ public class DownloadLinkProcessor implements
 
       URL toDownload = new URL(downloadUrl);
       log.info("Downloading {} to {}", toDownload, destFile);
-      while (moreAttempts > 0) {
+      while (moreAttempts > 0 && !downloadSuccessful) {
         try {
           moreAttempts--;
           FileUtils.copyURLToFile(toDownload, new File(destFile));
           log.info("Finished downloading {}", destFile);
 
           // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
-          Future<RecordMetadata> sendFuture = downloadedEpisodePublisher
-              .send(DownloadedEpisodeKey.newBuilder()
+          downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
                       .setEpisodeName(key.getEpisodeName())
                       .setEpisodeNumber(msg.getEpisodeNumber())
                       .setSeasonNumber(msg.getSeasonNumber())
@@ -119,17 +119,7 @@ public class DownloadLinkProcessor implements
                       .build(),
                   DownloadedEpisodeMessage.newBuilder()
                       .setRetrieveTime(DateTime.now()).build());
-          log.info("Initial Future: {}", sendFuture);
-          new Thread(() -> {
-            while (!sendFuture.isDone()) {
-              log.info("Future: {}", sendFuture);
-              trySleep(10000);
-            }
-          }).start();
-          trySleep(5000);
-          log.info("Trying to get future...");
-          RecordMetadata recordMetadata = sendFuture.get();
-          log.info("Record meta: {}", recordMetadata);
+          downloadSuccessful = true;
 
         } catch (Exception e) {
           log.info("Failed to download {}; trying {} more times", destFile, moreAttempts);
