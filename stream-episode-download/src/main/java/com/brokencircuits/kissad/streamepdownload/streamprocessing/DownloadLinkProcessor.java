@@ -65,7 +65,7 @@ public class DownloadLinkProcessor implements
   public void process(ExternalDownloadLinkKey key, ExternalDownloadLinkMessage msg) {
     log.info("Processing {} | {}", key, msg);
 
-    if (msg.getRetrieveTime().isBefore(DateTime.now().minusMinutes(5))) {
+    if (msg.getRetrieveTime().isBefore(DateTime.now().minusMinutes(30))) {
       log.info("Discarding link as expired");
       return;
     }
