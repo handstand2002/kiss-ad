@@ -15,7 +15,7 @@ public class KissWebFetcher implements WebFetcher {
 
   public HtmlPage fetchPage(String url) throws IOException {
     HtmlPage page = webClient.getPage(url);
-    log.info("Page size: {}", page.asXml().length());
+    log.info("Page size: {}", page.getWebResponse().getContentAsString().length());
 
 
     if (page.asXml().length() < 12000) {
@@ -23,7 +23,7 @@ public class KissWebFetcher implements WebFetcher {
       webClient.waitForBackgroundJavaScript(10000);
 
       page = webClient.getPage(url);
-      log.info("Page size: {}", page.asXml().length());
+      log.info("Page size: {}", page.getWebResponse().getContentAsString().length());
     }
     webClient.close();
 

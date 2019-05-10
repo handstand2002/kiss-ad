@@ -15,7 +15,7 @@ public class RapidvideoFetcher implements WebFetcher {
 
   public HtmlPage fetchPage(String url) throws IOException {
     HtmlPage page = webClient.getPage(url);
-    log.info("Page size: {}", page.asXml().length());
+    log.info("Page size: {}", page.getWebResponse().getContentAsString().length());
 
     return page;
   }

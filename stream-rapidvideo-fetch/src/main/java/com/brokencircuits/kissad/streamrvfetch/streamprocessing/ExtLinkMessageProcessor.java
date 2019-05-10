@@ -40,9 +40,10 @@ public class ExtLinkMessageProcessor implements
   @Override
   public void process(KissEpisodePageKey key, ExternalEpisodeLinkMessage msg) {
     log.info("Processing {} | {}", key, msg);
+
     try {
       HtmlPage page = webFetcher.fetchPage(msg.getUrl());
-      log.info("Page:\n{}", page.asXml());
+      log.info("Page:\n{}", page.getWebResponse().getContentAsString());
 
       DomNodeList<DomNode> videoSourceNodes = page.querySelectorAll("div video#videojs source");
 
@@ -71,7 +72,8 @@ public class ExtLinkMessageProcessor implements
 
       episodeLinkPublisher.send(downloadLinkKey, downloadLinkMsg);
 
-    } catch (IOException e) {
+    } catch (Exception e) {
+      log.error("Exception in processing...");
       e.printStackTrace();
     }
   }
