@@ -16,7 +16,7 @@ public class DownloadUtil {
 
     log.info("Downloading {} to {}", toDownload, destination);
     int currentAttempt = 0;
-    while (currentAttempt <= attempts) {
+    while (currentAttempt < attempts) {
       currentAttempt++;
       log.info("Attempt {}/{}", currentAttempt, attempts);
       try {

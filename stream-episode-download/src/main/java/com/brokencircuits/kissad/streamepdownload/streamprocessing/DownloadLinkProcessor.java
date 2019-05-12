@@ -95,6 +95,7 @@ public class DownloadLinkProcessor implements
     // if first link doesn't work, failover to lower quality links
     try {
       for (DownloadLink link : orderedLinks) {
+        log.info("Attempting to download from link: {}", link);
         String downloadUrl = link.getUrl();
         if (DownloadUtil.tryDownloadFile(downloadUrl, new File(destFile), 3)) {
           log.info("Finished downloading {}", destFile);
