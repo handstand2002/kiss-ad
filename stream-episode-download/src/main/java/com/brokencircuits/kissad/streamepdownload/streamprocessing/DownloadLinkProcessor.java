@@ -7,22 +7,17 @@ import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
 import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkKey;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkMessage;
+import com.brokencircuits.kissad.streamepdownload.download.DownloadUtil;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -80,9 +75,7 @@ public class DownloadLinkProcessor implements
     orderedLinks.sort((o1, o2) -> o2.getResolution().compareTo(o1.getResolution()));
 
     log.info("Links: {}", orderedLinks);
-    DownloadLink downloadLink = orderedLinks.get(0);
 
-    String downloadUrl = downloadLink.getUrl();
     String destFolder = destinationFolder + key.getShowName() + "/";
     File destFolderFile = new File(destFolder);
     if (!destFolderFile.exists()) {
@@ -99,36 +92,33 @@ public class DownloadLinkProcessor implements
       destFile = destFolder + key.getEpisodeName() + ".mp4";
     }
 
+    // if first link doesn't work, failover to lower quality links
     try {
-
-      URL toDownload = new URL(downloadUrl);
-      log.info("Downloading {} to {}", toDownload, destFile);
-      while (moreAttempts > 0 && !downloadSuccessful) {
-        try {
-          moreAttempts--;
-          FileUtils.copyURLToFile(toDownload, new File(destFile));
+      for (DownloadLink link : orderedLinks) {
+        log.info("Attempting to download from link: {}", link);
+        String downloadUrl = link.getUrl();
+        if (DownloadUtil.tryDownloadFile(downloadUrl, new File(destFile), 3)) {
           log.info("Finished downloading {}", destFile);
 
           // publish episode to list of "Finished" episodes, so it won't try to retrieve this one again
           downloadedEpisodePublisher.send(DownloadedEpisodeKey.newBuilder()
-                      .setEpisodeName(key.getEpisodeName())
-                      .setEpisodeNumber(msg.getEpisodeNumber())
-                      .setSeasonNumber(msg.getSeasonNumber())
-                      .setSubOrDub(msg.getSubOrDub())
-                      .setShowName(key.getShowName())
-                      .build(),
-                  DownloadedEpisodeMessage.newBuilder()
-                      .setRetrieveTime(DateTime.now()).build());
-          downloadSuccessful = true;
+                  .setEpisodeName(key.getEpisodeName())
+                  .setEpisodeNumber(msg.getEpisodeNumber())
+                  .setSeasonNumber(msg.getSeasonNumber())
+                  .setSubOrDub(msg.getSubOrDub())
+                  .setShowName(key.getShowName())
+                  .build(),
+              DownloadedEpisodeMessage.newBuilder()
+                  .setRetrieveTime(DateTime.now()).build());
 
-        } catch (Exception e) {
-          log.info("Failed to download {}; trying {} more times", destFile, moreAttempts);
+          break;    // no need to try other download links
         }
+        // TODO: Else send this episode back to episodelink fetcher to get new DL links
       }
-
-    } catch (IOException e) {
+    } catch (MalformedURLException e) {
       e.printStackTrace();
     }
+
     log.info("Finished processing {}", key);
     availabilityPublisher
         .send(applicationId, DownloadAvailability.newBuilder().setAvailableCapacity(1).build());
