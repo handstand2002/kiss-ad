@@ -2,13 +2,8 @@ messaging:
   application-id: rest-show-interface
   stores:
     show: show-store
-    url-to-show-id: url-to-showid-store
   topics:
-    show: kissad-kiss-show
-    show-private: kissad-private-restapi-show
-    url-to-show-id: kissad-private-restapi-urltoshowid
-    downloader-availability: kissad-downloader-availability
-    downloaded-episode: kissad-download-finished
+    show-store: ad.store.show
 
 ---
 
@@ -22,9 +17,3 @@ messaging:
 
 server:
   port: 15000
-
-new-episode-poll: >
-  0 0 14-18 * * MON-FRI,
-  0 0 11 * * SAT,
-  0 0 11 * * SUN,
-  0 0 1-7 * * *

@@ -1,30 +1,23 @@
 package com.brokencircuits.kissad.kafka;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Materialized;
-import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.processor.StateStore;
 
-@Value
-public class Topic<K, V> {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class Topic<K, V> extends SerdePair<K,V>{
 
   final private String name;
-  final private Serde<K> keySerde;
-  final private Serde<V> valueSerde;
 
-  public Consumed<K, V> consumed() {
-    return Consumed.with(keySerde, valueSerde);
+  @java.beans.ConstructorProperties({"name"})
+  public Topic(String name, Serde<K> keySerde, Serde<V> valueSerde) {
+    super(keySerde, valueSerde);
+    this.name = name;
   }
 
-  public Produced<K, V> produced() {
-    return Produced.with(keySerde, valueSerde);
+  public String getName() {
+    return this.name;
   }
-
-  public Materialized<K, V, StateStore> materialized() {
-    return Materialized.with(keySerde, valueSerde);
-  }
-
 
 }

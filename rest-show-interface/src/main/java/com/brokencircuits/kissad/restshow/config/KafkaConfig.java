@@ -6,7 +6,7 @@ import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.DownloadAvailability;
 import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
 import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
-import com.brokencircuits.kissad.messages.KissShowMessage;
+import com.brokencircuits.kissad.messages.ShowMessage;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -19,79 +19,24 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   @Bean
-  Topic<Long, KissShowMessage> showTopic(
-      @Value("${messaging.topics.show}") String topic,
-      Serde<KissShowMessage> messageSerde) {
+  Topic<Long, ShowMessage> showStoreTopic(
+      @Value("${messaging.topics.show-store}") String topic,
+      Serde<ShowMessage> messageSerde) {
     return new Topic<>(topic, Serdes.Long(), messageSerde);
   }
 
   @Bean
-  Topic<Long, KissShowMessage> showPrivateTopic(
-      @Value("${messaging.topics.show-private}") String topic,
-      Serde<KissShowMessage> messageSerde) {
-    return new Topic<>(topic, Serdes.Long(), messageSerde);
-  }
-
-  @Bean
-  Serde<KissShowMessage> showMessageSerde(
+  Serde<ShowMessage> showMessageSerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, false);
   }
 
-  @Bean
-  Topic<String, Long> urlToShowIdTopic(@Value("${messaging.topics.url-to-show-id}") String topic) {
-    return new Topic<>(topic, Serdes.String(), Serdes.Long());
-  }
 
   @Bean
-  KeyValueStore<String, Long> showIdLookupStore(
-      @Value("${messaging.stores.url-to-show-id}") String storeName) {
-    return new KeyValueStore<>(storeName);
-  }
-
-  @Bean
-  KeyValueStore<Long, KissShowMessage> showMessageStore(
-      @Value("${messaging.stores.show}") String storeName) {
-    return new KeyValueStore<>(storeName);
-  }
-
-  /**
-   * Topic for communicating whether or not the downloader can accept new download requests
-   */
-  @Bean
-  Topic<String, DownloadAvailability> downloadAvailabilityTopic(
-      @Value("${messaging.topics.downloader-availability}") String topic,
-      Serde<DownloadAvailability> msgSerde) {
-    return new Topic<>(topic, Serdes.String(), msgSerde);
-  }
-
-  @Bean
-  Serde<DownloadAvailability> downloadAvailabilitySerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
-  }
-
-  /**
-   * Topic for storing the episodes that have been downloaded
-   */
-  @Bean
-  Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodeTopic(
-      @Value("${messaging.topics.downloaded-episode}") String topic,
-      Serde<DownloadedEpisodeKey> keySerde,
-      Serde<DownloadedEpisodeMessage> msgSerde) {
-    return new Topic<>(topic, keySerde, msgSerde);
-  }
-
-  @Bean
-  Serde<DownloadedEpisodeKey> downloadedEpisodeKeySerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, true);
-  }
-
-  @Bean
-  Serde<DownloadedEpisodeMessage> downloadedEpisodeMessageSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
+  KeyValueStore<Long, ShowMessage> showMessageStore(
+      @Value("${messaging.stores.show}") String storeName,
+      Topic<Long, ShowMessage> showStoreTopic) {
+    return new KeyValueStore<>(storeName, showStoreTopic);
   }
 
   @Bean

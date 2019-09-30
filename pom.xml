@@ -9,10 +9,11 @@
     <module>rest-show-interface</module>
     <module>core-message</module>
     <module>core</module>
-    <module>stream-show-fetch</module>
+    <module>hs-show-fetch</module>
     <module>stream-episodelinks-fetch</module>
     <module>stream-rapidvideo-fetch</module>
     <module>stream-episode-download</module>
+    <module>downloader</module>
   </modules>
 
   <parent>

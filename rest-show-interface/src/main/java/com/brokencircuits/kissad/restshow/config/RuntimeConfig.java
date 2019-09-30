@@ -5,6 +5,7 @@ import com.brokencircuits.kissad.kafka.StreamsServiceRunner;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.concurrent.ScheduledFuture;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.TaskScheduler;
@@ -13,8 +14,8 @@ import org.springframework.scheduling.TaskScheduler;
 public class RuntimeConfig {
 
   @Bean
-  ScheduledFuture<?> startStreams(TaskScheduler taskScheduler, StreamsServiceRunner serviceRunner) {
-    return taskScheduler.schedule(serviceRunner, Instant.now());
+  CommandLineRunner startStreams(StreamsServiceRunner serviceRunner) {
+    return args -> serviceRunner.run();
   }
 
   @Bean

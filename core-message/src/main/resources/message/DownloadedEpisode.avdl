@@ -1,6 +1,6 @@
 @namespace("com.brokencircuits.kissad.messages")
 protocol Simple {
-  import idl "Shared.avdl";
+  import idl "KissShared.avdl";
 
   record DownloadedEpisodeKey {
     string showName;

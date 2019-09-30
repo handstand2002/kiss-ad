@@ -4,7 +4,7 @@ import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
 import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
-import com.brokencircuits.kissad.messages.KissShowMessage;
+import com.brokencircuits.kissad.messages.ShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -16,16 +16,9 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<Long, KissShowMessage> showMessagePublisher(Topic<Long, KissShowMessage> showTopic,
+  Publisher<Long, ShowMessage> showMessagePublisher(Topic<Long, ShowMessage> showTopic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, showTopic);
-  }
-
-  @Bean
-  Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> completedEpisodePublisher(
-      Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodeTopic,
-      Properties producerProperties) {
-    return new Publisher<>(producerProperties, downloadedEpisodeTopic);
   }
 
   @Bean

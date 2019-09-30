@@ -1,0 +1,23 @@
+messaging:
+  application-id: kafka-downloader
+  topics:
+    download-instruction: download-instruction
+    download-status: download-status
+    downloader-status: downloader-status
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
+
+download:
+  downloader-id: 1
+  aria:
+    port: 9000
+    path: "C:\\Users\\Grant\\Downloads\\aria2-1.34.0-win-64bit-build1\\aria2-1.34.0-win-64bit-build1\\aria2c.exe"
+    status-poll-interval: 5s
+    inactivity-timeout: 10m

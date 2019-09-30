@@ -1,6 +1,8 @@
 @namespace("com.brokencircuits.kissad.messages")
 protocol Simple {
-  import idl "Shared.avdl";
+  import idl "KissShared.avdl";
+  import idl "RootShared.avdl";
+  import idl "Show.avdl";
 
   record KissEpisodePageKey {
     string showName;
@@ -15,5 +17,26 @@ protocol Simple {
     union{null, int} seasonNumber;
     union{null, SubOrDub} subOrDub;
     timestamp_ms retrieveTime;
+  }
+
+  record EpisodeKey {
+    ShowMessage show;
+    union{null, long} episodeNumber;
+  }
+
+  record Episode {
+    EpisodeKey key;
+    union{null, long} downloadTime = null;
+    int downloadedQuality = 0;
+  }
+
+  record EpisodeLink {
+    int quality;
+    com.brokencircuits.download.messages.DownloadType type;
+    string url;
+  }
+
+  record EpisodeLinks {
+    array<EpisodeLink> links;
   }
 }

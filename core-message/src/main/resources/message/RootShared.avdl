@@ -1,0 +1,8 @@
+@namespace("com.brokencircuits.download.messages")
+protocol Simple {
+
+  enum DownloadType {
+    DIRECT, MAGNET
+  }
+
+}

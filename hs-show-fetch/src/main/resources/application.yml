@@ -1,0 +1,27 @@
+messaging:
+  application-id: ad.streamShowFetch
+  stores:
+    show: show
+  topics:
+    show-store: ad.store.show
+    episode-queue: ad.queue.episode
+
+logging.level:
+  com.gargoylesoftware.htmlunit: ERROR
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  state-dir: ./target/streams-state-dir
+  schema-registry-url: http://192.168.0.254:8081
+  brokers: 192.168.0.254:29092
+
+server:
+  port: 15001
+
+com.horriblesubs:
+  url: https://horriblesubs.info
+  get-shows-endpoint: /api.php?method=getshows&type=show&showid=<SHOWID>

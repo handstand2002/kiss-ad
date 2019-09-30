@@ -2,6 +2,7 @@ package com.brokencircuits.kissad.restshow.rest.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,13 +15,12 @@ import lombok.NonNull;
 public class ShowObject {
 
   @NonNull
-  private String showUrl;
-  @NonNull
-  private String showName;
-  private Integer seasonNumber;
+  private String title;
+  private Integer season;
   private Long showId;
   private Boolean isActive = true;
   private String initialSkipEpisodeString = null;
+  private Collection<ShowSource> sources;
 
   @JsonPOJOBuilder(withPrefix = "")
   public static class ShowObjectBuilder {
