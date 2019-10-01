@@ -16,7 +16,10 @@ messaging:
 
 download:
   downloader-id: 1
+  download-folder-root: "D:\\"
+  overwrite-permission: true
   aria:
+    temp-download-dir: "D:\\Unsorted"
     port: 9000
     path: "C:\\Users\\Grant\\Downloads\\aria2-1.34.0-win-64bit-build1\\aria2-1.34.0-win-64bit-build1\\aria2c.exe"
     status-poll-interval: 5s

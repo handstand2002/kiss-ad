@@ -5,6 +5,8 @@ import com.brokencircuits.downloader.domain.AriaResponseStatus;
 import com.brokencircuits.downloader.domain.AriaResponseUriSubmit;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,10 +30,17 @@ public class AriaApi {
 
   public AriaResponseUriSubmit submitUri(String requestId, String uri)
       throws IOException {
+
     JsonArray parameters = new JsonArray();
     JsonArray uriList = new JsonArray();
     uriList.add(uri);
     parameters.add(uriList);
+
+    JsonObject options = new JsonObject();
+    options.add("dir", new JsonPrimitive(ariaProps.getAriaTempDownloadDir()));
+    parameters.add(options);
+    log.debug("Parameters: {}", new Gson().toJson(parameters));
+
     return submitRequest("aria2.addUri", requestId, parameters, AriaResponseUriSubmit.class);
   }
 
@@ -50,7 +59,7 @@ public class AriaApi {
   public <T> T submitRequest(String method, String requestId, JsonArray params,
       Class<T> expectedObject)
       throws IOException {
-    log.info("Starting request");
+    log.debug("Starting request");
 
     Map<String, String> parameters = new HashMap<>();
     parameters.put("method", method);
@@ -60,7 +69,7 @@ public class AriaApi {
 
     URL url = new URL("http://127.0.0.1:" + ariaProps.getAriaRpcPort() + "/jsonrpc?"
         + getParamsString(parameters));
-    log.info("Request: {}", url);
+    log.debug("Request: {}", url);
 
     HttpURLConnection con = (HttpURLConnection) url.openConnection();
     con.setRequestMethod("GET");
@@ -84,7 +93,7 @@ public class AriaApi {
       return null;
     }
 
-    log.info("Raw response: {}", fullOutput.toString());
+    log.debug("Raw response: {}", fullOutput.toString());
     T response = new Gson().fromJson(fullOutput.toString(), expectedObject);
 
     con.disconnect();

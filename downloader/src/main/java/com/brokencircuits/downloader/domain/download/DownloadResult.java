@@ -1,5 +1,6 @@
 package com.brokencircuits.downloader.domain.download;
 
+import com.brokencircuits.downloader.domain.FileDetails;
 import java.util.List;
 import lombok.Value;
 
@@ -14,7 +15,7 @@ public class DownloadResult {
   private long downloadSpeed;
   private int errorCode;
   private String errorMessage;
-  //  private List<FileDetails> files;
+    private List<FileDetails> files;
   private List<String> followedBy;
   private String gid;
   private String infoHash;

@@ -12,4 +12,6 @@ public class AriaProps {
   private String ariaPath;
   @Value("${download.aria.port}")
   private int ariaRpcPort;
+  @Value("${download.aria.temp-download-dir}")
+  private String ariaTempDownloadDir;
 }
