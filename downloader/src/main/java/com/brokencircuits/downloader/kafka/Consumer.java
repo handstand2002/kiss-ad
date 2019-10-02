@@ -8,8 +8,7 @@ import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
-import com.brokencircuits.downloader.messages.DownloaderStatusKey;
-import com.brokencircuits.downloader.messages.DownloaderStatusValue;
+import com.brokencircuits.downloader.publish.DownloaderStatusApi;
 import com.brokencircuits.kissad.kafka.Publisher;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.KeyValue;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -27,16 +27,17 @@ public class Consumer {
 
   private final DownloadController downloadController;
   private final Publisher<DownloadStatusKey, DownloadStatusValue> downloadStatusPublisher;
-  private final Publisher<DownloaderStatusKey, DownloaderStatusValue> downloaderStatusPublisher;
+  private final DownloaderStatusApi downloaderStatusApi;
 
   @Value("${download.downloader-id}")
   long downloaderId;
 
-  //  @KafkaListener(topics = "${messaging.topics.download-instruction}")
+  @KafkaListener(topics = "${messaging.topics.download-instruction}")
   public void listen(ConsumerRecord<DownloadRequestKey, DownloadRequestValue> message,
       Acknowledgment acknowledgment) {
     log.info("Received Message: {}", message);
     if (message.key().getDownloaderId().equals(downloaderId)) {
+      downloaderStatusApi.tellClusterStatus(false);
       boolean isMagnet = false;
       if (message.key().getDownloadType().equals(DownloadType.MAGNET)) {
         isMagnet = true;
@@ -53,19 +54,12 @@ public class Consumer {
         log.error("Error occurred during download:", e);
         downloadStatusPublisher.send(errorStatus(message.value().getDownloadId(), e.getMessage()));
       } finally {
-        downloaderStatusPublisher.send(downloaderStatus(downloaderId, true));
+        downloaderStatusApi.tellClusterStatus(true);
       }
     } else {
       log.info("Ignoring {}, as it was for a different downloader");
     }
     acknowledgment.acknowledge();
-  }
-
-  private KeyValue<DownloaderStatusKey, DownloaderStatusValue> downloaderStatus(long downloaderId,
-      boolean isAvailable) {
-    return new KeyValue<>(DownloaderStatusKey.newBuilder()
-        .setDownloaderId(downloaderId).build(),
-        DownloaderStatusValue.newBuilder().setIsAvailable(isAvailable).build());
   }
 
   private KeyValue<DownloadStatusKey, DownloadStatusValue> errorStatus(String downloadId,
