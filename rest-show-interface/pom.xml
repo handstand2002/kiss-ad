@@ -12,11 +12,13 @@
   <artifactId>rest-show-interface</artifactId>
 
   <dependencies>
+
     <dependency>
       <groupId>com.brokencircuits</groupId>
       <artifactId>core-message</artifactId>
       <version>0.0.1</version>
     </dependency>
+
     <dependency>
       <groupId>com.brokencircuits</groupId>
       <artifactId>core</artifactId>
@@ -27,6 +29,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+
   </dependencies>
 
   <build>
