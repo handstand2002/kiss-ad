@@ -2,8 +2,6 @@ package com.brokencircuits.kissad.hsshowfetch.streams;
 
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.StreamsService;
-import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.messages.ShowMessage;
 import java.util.Collection;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +31,7 @@ public class StreamController extends StreamsService {
 
     // build all the global stores for KeyValueStore objects
     stores.forEach(store -> streamsBuilder
-        .globalTable(store.getBuiltOnTopic().getName(), store.getBuiltOnTopic().consumed(),
+        .globalTable(store.getBuiltOnTopic().getName(), store.getBuiltOnTopic().consumedWith(),
             Materialized.as(store.getName())));
 
     return streamsBuilder.build();

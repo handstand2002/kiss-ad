@@ -5,9 +5,6 @@ import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkKey;
 import com.brokencircuits.kissad.messages.ExternalDownloadLinkMessage;
-import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
-import com.brokencircuits.kissad.messages.KissEpisodePageKey;
-import com.brokencircuits.kissad.messages.VideoSource;
 import com.brokencircuits.kissad.streamepdownload.streamprocessing.DownloadLinkProcessor;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +28,7 @@ public class DownloadLinkStreams extends StreamsService {
   }
 
   private Topology buildTopology() {
-    streamsBuilder.stream(downloadLinkTopic.getName(), downloadLinkTopic.consumed())
+    streamsBuilder.stream(downloadLinkTopic.getName(), downloadLinkTopic.consumedWith())
         .process(() -> downloadLinkProcessor);
 
     return streamsBuilder.build();

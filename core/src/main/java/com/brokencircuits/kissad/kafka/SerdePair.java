@@ -17,7 +17,7 @@ public class SerdePair<K, V> {
     this.valueSerde = valueSerde;
   }
 
-  public Consumed<K, V> consumed() {
+  public Consumed<K, V> consumedWith() {
     return Consumed.with(keySerde, valueSerde);
   }
 

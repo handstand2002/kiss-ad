@@ -36,30 +36,33 @@ public class Consumer {
   public void listen(ConsumerRecord<DownloadRequestKey, DownloadRequestValue> message,
       Acknowledgment acknowledgment) {
     log.info("Received Message: {}", message);
-    if (message.key().getDownloaderId().equals(downloaderId)) {
-      downloaderStatusApi.tellClusterStatus(false);
-      boolean isMagnet = false;
-      if (message.key().getDownloadType().equals(DownloadType.MAGNET)) {
-        isMagnet = true;
-      }
-      try {
-        downloadController.doDownload(message.value().getUri(), message.value().getDestinationDir(),
-            message.value().getDestinationFileName(), isMagnet,
-            status -> downloadStatusPublisher
-                .send(downloadStatus(message.value().getDownloadId(), status)),
-            (downloadedFile, completeStatus) -> downloadStatusPublisher
-                .send(downloadStatus(message.value().getDownloadId(), completeStatus)));
-
-      } catch (IOException | InterruptedException e) {
-        log.error("Error occurred during download:", e);
-        downloadStatusPublisher.send(errorStatus(message.value().getDownloadId(), e.getMessage()));
-      } finally {
-        downloaderStatusApi.tellClusterStatus(true);
-      }
-    } else {
-      log.info("Ignoring {}, as it was for a different downloader");
-    }
     acknowledgment.acknowledge();
+
+    new Thread(() -> {
+      if (message.key().getDownloaderId().equals(downloaderId)) {
+        downloaderStatusApi.tellClusterStatus(false);
+        boolean isMagnet = false;
+        if (message.key().getDownloadType().equals(DownloadType.MAGNET)) {
+          isMagnet = true;
+        }
+        try {
+          downloadController.doDownload(message.value().getUri(), message.value().getDestinationDir(),
+              message.value().getDestinationFileName(), isMagnet,
+              status -> downloadStatusPublisher
+                  .send(downloadStatus(message.value().getDownloadId(), status)),
+              (downloadedFile, completeStatus) -> downloadStatusPublisher
+                  .send(downloadStatus(message.value().getDownloadId(), completeStatus)));
+
+        } catch (IOException | InterruptedException e) {
+          log.error("Error occurred during download:", e);
+          downloadStatusPublisher.send(errorStatus(message.value().getDownloadId(), e.getMessage()));
+        } finally {
+          downloaderStatusApi.tellClusterStatus(true);
+        }
+      } else {
+        log.info("Ignoring {}, as it was for a different downloader");
+      }
+    }).start();
   }
 
   private KeyValue<DownloadStatusKey, DownloadStatusValue> errorStatus(String downloadId,

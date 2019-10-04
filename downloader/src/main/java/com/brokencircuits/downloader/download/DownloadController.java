@@ -118,7 +118,14 @@ public class DownloadController {
       }
 
       boolean renamed = false;
-      String newFilePath = downloadFolder + destinationDir + filename;
+      String newFileDir = downloadFolder + destinationDir;
+      {
+        File file = new File(newFileDir);
+        if (!file.exists()) {
+          file.mkdirs();
+        }
+      }
+      String newFilePath = newFileDir + filename;
 
       File destinationFile = new File(newFilePath);
       if (destinationFile.exists() && overwritePermission) {

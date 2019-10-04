@@ -9,7 +9,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 public abstract class StreamsService {
 
   private KafkaStreams streams;
-  protected StreamsBuilder streamsBuilder = new StreamsBuilder();
+  protected StreamsBuilder streamsBuilder;
 
   abstract protected KafkaStreams getStreams();
 

@@ -28,7 +28,7 @@ public class ExtLinkStreams extends StreamsService {
   }
 
   private Topology buildTopology() {
-    streamsBuilder.stream(externalLinkTopic.getName(), externalLinkTopic.consumed())
+    streamsBuilder.stream(externalLinkTopic.getName(), externalLinkTopic.consumedWith())
         .filter((key, msg) -> msg.getVideoSource().equals(VideoSource.RAPIDVIDEO))
         .process(() -> extLinkMessageProcessor);
 

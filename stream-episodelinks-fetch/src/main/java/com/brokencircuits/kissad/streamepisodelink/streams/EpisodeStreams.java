@@ -34,10 +34,10 @@ public class EpisodeStreams extends StreamsService {
   }
 
   private Topology buildTopology() {
-    streamsBuilder.stream(episodeTopic.getName(), episodeTopic.consumed())
+    streamsBuilder.stream(episodeTopic.getName(), episodeTopic.consumedWith())
         .process(() -> showMessageProcessor);
     streamsBuilder
-        .globalTable(downloadAvailabilityTopic.getName(), downloadAvailabilityTopic.consumed(),
+        .globalTable(downloadAvailabilityTopic.getName(), downloadAvailabilityTopic.consumedWith(),
             Materialized.as(downloadAvailabilityStoreName));
 
     return streamsBuilder.build();
