@@ -1,14 +1,13 @@
-package com.brokencircuits.kissad.restshow.streams;
+package com.brokencircuits.kissad.showapi.streams;
 
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.StreamsService;
-import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.messages.ShowMessage;
 import java.util.Collection;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.springframework.stereotype.Component;
@@ -32,10 +31,11 @@ public class StreamController extends StreamsService {
   }
 
   private Topology buildTopology() {
+    streamsBuilder = new StreamsBuilder();
 
     // build all the global stores for KeyValueStore objects
     stores.forEach(store -> streamsBuilder
-        .globalTable(store.getBuiltOnTopic().getName(), store.getBuiltOnTopic().consumed(),
+        .globalTable(store.getBuiltOnTopic().getName(), store.getBuiltOnTopic().consumedWith(),
             Materialized.as(store.getName())));
 
     return streamsBuilder.build();

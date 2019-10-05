@@ -1,9 +1,7 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.messages.DownloadedEpisodeKey;
-import com.brokencircuits.kissad.messages.DownloadedEpisodeMessage;
 import com.brokencircuits.kissad.messages.ShowMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;

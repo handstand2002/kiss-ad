@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.restshow;
+package com.brokencircuits.kissad.showapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

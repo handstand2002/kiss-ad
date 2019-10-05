@@ -1,11 +1,11 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.showapi.config;
 
 import avro.shaded.com.google.common.collect.Maps;
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.messages.ShowMessage;
 import com.brokencircuits.kissad.messages.SourceName;
-import com.brokencircuits.kissad.restshow.rest.domain.ShowObject;
-import com.brokencircuits.kissad.restshow.rest.domain.ShowSource;
+import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
+import com.brokencircuits.kissad.showapi.rest.domain.ShowSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;

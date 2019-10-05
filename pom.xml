@@ -6,7 +6,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>rest-show-interface</module>
+    <module>show-api</module>
     <module>core-message</module>
     <module>core</module>
     <module>hs-show-fetch</module>

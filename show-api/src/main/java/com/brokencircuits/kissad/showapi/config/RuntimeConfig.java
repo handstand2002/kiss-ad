@@ -1,14 +1,11 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.StreamsServiceRunner;
-import java.time.Instant;
 import java.util.Collection;
-import java.util.concurrent.ScheduledFuture;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.TaskScheduler;
 
 @Configuration
 public class RuntimeConfig {

@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.restshow.config;
+package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Topic;
@@ -27,7 +27,6 @@ public class KafkaConfig {
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, false);
   }
-
 
   @Bean
   KeyValueStore<Long, ShowMessage> showMessageStore(

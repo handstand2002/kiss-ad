@@ -1,10 +1,10 @@
-package com.brokencircuits.kissad.restshow.rest;
+package com.brokencircuits.kissad.showapi.rest;
 
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.ShowMessage;
-import com.brokencircuits.kissad.restshow.rest.domain.ShowObject;
+import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

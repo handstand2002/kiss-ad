@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.restshow.rest.domain;
+package com.brokencircuits.kissad.showapi.rest.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
