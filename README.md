@@ -14,8 +14,8 @@ Web Scraper and downloader specifically tailored to use a particular anime site.
 ## Kafka Topics
  - **ad.show.store**: interest list of shows
  - **ad.show.queue**: trigger for **hs-show-fetch** to check for new episodes of a show
- - **ad.episode.queue**: trigger for **download-delegator** to initiate download
  - **ad.episode.store**: store of downloaded episodes
+ - **ad.episode.queue**: trigger for **download-delegator** to initiate download
  - **download-instruction**: send trigger to **downloader** to start download
  - **download-status**: status of active downloads are reported to this topic
 
