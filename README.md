@@ -50,7 +50,7 @@ On defined schedules, sends trigger to **hs-show-fetch** to check for new episod
       state-dir:
       schema-registry-url: 
       brokers: 
-      delayed-episode-poll-frequency: < for shows that should have an episode released but don't yet, how frequently to re-check. e.g. 1h or 20m >
+    delayed-episode-poll-frequency: < for shows that should have an episode released but don't yet, how frequently to re-check. e.g. 1h or 20m >
 
 ### Kafka Topics
  - **ad.show.store**: interest list of shows
