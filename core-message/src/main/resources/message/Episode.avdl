@@ -2,7 +2,7 @@
 protocol Simple {
   import idl "KissShared.avdl";
   import idl "RootShared.avdl";
-  import idl "Show.avdl";
+  import schema "Show.avsc";
 
   record KissEpisodePageKey {
     string showName;
@@ -20,7 +20,7 @@ protocol Simple {
   }
 
   record EpisodeKey {
-    ShowMessage show;
+    ShowMsgKey showId;
     union{null, long} episodeNumber;
   }
 

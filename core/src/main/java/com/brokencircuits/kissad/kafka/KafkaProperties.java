@@ -1,6 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
-import avro.shaded.com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -12,7 +12,7 @@ public class KafkaProperties extends Properties {
   }
 
   public Map<String, Object> asMap() {
-    Map<String, Object> output = Maps.newHashMap();
+    Map<String, Object> output = new HashMap<>();
     this.forEach((key, value) -> output.put(key.toString(), value));
     return output;
   }

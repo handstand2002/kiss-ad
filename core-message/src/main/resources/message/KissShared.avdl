@@ -10,4 +10,7 @@ protocol Simple {
     RAPIDVIDEO
   }
 
+  enum SourceName {
+    HORRIBLESUBS, KISSANIME
+  }
 }

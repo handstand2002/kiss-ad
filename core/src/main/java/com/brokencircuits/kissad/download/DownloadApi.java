@@ -1,6 +1,5 @@
 package com.brokencircuits.kissad.download;
 
-import avro.shaded.com.google.common.collect.Maps;
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
@@ -10,6 +9,7 @@ import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
 import com.brokencircuits.kissad.download.domain.DownloadType;
 import com.brokencircuits.kissad.kafka.Publisher;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DownloadApi {
 
   private final Publisher<DownloadRequestKey, DownloadRequestValue> requestPublisher;
-  private Map<UUID, DownloadThread> activeDownloadThreads = Maps.newHashMap();
+  private Map<UUID, DownloadThread> activeDownloadThreads = new HashMap<>();
 
   public DownloadStatus submitDownload(String uri, DownloadType downloadType,
       String destinationDir, String destinationFileName) {
@@ -32,7 +32,7 @@ public class DownloadApi {
     DownloadStatusWrapper statusWrapper = new DownloadStatusWrapper(status);
 
     DownloadThread downloadThread = new DownloadThread(statusWrapper, this, requestPublisher,
-        Duration.ofSeconds(30), (completeStatus, thread )-> {
+        Duration.ofSeconds(30), (completeStatus, thread) -> {
       log.info("Completed download: {}", completeStatus);
       activeDownloadThreads.remove(thread.getUuid());
     });
