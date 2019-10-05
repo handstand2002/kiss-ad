@@ -14,6 +14,7 @@
     <module>stream-rapidvideo-fetch</module>
     <module>stream-episode-download</module>
     <module>downloader</module>
+    <module>scheduler</module>
   </modules>
 
   <parent>
