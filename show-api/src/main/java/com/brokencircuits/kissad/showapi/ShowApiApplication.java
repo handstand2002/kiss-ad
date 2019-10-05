@@ -8,10 +8,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 @EnableScheduling
 @SpringBootApplication
-public class RestShowApplication {
+public class ShowApiApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(RestShowApplication.class, args);
+    SpringApplication.run(ShowApiApplication.class, args);
   }
 
 }
