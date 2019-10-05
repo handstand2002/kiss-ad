@@ -1,16 +1,17 @@
 package com.brokencircuits.kissad.showapi.config;
 
-import avro.shaded.com.google.common.collect.Maps;
 import com.brokencircuits.kissad.Translator;
-import com.brokencircuits.kissad.messages.ShowMessage;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowSource;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.utils.Sets;
 import org.apache.kafka.streams.KeyValue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,55 +21,49 @@ import org.springframework.context.annotation.Configuration;
 public class TranslatorConfig {
 
   @Bean
-  Translator<ShowObject, KeyValue<Long, ShowMessage>> showLocalToMsgTranslator(
-      Translator<Collection<ShowSource>, Map<String, String>> showSourceTranslator) {
+  Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsgValue>> showLocalToMsgTranslator() {
     return input -> new KeyValue<>(
-        input.getShowId(),
-        ShowMessage.newBuilder()
-            .setSeason(input.getSeason())
-            .setIsActive(input.getIsActive())
+        ShowMsgKey.newBuilder().setShowId(input.getShowId().toString()).build(),
+        ShowMsgValue.newBuilder()
             .setTitle(input.getTitle())
+            .setSeason(input.getSeason())
+            .setSources(convertSources(input.getSources()))
+            .setIsActive(input.getIsActive())
+            .setReleaseScheduleCron(input.getReleaseScheduleCron())
             .setSkipEpisodeString(input.getInitialSkipEpisodeString())
-            .setSources(showSourceTranslator.translate(input.getSources()))
+            .setEpisodeNamePattern(input.getEpisodeNamePattern())
+            .setFolderName(input.getFolderName())
             .build());
   }
 
+  private static Map<String, String> convertSources(Collection<ShowSource> sources) {
+    Map<String, String> outputMap = new HashMap<>();
+    sources.forEach(source -> outputMap.put(source.getSourceName().name(), source.getUrl()));
+    return outputMap;
+  }
+
   @Bean
-  Translator<KeyValue<Long, ShowMessage>, ShowObject> showMsgToLocalTranslator(
-      Translator<Map<String, String>, Collection<ShowSource>> showSourceTranslator) {
+  Translator<KeyValue<ShowMsgKey, ShowMsgValue>, ShowObject> showMsgToLocalTranslator() {
     return pair -> ShowObject.builder()
-        .season(pair.value.getSeason())
         .title(pair.value.getTitle())
-        .showId(pair.key)
-        .sources(showSourceTranslator.translate(pair.value.getSources()))
+        .season(pair.value.getSeason())
+        .showId(UUID.fromString(pair.key.getShowId()))
+        .isActive(pair.value.getIsActive())
+        .initialSkipEpisodeString(pair.value.getSkipEpisodeString())
+        .releaseScheduleCron(pair.value.getReleaseScheduleCron())
+        .sources(convertSources(pair.value.getSources()))
+        .episodeNamePattern(pair.value.getEpisodeNamePattern())
+        .folderName(pair.value.getFolderName())
         .build();
   }
 
-  @Bean
-  Translator<Collection<ShowSource>, Map<String, String>> showSourceObjToMsgTranslator() {
-    return input -> {
-      Map<String, String> output = Maps.newHashMap();
-      for (ShowSource sourceObj : input) {
-        output.put(sourceObj.getSourceName().toString(), sourceObj.getUrl());
-      }
-      return output;
-    };
+  private static Collection<ShowSource> convertSources(Map<String, String> sources) {
+    Collection<ShowSource> outputCollection = Sets.newHashSet();
+    sources.forEach((sourceName, url) -> outputCollection
+        .add(ShowSource.builder().sourceName(SourceName.valueOf(sourceName)).url(url).build()));
+
+    return outputCollection;
   }
 
-  @Bean
-  Translator<Map<String, String>, Collection<ShowSource>> showSourceMsgToObjTranslator() {
-    return input -> {
-      Collection<ShowSource> output = new ArrayList<>();
-      for (Entry<String, String> entry : input.entrySet()) {
-        String sourceName = entry.getKey();
-        String url = entry.getValue();
-        output.add(ShowSource.builder()
-            .sourceName(SourceName.valueOf(sourceName))
-            .url(url)
-            .build());
-      }
-      return output;
-    };
-  }
 
 }

@@ -3,12 +3,15 @@ package com.brokencircuits.kissad.showapi.rest;
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
-import com.brokencircuits.kissad.messages.ShowMessage;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.KeyValue;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,23 +23,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ShowRestController {
 
-  private final Publisher<Long, ShowMessage> showMessagePublisher;
-  private final Translator<ShowObject, KeyValue<Long, ShowMessage>> showLocalToMsgTranslator;
-  private final Translator<KeyValue<Long, ShowMessage>, ShowObject> showMsgToLocalTranslator;
-  private final KeyValueStore<Long, ShowMessage> showMsgStore;
+  private final Publisher<ShowMsgKey, ShowMsgValue> showMessagePublisher;
+  private final Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsgValue>> showLocalToMsgTranslator;
+  private final Translator<KeyValue<ShowMsgKey, ShowMsgValue>, ShowObject> showMsgToLocalTranslator;
+  private final KeyValueStore<ShowMsgKey, ShowMsgValue> showMsgStore;
 
-  private Long highestAssignedId = null;
+  @Value("${show.default.episode-name-pattern}")
+  private String defaultEpisodeNamePattern;
+  @Value("${show.default.release-schedule-cron}")
+  private String defaultReleaseScheduleCron;
 
   private static final String CONTENT_TYPE_JSON = "application/json";
 
   /**
    * <pre>
    *   {
-   * 	   Optional "showId",
-   * 	   Optional "isActive",
+   * 	   Optional "showId",     // if absent, ID will be assigned
+   * 	   Optional "isActive",   // default to True
    *     Optional "initialSkipEpisodeString",
-   *     Required "title": ,
+   *     Required "title",
    *     Nullable "season",
+   *     Optional "episodeNamePattern", // if not set, uses default set in config
+   *     Required "folderName",
    *     Required "sources": [
    *         {
    *             "sourceName": "KISSANIME",
@@ -49,31 +57,27 @@ public class ShowRestController {
    */
   @PostMapping(path = "/addShow", consumes = CONTENT_TYPE_JSON, produces = CONTENT_TYPE_JSON)
   public ShowObject addShow(@RequestBody ShowObject newShowObject) {
+
     if (newShowObject.getIsActive() == null) {
       newShowObject.setIsActive(true);
     }
 
-    // set show ID if it isn't present (if show ID isn't present, assume it's a new show entry)
     if (newShowObject.getShowId() == null) {
-      newShowObject.setShowId(getNextShowId());
+      newShowObject.setShowId(UUID.randomUUID());
     }
 
-    KeyValue<Long, ShowMessage> message = showLocalToMsgTranslator.translate(newShowObject);
+    if (newShowObject.getEpisodeNamePattern() == null) {
+      newShowObject.setEpisodeNamePattern(defaultEpisodeNamePattern);
+    }
+
+    if (newShowObject.getReleaseScheduleCron() == null) {
+      newShowObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
+    }
+
+    KeyValue<ShowMsgKey, ShowMsgValue> message = showLocalToMsgTranslator.translate(newShowObject);
 
     showMessagePublisher.send(message);
     return newShowObject;
-  }
-
-  private Long getNextShowId() {
-    if (highestAssignedId == null) {
-      highestAssignedId = 0L;
-      showMsgStore.all().forEachRemaining(pair -> {
-        if (pair.key > highestAssignedId) {
-          highestAssignedId = pair.key;
-        }
-      });
-    }
-    return ++highestAssignedId;
   }
 
   @GetMapping(path = "/getShow", produces = CONTENT_TYPE_JSON)
@@ -85,23 +89,25 @@ public class ShowRestController {
   }
 
   @GetMapping(path = "/getShow/{id}", produces = CONTENT_TYPE_JSON)
-  public ShowObject getShow(@PathVariable final Long id) {
-    ShowMessage showMessage = showMsgStore.get(id);
+  public ShowObject getShow(@PathVariable final String id) {
+    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+    ShowMsgValue showMessage = showMsgStore.get(lookupKey);
 
     return showMessage != null ? showMsgToLocalTranslator
-        .translate(new KeyValue<>(id, showMessage)) : null;
+        .translate(new KeyValue<>(lookupKey, showMessage)) : null;
   }
 
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
-  public ShowObject deleteShow(@PathVariable final Long id) {
-    ShowMessage showMessage = showMsgStore.get(id);
+  public ShowObject deleteShow(@PathVariable final String id) {
+    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+    ShowMsgValue showMessage = showMsgStore.get(lookupKey);
     ShowObject showObject = null;
     if (showMessage != null) {
       showObject = showMsgToLocalTranslator
-          .translate(new KeyValue<>(id, showMessage));
+          .translate(new KeyValue<>(lookupKey, showMessage));
     }
     if (showObject != null) {
-      showMessagePublisher.send(id, null);
+      showMessagePublisher.send(lookupKey, null);
     }
     return showObject;
   }

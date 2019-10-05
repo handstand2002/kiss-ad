@@ -2,7 +2,8 @@ package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.messages.ShowMessage;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsgValue;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<Long, ShowMessage> showMessagePublisher(Topic<Long, ShowMessage> showTopic,
+  Publisher<ShowMsgKey, ShowMsgValue> showMessagePublisher(Topic<ShowMsgKey, ShowMsgValue> showTopic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, showTopic);
   }
