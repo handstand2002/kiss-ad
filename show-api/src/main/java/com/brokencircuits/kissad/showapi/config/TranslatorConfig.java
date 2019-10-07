@@ -33,6 +33,7 @@ public class TranslatorConfig {
             .setSkipEpisodeString(input.getInitialSkipEpisodeString())
             .setEpisodeNamePattern(input.getEpisodeNamePattern())
             .setFolderName(input.getFolderName())
+            .setMessageId(UUID.randomUUID().toString())
             .build());
   }
 

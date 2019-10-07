@@ -1,6 +1,6 @@
 package com.brokencircuits.kissad.showapi.config;
 
-import com.brokencircuits.kissad.kafka.KeyValueStore;
+import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class KafkaConfig {
+
+  public static final String STORE_SHOW = "show";
 
   @Bean
   Topic<ShowMsgKey, ShowMsgValue> showStoreTopic(
@@ -35,10 +37,9 @@ public class KafkaConfig {
   }
 
   @Bean
-  KeyValueStore<ShowMsgKey, ShowMsgValue> showMessageStore(
-      @Value("${messaging.stores.show}") String storeName,
+  KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper(
       Topic<ShowMsgKey, ShowMsgValue> showStoreTopic) {
-    return new KeyValueStore<>(storeName, showStoreTopic);
+    return new KeyValueStoreWrapper<>(STORE_SHOW, showStoreTopic);
   }
 
   @Bean

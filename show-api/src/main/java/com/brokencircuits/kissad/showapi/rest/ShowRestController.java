@@ -1,7 +1,7 @@
 package com.brokencircuits.kissad.showapi.rest;
 
 import com.brokencircuits.kissad.Translator;
-import com.brokencircuits.kissad.kafka.KeyValueStore;
+import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
@@ -26,7 +26,7 @@ public class ShowRestController {
   private final Publisher<ShowMsgKey, ShowMsgValue> showMessagePublisher;
   private final Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsgValue>> showLocalToMsgTranslator;
   private final Translator<KeyValue<ShowMsgKey, ShowMsgValue>, ShowObject> showMsgToLocalTranslator;
-  private final KeyValueStore<ShowMsgKey, ShowMsgValue> showMsgStore;
+  private final KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showMsgStore;
 
   @Value("${show.default.episode-name-pattern}")
   private String defaultEpisodeNamePattern;
