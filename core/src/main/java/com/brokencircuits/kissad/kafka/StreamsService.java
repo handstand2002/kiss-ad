@@ -9,7 +9,8 @@ import org.apache.kafka.streams.StreamsBuilder;
 public abstract class StreamsService {
 
   private KafkaStreams streams;
-  protected StreamsBuilder streamsBuilder;
+  protected StreamsBuilder builder;
+  private boolean isRunning = false;
 
   abstract protected KafkaStreams getStreams();
 
@@ -23,11 +24,14 @@ public abstract class StreamsService {
 
     AtomicInteger changedToRunningCount = new AtomicInteger(0);
     streams.setStateListener((newState, oldState) -> {
-      if (newState.isRunning()) {
-        changedToRunningCount.incrementAndGet();
-        if (changedToRunningCount.get() == 2) {
-          log.info("Streams fully initialized, running afterStreamsStart()");
+      if (newState.isRunning() && !isRunning) {
+        try {
+          log.info("Trying to run afterStreamsStart()");
           afterStreamsStart(streams);
+          log.info("afterStreamsStart completed successfully");
+          isRunning = true;
+        } catch (RuntimeException e) {
+          log.info("afterStreamsStart failed with exception message: {}", e.getMessage());
         }
       }
     });
