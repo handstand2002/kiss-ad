@@ -11,5 +11,18 @@
 
   <artifactId>scheduler</artifactId>
 
+  <dependencies>
+    <dependency>
+      <groupId>com.brokencircuits</groupId>
+      <artifactId>core-message</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.brokencircuits</groupId>
+      <artifactId>core</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+  </dependencies>
 
 </project>
