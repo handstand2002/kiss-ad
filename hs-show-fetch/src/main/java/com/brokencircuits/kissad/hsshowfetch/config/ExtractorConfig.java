@@ -1,12 +1,12 @@
 package com.brokencircuits.kissad.hsshowfetch.config;
 
-import avro.shaded.com.google.common.collect.Lists;
 import com.brokencircuits.kissad.Extractor;
 import com.brokencircuits.kissad.hsshowfetch.domain.EpisodeDetails;
 import com.brokencircuits.kissad.hsshowfetch.domain.MagnetUrl;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -40,12 +40,12 @@ public class ExtractorConfig {
     return page -> {
       DomNodeList<DomNode> domNodes = page.getBody().querySelectorAll(".rls-info-container");
 
-      List<EpisodeDetails> allEpisodes = Lists.newArrayList();
+      List<EpisodeDetails> allEpisodes = new ArrayList<>();
       domNodes.forEach(episodeNode -> {
         String episodeNum = episodeNode.getAttributes().getNamedItem("id").getNodeValue();
         DomNodeList<DomNode> qualityLinks = episodeNode.querySelectorAll(".rls-link");
 
-        EpisodeDetails details = new EpisodeDetails(Long.valueOf(episodeNum));
+        EpisodeDetails details = new EpisodeDetails(Long.parseLong(episodeNum));
         qualityLinks.forEach(link -> details.getUrlList().add(episodeMagnetUrlFromLinkNode(link)));
         allEpisodes.add(details);
       });

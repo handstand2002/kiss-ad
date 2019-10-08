@@ -19,15 +19,11 @@ protocol Simple {
     timestamp_ms retrieveTime;
   }
 
-  record EpisodeKey {
+  record EpisodeMsgKey {
     ShowMsgKey showId;
     union{null, long} episodeNumber;
-  }
-
-  record Episode {
-    EpisodeKey key;
-    union{null, long} downloadTime = null;
-    int downloadedQuality = 0;
+    /** Should only be populated if episodeNumber is not */
+    union{null, string} rawTitle = null;
   }
 
   record EpisodeLink {
@@ -36,7 +32,10 @@ protocol Simple {
     string url;
   }
 
-  record EpisodeLinks {
-    array<EpisodeLink> links;
+  record EpisodeMsgValue {
+    union{null, timestamp_ms} downloadTime = null;
+    int downloadedQuality = 0;
+    array<EpisodeLink> latestLinks;
+    string messageId;
   }
 }

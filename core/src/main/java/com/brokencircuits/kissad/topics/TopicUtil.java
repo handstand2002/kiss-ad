@@ -6,8 +6,8 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
-import com.brokencircuits.kissad.messages.Episode;
-import com.brokencircuits.kissad.messages.EpisodeKey;
+import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import java.util.HashMap;
@@ -45,12 +45,12 @@ public class TopicUtil {
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<EpisodeKey, Episode> episodeStoreTopic(String schemaRegistryUrl) {
+  public static Topic<EpisodeMsgKey, EpisodeMsgValue> episodeStoreTopic(String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_STORE, schemaRegistryUrl);
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<EpisodeKey, Episode> episodeQueueTopic(String schemaRegistryUrl) {
+  public static Topic<EpisodeMsgKey, EpisodeMsgValue> episodeQueueTopic(String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_QUEUE, schemaRegistryUrl);
   }
 

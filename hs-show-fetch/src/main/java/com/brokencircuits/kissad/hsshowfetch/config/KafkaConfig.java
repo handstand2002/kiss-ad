@@ -1,15 +1,14 @@
 package com.brokencircuits.kissad.hsshowfetch.config;
 
-import com.brokencircuits.kissad.kafka.KeyValueStore;
+import com.brokencircuits.kissad.hsshowfetch.kafka.StreamProperties;
+import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.kafka.Util;
-import com.brokencircuits.kissad.messages.EpisodeKey;
-import com.brokencircuits.kissad.messages.EpisodeLinks;
-import com.brokencircuits.kissad.messages.ShowMessage;
-import java.util.Properties;
-import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsConfig;
+import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.EpisodeMsgValue;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsgValue;
+import com.brokencircuits.kissad.topics.TopicUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,60 +17,28 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   @Bean
-  Topic<Long, ShowMessage> showTopic(
-      @Value("${messaging.topics.show-store}") String topic,
-      Serde<ShowMessage> messageSerde) {
-    return new Topic<>(topic, Serdes.Long(), messageSerde);
-  }
-
-  @Bean
-  Serde<ShowMessage> showMessageSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
-  }
-
-  @Bean
-  KeyValueStore<Long, ShowMessage> showStore(
-      @Value("${messaging.stores.show}") String storeName,
-      Topic<Long, ShowMessage> showTopic) {
-    return new KeyValueStore<>(storeName, showTopic);
-  }
-
-  /**
-   * Topic for triggering new download of episodes
-   */
-  @Bean
-  Topic<EpisodeKey, EpisodeLinks> episodeQueueTopic(
-      @Value("${messaging.topics.episode-queue}") String topic,
-      Serde<EpisodeKey> keySerde, Serde<EpisodeLinks> msgSerde) {
-    return new Topic<>(topic, keySerde, msgSerde);
-  }
-
-  @Bean
-  Serde<EpisodeKey> episodeKeySerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, true);
-  }
-
-  @Bean
-  Serde<EpisodeLinks> episodeLinksSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
-  }
-
-  @Bean
-  Properties streamProperties(
-      @Value("${messaging.application-id}") String applicationId,
-      @Value("${messaging.brokers}") String brokers,
-      @Value("${messaging.state-dir}") String stateDir) {
-
-    Properties props = new Properties();
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
-    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
-    props.put(StreamsConfig.STATE_DIR_CONFIG, stateDir);
-
+  KafkaProperties kafkaProperties(StreamProperties streamProperties) {
+    KafkaProperties props = new KafkaProperties();
+    streamProperties.getUpdatedStreamConfig().forEach(props::add);
     return props;
   }
 
+  @Bean
+  Topic<ShowMsgKey, ShowMsgValue> showQueueTopic(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return TopicUtil.showQueueTopic(schemaRegistryUrl);
+  }
+
+  @Bean
+  Topic<EpisodeMsgKey, EpisodeMsgValue> episodeQueueTopic(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return TopicUtil.episodeQueueTopic(schemaRegistryUrl);
+  }
+
+  @Bean
+  Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeMsgPublisher(KafkaProperties props,
+      Topic<EpisodeMsgKey, EpisodeMsgValue> episodeQueueTopic) {
+    return new Publisher<>(props, episodeQueueTopic);
+  }
 
 }

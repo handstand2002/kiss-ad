@@ -1,6 +1,6 @@
 package com.brokencircuits.kissad.hsshowfetch.domain;
 
-import avro.shaded.com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -11,5 +11,5 @@ import lombok.ToString;
 @RequiredArgsConstructor
 public class EpisodeDetails {
   private final long episodeNumber;
-  private final List<MagnetUrl> urlList = Lists.newArrayList();
+  private final List<MagnetUrl> urlList = new ArrayList<>();
 }

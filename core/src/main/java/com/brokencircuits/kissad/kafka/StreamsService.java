@@ -42,4 +42,12 @@ public abstract class StreamsService {
   void stop() {
     streams.close();
   }
+
+  public static void logConsume(Object key, Object value) {
+    log.info("Consumed [{}|{}]: {} | {}", objectClass(key), objectClass(value), key, value);
+  }
+
+  private static String objectClass(Object obj) {
+    return obj != null ? obj.getClass().getSimpleName() : "null";
+  }
 }
