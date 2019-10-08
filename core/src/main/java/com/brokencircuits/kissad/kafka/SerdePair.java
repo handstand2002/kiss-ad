@@ -21,7 +21,7 @@ public class SerdePair<K, V> {
     return Consumed.with(keySerde, valueSerde);
   }
 
-  public Produced<K, V> produced() {
+  public Produced<K, V> producedWith() {
     return Produced.with(keySerde, valueSerde);
   }
 

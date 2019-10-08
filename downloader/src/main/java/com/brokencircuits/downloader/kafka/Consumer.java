@@ -39,7 +39,7 @@ public class Consumer {
     acknowledgment.acknowledge();
 
     new Thread(() -> {
-      if (message.key().getDownloaderId().equals(downloaderId)) {
+      if (message.key().getDownloaderId() == downloaderId) {
         downloaderStatusApi.tellClusterStatus(false);
         boolean isMagnet = false;
         if (message.key().getDownloadType().equals(DownloadType.MAGNET)) {

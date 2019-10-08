@@ -1,0 +1,14 @@
+messaging:
+  stream-config:
+    application-id: download-delegator
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  stream-config:
+    state-dir: ./target/streams-state-dir
+    bootstrap-servers: 192.168.0.254:29092
+  schema-registry-url: http://192.168.0.254:8081

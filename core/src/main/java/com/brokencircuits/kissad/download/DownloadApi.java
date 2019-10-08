@@ -24,6 +24,8 @@ public class DownloadApi {
 
   public DownloadStatus submitDownload(String uri, DownloadType downloadType,
       String destinationDir, String destinationFileName) {
+    log.info("Submitting download:\n\tURI: {}\n\tType: {}\n\tDestinationDir: {}\n\tFileName: {}",
+        uri, downloadType, destinationDir, destinationFileName);
 
     UUID downloadId = UUID.randomUUID();
 

@@ -1,9 +1,14 @@
 package com.brokencircuits.kissad.kafka;
 
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import lombok.Builder;
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
+import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -13,15 +18,28 @@ import org.apache.logging.log4j.util.TriConsumer;
 public class TrivialProcessor<K, V> implements Processor<K, V> {
 
   private TriConsumer<K, V, V> onRecordActionWithPrevious;
-  private BiConsumer<K,V> onRecordAction;
+  private BiConsumer<K, V> onRecordAction;
+  private Predicate<KeyValue<K, V>> expiryPredicate;    // TODO: figure out how to get rid of old entries
   private String storeName;
-  @Builder.Default
-  private KeyValueStore<K, V> internalStore;
+
+  private final AtomicReference<KeyValueStore<K, V>> internalStore = new AtomicReference<>(null);
 
   @Override
   public void init(ProcessorContext context) {
     if (storeName != null) {
-      internalStore = (KeyValueStore) context.getStateStore(storeName);
+      internalStore.set((KeyValueStore) context.getStateStore(storeName));
+    }
+  }
+
+  private void punctuate(long timestamp) {
+    if (internalStore.get() != null) {
+      @Cleanup
+      KeyValueIterator<K, V> iter = internalStore.get().all();
+      iter.forEachRemaining(entry -> {
+        if (expiryPredicate.test(entry)) {
+          internalStore.get().delete(entry.key);
+        }
+      });
     }
   }
 
@@ -32,8 +50,8 @@ public class TrivialProcessor<K, V> implements Processor<K, V> {
     V oldValue = null;
     if (storeName != null) {
       log.debug("Updating store with new value: {} | {}", key, newValue);
-      oldValue = internalStore.get(key);
-      internalStore.put(key, newValue);
+      oldValue = internalStore.get().get(key);
+      internalStore.get().put(key, newValue);
     }
 
     if (onRecordActionWithPrevious != null) {

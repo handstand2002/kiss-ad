@@ -47,6 +47,10 @@ public abstract class StreamsService {
     log.info("Consumed [{}|{}]: {} | {}", objectClass(key), objectClass(value), key, value);
   }
 
+  public static void logProduce(Object key, Object value) {
+    log.info("Produced [{}|{}]: {} | {}", objectClass(key), objectClass(value), key, value);
+  }
+
   private static String objectClass(Object obj) {
     return obj != null ? obj.getClass().getSimpleName() : "null";
   }

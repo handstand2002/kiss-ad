@@ -55,7 +55,7 @@ public class TopicUtil {
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<DownloadRequestKey, DownloadRequestValue> downloadCommandTopic(
+  public static Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic(
       String schemaRegistryUrl) {
     return getTopic(TOPIC_DOWNLOAD_COMMAND, schemaRegistryUrl);
   }
