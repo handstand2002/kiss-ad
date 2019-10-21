@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: kafka-downloader
+    application.id: downloader
 
 ---
 spring:
