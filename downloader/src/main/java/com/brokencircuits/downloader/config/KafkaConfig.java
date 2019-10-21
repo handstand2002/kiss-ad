@@ -6,16 +6,24 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.downloader.messages.DownloaderStatusKey;
 import com.brokencircuits.downloader.messages.DownloaderStatusValue;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.topics.TopicUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
 public class KafkaConfig {
+
+  @Bean
+  @ConfigurationProperties(prefix = "messaging")
+  ClusterConnectionProps clusterConnectionProps() {
+    return new ClusterConnectionProps();
+  }
 
   @Bean
   Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic(

@@ -2,12 +2,12 @@ package com.brokencircuits.downloader.config;
 
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Topic;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,24 +23,23 @@ import org.springframework.kafka.listener.ContainerProperties.AckMode;
 public class KafkaConsumerConfig {
 
   @Bean
-  public KafkaProperties connectionProperties(@Value("${messaging.brokers}") String brokers) {
-    return new KafkaProperties().add(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
-  }
-
-  @Bean
-  public KafkaAdmin kafkaAdmin(KafkaProperties props) {
-    return new KafkaAdmin(props.asMap());
+  public KafkaAdmin kafkaAdmin(ClusterConnectionProps props) {
+    return new KafkaAdmin(props.asObjectMap());
   }
 
   @Bean
   public ConsumerFactory<DownloadRequestKey, DownloadRequestValue> consumerFactory(
-      KafkaProperties kafkaProps,
+      ClusterConnectionProps kafkaProps,
       Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic,
-      @Value("${messaging.application-id}") String applicationId,
       @Value("${download.downloader-id}") int downloaderId) {
-    Map<String, Object> props = new HashMap<>(kafkaProps.asMap());
+    Map<String, Object> props = new HashMap<>(kafkaProps.getClusterConnection());
 
-    props.put(ConsumerConfig.GROUP_ID_CONFIG, applicationId + "-" + downloaderId);
+    String groupId = kafkaProps.getClusterConnection().get(StreamsConfig.APPLICATION_ID_CONFIG);
+    if (groupId == null) {
+      throw new IllegalArgumentException("Cluster config " + StreamsConfig.APPLICATION_ID_CONFIG
+          + " is required");
+    }
+    props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-" + downloaderId);
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 

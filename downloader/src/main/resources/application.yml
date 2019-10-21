@@ -1,14 +1,15 @@
 messaging:
-  application-id: kafka-downloader
+  cluster-connection:
+    application.id: kafka-downloader
 
 ---
-
 spring:
   profiles: dev
 
 messaging:
   schema-registry-url: http://192.168.0.254:8081
-  brokers: 192.168.0.254:29092
+  cluster-connection:
+    bootstrap.servers: 192.168.0.254:29092
 
 download:
   downloader-id: 1
