@@ -1,6 +1,6 @@
 package com.brokencircuits.kissad.hsshowfetch.streams;
 
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
@@ -20,13 +20,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StreamController extends StreamsService {
 
-  private final KafkaProperties streamProperties;
+  private final ClusterConnectionProps clusterConnectionProps;
   private final Topic<ShowMsgKey, ShowMsgValue> showQueueTopic;
   private final ProcessorSupplier<ShowMsgKey, ShowMsgValue> showProcessorSupplier;
 
   @Override
   protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), streamProperties);
+    return new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
   }
 
   private Topology buildTopology() {
@@ -48,10 +48,5 @@ public class StreamController extends StreamsService {
 
     return builder.build();
   }
-
-  private void processShow(ShowMsgKey key, ShowMsgValue value) {
-
-  }
-
 
 }

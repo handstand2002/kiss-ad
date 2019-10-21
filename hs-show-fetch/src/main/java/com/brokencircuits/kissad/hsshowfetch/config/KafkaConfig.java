@@ -1,7 +1,6 @@
 package com.brokencircuits.kissad.hsshowfetch.config;
 
-import com.brokencircuits.kissad.hsshowfetch.kafka.StreamProperties;
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -10,6 +9,7 @@ import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.topics.TopicUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,10 +17,9 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   @Bean
-  KafkaProperties kafkaProperties(StreamProperties streamProperties) {
-    KafkaProperties props = new KafkaProperties();
-    streamProperties.getUpdatedStreamConfig().forEach(props::add);
-    return props;
+  @ConfigurationProperties(prefix = "messaging")
+  ClusterConnectionProps clusterConnectionProps() {
+    return new ClusterConnectionProps();
   }
 
   @Bean
@@ -36,9 +35,9 @@ public class KafkaConfig {
   }
 
   @Bean
-  Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeMsgPublisher(KafkaProperties props,
+  Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeMsgPublisher(ClusterConnectionProps props,
       Topic<EpisodeMsgKey, EpisodeMsgValue> episodeQueueTopic) {
-    return new Publisher<>(props, episodeQueueTopic);
+    return new Publisher<>(props.asProperties(), episodeQueueTopic);
   }
 
 }

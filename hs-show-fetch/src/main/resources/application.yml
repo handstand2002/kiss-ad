@@ -1,19 +1,19 @@
-messaging.stream-config:
-  application-id: ad.showFetch.hs
+messaging:
+  cluster-connection:
+    application.id: ad.showFetch.hs
 
 logging.level:
   com.gargoylesoftware.htmlunit: ERROR
 
 ---
-
 spring:
   profiles: dev
 
 messaging:
-  stream-config:
-    state-dir: ./target/streams-state-dir
-    bootstrap-servers: 192.168.0.254:29092
   schema-registry-url: http://192.168.0.254:8081
+  cluster-connection:
+    state.dir: ./target/streams-state-dir
+    bootstrap.servers: 192.168.0.254:29092
 
 com.horriblesubs:
   url: https://horriblesubs.info
