@@ -27,7 +27,7 @@
 
   <groupId>com.brokencircuits</groupId>
   <artifactId>kiss-ad</artifactId>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <name>kiss-ad</name>
   <description>Kissanime Downloader microservices</description>
 
