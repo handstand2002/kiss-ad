@@ -1,6 +1,6 @@
 package com.brokenciruits.kissad.scheduler.config;
 
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
@@ -13,7 +13,7 @@ public class PublisherConfig {
 
   @Bean
   Publisher<ShowMsgKey, ShowMsgValue> showTriggerPublisher(
-      Topic<ShowMsgKey, ShowMsgValue> showQueueTopic, KafkaProperties props) {
-    return new Publisher<>(props, showQueueTopic);
+      Topic<ShowMsgKey, ShowMsgValue> showQueueTopic, ClusterConnectionProps props) {
+    return new Publisher<>(props.asProperties(), showQueueTopic);
   }
 }

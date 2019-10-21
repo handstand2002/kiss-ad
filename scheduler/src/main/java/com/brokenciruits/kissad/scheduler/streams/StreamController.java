@@ -1,6 +1,6 @@
 package com.brokenciruits.kissad.scheduler.streams;
 
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StreamsService;
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StreamController extends StreamsService {
 
-  private final KafkaProperties streamProperties;
+  private final ClusterConnectionProps clusterConnectionProps;
   private final KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper;
   private final TaskScheduler taskScheduler;
   private final Publisher<ShowMsgKey, ShowMsgValue> showTriggerPublisher;
@@ -74,7 +74,7 @@ public class StreamController extends StreamsService {
 
   @Override
   protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), streamProperties);
+    return new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
   }
 
   private Topology buildTopology() {
