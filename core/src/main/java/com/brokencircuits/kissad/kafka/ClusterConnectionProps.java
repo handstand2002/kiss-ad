@@ -15,4 +15,10 @@ public class ClusterConnectionProps {
     clusterConnection.forEach(props::put);
     return props;
   }
+
+  public Map<String, Object> asObjectMap() {
+    Map<String, Object> outputMap = new HashMap<>();
+    clusterConnection.forEach(outputMap::put);
+    return outputMap;
+  }
 }

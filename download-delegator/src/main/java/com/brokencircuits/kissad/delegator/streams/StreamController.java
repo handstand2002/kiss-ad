@@ -3,7 +3,7 @@ package com.brokencircuits.kissad.delegator.streams;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.kissad.download.DownloadApi;
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 public class StreamController extends StreamsService {
 
   private final DownloadApi downloadApi;
-  private final KafkaProperties streamProperties;
+  private final ClusterConnectionProps streamProperties;
   private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> notDownloadedStoreDetails;
   private final StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails;
   private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails;
@@ -40,7 +40,7 @@ public class StreamController extends StreamsService {
 
   @Override
   protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), streamProperties);
+    return new KafkaStreams(buildTopology(), streamProperties.asProperties());
   }
 
   Topology buildTopology() {

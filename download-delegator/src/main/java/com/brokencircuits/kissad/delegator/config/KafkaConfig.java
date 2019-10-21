@@ -4,8 +4,7 @@ import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
-import com.brokencircuits.kissad.delegator.kafka.StreamProperties;
-import com.brokencircuits.kissad.kafka.KafkaProperties;
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.kafka.Topic;
@@ -15,6 +14,7 @@ import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.topics.TopicUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,10 +26,9 @@ public class KafkaConfig {
   private static final String STORE_EPISODE = "episodes";
 
   @Bean
-  KafkaProperties kafkaProperties(StreamProperties streamProperties) {
-    KafkaProperties props = new KafkaProperties();
-    streamProperties.getUpdatedStreamConfig().forEach(props::add);
-    return props;
+  @ConfigurationProperties(prefix = "messaging")
+  ClusterConnectionProps clusterConnectionProps() {
+    return new ClusterConnectionProps();
   }
 
   @Bean
@@ -84,9 +83,9 @@ public class KafkaConfig {
   }
 
   @Bean
-  Publisher<DownloadRequestKey, DownloadRequestValue> publisher(KafkaProperties props,
+  Publisher<DownloadRequestKey, DownloadRequestValue> publisher(ClusterConnectionProps props,
       Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic) {
-    return new Publisher<>(props, downloadRequestTopic);
+    return new Publisher<>(props.asProperties(), downloadRequestTopic);
   }
 
 }
