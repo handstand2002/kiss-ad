@@ -5,6 +5,7 @@ import static com.brokencircuits.kissad.util.PathUtil.addTrailingSlashToPath;
 import com.brokencircuits.kissad.download.DownloadApi;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadType;
+import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.messages.EpisodeLink;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,16 +39,22 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
 
   private static final Queue<KeyValue<EpisodeMsgKey, EpisodeMsgValue>> episodesToDownload = new LinkedBlockingQueue<>();
   private static final Set<DownloadStatus> activeDownloads = new HashSet<>();
+
   private final DownloadApi downloadApi;
+  private final Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeStorePublisher;
   private final StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails;
+  private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails;
   private final long minQualityGoal;
   private final String downloadFolder;
 
   private KeyValueStore<ShowMsgKey, ShowMsgValue> showStore;
+  private KeyValueStore<EpisodeMsgKey, EpisodeMsgValue> episodeStore;
 
   @Override
   public void init(ProcessorContext context) {
+    episodeStore = episodeStoreDetails.getStore(context);
     showStore = showStoreDetails.getStore(context);
+
     context.schedule(10000, PunctuationType.WALL_CLOCK_TIME, l -> {
       activeDownloads.forEach(download -> {
         if (download.isFinished() || download.getErrorCode() != 0) {
@@ -63,6 +71,12 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
 
   @Override
   public void process(EpisodeMsgKey key, EpisodeMsgValue value) {
+    EpisodeMsgValue previousEpisodeDownload = episodeStore.get(key);
+    if (previousEpisodeDownload != null && previousEpisodeDownload.getDownloadTime() != null) {
+      log.info("Episode has already been downloaded, skipping: {}|{}", key, value);
+      return;
+    }
+
     if (activeDownloads.isEmpty()) {
       submitDownload(key, value);
     } else {
@@ -76,7 +90,8 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
     String destinationDir = addTrailingSlashToPath(downloadFolder);
     String destinationFileName = "UNKNOWN_" + Instant.now().getEpochSecond();
     if (showMsg == null) {
-      log.warn("Show with ID {} has no entry in GKT; Downloading to {} with filename {}", key.getShowId(),
+      log.warn("Show with ID {} has no entry in GKT; Downloading to {} with filename {}",
+          key.getShowId(),
           destinationDir, destinationFileName);
     } else {
       destinationDir += addTrailingSlashToPath(showMsg.getFolderName());
@@ -88,9 +103,24 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
 
     DownloadStatus downloadStatus = downloadApi.submitDownload(linkForBestQuality.getUrl(),
         DownloadType.valueOf(linkForBestQuality.getType().name()), destinationDir,
-        destinationFileName);
+        destinationFileName, completedStatus -> {
+          if (completedStatus.isFinished() && completedStatus.getErrorCode() == 0) {
+            episodeStorePublisher
+                .send(key, completedValue(completedStatus, value, linkForBestQuality));
+          }
+        });
 
     activeDownloads.add(downloadStatus);
+  }
+
+  private EpisodeMsgValue completedValue(DownloadStatus completedStatus,
+      EpisodeMsgValue value, EpisodeLink linkForBestQuality) {
+    return EpisodeMsgValue.newBuilder(value)
+        .setDownloadTime(completedStatus.getEndTime())
+        .setDownloadedQuality(linkForBestQuality.getQuality())
+        .setLatestLinks(value.getLatestLinks())
+        .setMessageId(UUID.randomUUID().toString())
+        .build();
   }
 
   private String createFileName(String episodeNamePattern, Integer seasonNum, Long episodeNum) {

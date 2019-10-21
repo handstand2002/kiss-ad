@@ -1,9 +1,5 @@
 messaging:
   application-id: kafka-downloader
-  topics:
-    download-instruction: download-instruction
-    download-status: download-status
-    downloader-status: downloader-status
 
 ---
 

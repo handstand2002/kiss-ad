@@ -4,6 +4,8 @@ import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
+import com.brokencircuits.downloader.messages.DownloaderStatusKey;
+import com.brokencircuits.downloader.messages.DownloaderStatusValue;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -21,6 +23,7 @@ public class TopicUtil {
   private static Serde<SpecificRecord> valueSerde = null;
   private static Map<String, Topic> topicCache = new HashMap<>();
 
+  public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status";
   public static final String TOPIC_SHOW_STORE = "ad.show.store";
   public static final String TOPIC_SHOW_QUEUE = "ad.show.queue";
   public static final String TOPIC_EPISODE_STORE = "ad.episode.store";
@@ -64,6 +67,11 @@ public class TopicUtil {
   public static Topic<DownloadStatusKey, DownloadStatusValue> downloadStatusTopic(
       String schemaRegistryUrl) {
     return getTopic(TOPIC_DOWNLOAD_STATUS, schemaRegistryUrl);
+  }
+
+  public static Topic<DownloaderStatusKey, DownloaderStatusValue> downloaderStatusTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_DOWNLOADER_STATUS, schemaRegistryUrl);
   }
 
   @SuppressWarnings("unchecked")

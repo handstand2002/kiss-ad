@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 @EnableScheduling
 @SpringBootApplication
-public class StreamShowApplication {
+public class HsShowFetchApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(StreamShowApplication.class, args);
+    SpringApplication.run(HsShowFetchApplication.class, args);
   }
 }

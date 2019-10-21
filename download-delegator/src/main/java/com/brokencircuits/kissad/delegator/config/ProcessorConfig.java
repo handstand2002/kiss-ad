@@ -2,6 +2,7 @@ package com.brokencircuits.kissad.delegator.config;
 
 import com.brokencircuits.kissad.delegator.dslprocessing.EpisodeProcessor;
 import com.brokencircuits.kissad.download.DownloadApi;
+import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
@@ -16,8 +17,11 @@ public class ProcessorConfig {
 
   @Bean
   ProcessorSupplier<EpisodeMsgKey, EpisodeMsgValue> processorSupplier(DownloadApi downloadApi,
-      StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails) {
+      StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails,
+      Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeStorePublisher,
+      StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails) {
     // TODO: make options configurable
-    return () -> new EpisodeProcessor(downloadApi, showStoreDetails, 99999, "Anime");
+    return () -> new EpisodeProcessor(downloadApi, episodeStorePublisher, showStoreDetails,
+        episodeStoreDetails, 99999, "Anime");
   }
 }

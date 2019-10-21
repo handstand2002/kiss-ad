@@ -2,11 +2,10 @@ package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
+import com.brokencircuits.kissad.topics.TopicUtil;
 import java.util.Properties;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,21 +18,8 @@ public class KafkaConfig {
 
   @Bean
   Topic<ShowMsgKey, ShowMsgValue> showStoreTopic(
-      @Value("${messaging.topics.show-store}") String topic,
-      Serde<ShowMsgKey> keySerde, Serde<ShowMsgValue> valueSerde) {
-    return new Topic<>(topic, keySerde, valueSerde);
-  }
-
-  @Bean
-  Serde<ShowMsgKey> showMsgKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, true);
-  }
-
-  @Bean
-  Serde<ShowMsgValue> showMsgValueSerde(
-      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return Util.createAvroSerde(schemaRegistryUrl, false);
+    return TopicUtil.showStoreTopic(schemaRegistryUrl);
   }
 
   @Bean

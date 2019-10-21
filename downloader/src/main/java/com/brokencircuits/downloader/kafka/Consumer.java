@@ -10,6 +10,7 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.downloader.publish.DownloaderStatusApi;
 import com.brokencircuits.kissad.kafka.Publisher;
+import com.brokencircuits.kissad.topics.TopicUtil;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class Consumer {
   @Value("${download.downloader-id}")
   long downloaderId;
 
-  @KafkaListener(topics = "${messaging.topics.download-instruction}")
+  @KafkaListener(topics = TopicUtil.TOPIC_DOWNLOAD_COMMAND)
   public void listen(ConsumerRecord<DownloadRequestKey, DownloadRequestValue> message,
       Acknowledgment acknowledgment) {
     log.info("Received Message: {}", message);

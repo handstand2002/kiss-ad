@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +24,7 @@ public class DownloadApi {
   private Map<UUID, DownloadThread> activeDownloadThreads = new HashMap<>();
 
   public DownloadStatus submitDownload(String uri, DownloadType downloadType,
-      String destinationDir, String destinationFileName) {
+      String destinationDir, String destinationFileName, Consumer<DownloadStatus> onCompletion) {
     log.info("Submitting download:\n\tURI: {}\n\tType: {}\n\tDestinationDir: {}\n\tFileName: {}",
         uri, downloadType, destinationDir, destinationFileName);
 
@@ -37,6 +38,7 @@ public class DownloadApi {
         Duration.ofSeconds(30), (completeStatus, thread) -> {
       log.info("Completed download: {}", completeStatus);
       activeDownloadThreads.remove(thread.getUuid());
+      onCompletion.accept(completeStatus);
     });
     downloadThread.start();
     activeDownloadThreads.put(downloadId, downloadThread);

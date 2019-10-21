@@ -23,6 +23,7 @@ public class KafkaConfig {
 
   private static final String NOT_DOWNLOADED_EPISODE_STORE_NAME = "not-downloaded-episodes";
   private static final String STORE_SHOW = "shows";
+  private static final String STORE_EPISODE = "episodes";
 
   @Bean
   KafkaProperties kafkaProperties(StreamProperties streamProperties) {
@@ -72,6 +73,13 @@ public class KafkaConfig {
   StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return new StateStoreDetails<>(STORE_SHOW,
+        TopicUtil.getKeySerde(schemaRegistryUrl), TopicUtil.getValueSerde(schemaRegistryUrl));
+  }
+
+  @Bean
+  StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return new StateStoreDetails<>(STORE_EPISODE,
         TopicUtil.getKeySerde(schemaRegistryUrl), TopicUtil.getValueSerde(schemaRegistryUrl));
   }
 

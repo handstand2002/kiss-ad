@@ -31,7 +31,9 @@ public class StreamController extends StreamsService {
   private final KafkaProperties streamProperties;
   private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> notDownloadedStoreDetails;
   private final StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails;
+  private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails;
   private final Topic<EpisodeMsgKey, EpisodeMsgValue> episodeQueueTopic;
+  private final Topic<EpisodeMsgKey, EpisodeMsgValue> episodeStoreTopic;
   private final Topic<DownloadStatusKey, DownloadStatusValue> downloadStatusTopic;
   private final Topic<ShowMsgKey, ShowMsgValue> showStoreTopic;
   private final ProcessorSupplier<EpisodeMsgKey, EpisodeMsgValue> episodeProcessorSupplier;
@@ -55,11 +57,16 @@ public class StreamController extends StreamsService {
 
     KeyValueStoreBuilder<ShowMsgKey, ShowMsgValue> showStoreBuilder = Util
         .keyValueStoreBuilder(showStoreDetails);
+    builder.addGlobalStore(showStoreBuilder, showStoreTopic.getName(),
+        showStoreTopic.consumedWith(), () -> TrivialProcessor.<ShowMsgKey, ShowMsgValue>builder()
+            .storeName(showStoreDetails.getStoreName()).build());
 
-    builder
-        .addGlobalStore(showStoreBuilder, showStoreTopic.getName(), showStoreTopic.consumedWith(),
-            () -> TrivialProcessor.<ShowMsgKey, ShowMsgValue>builder()
-                .storeName(showStoreDetails.getStoreName()).build());
+    KeyValueStoreBuilder<EpisodeMsgKey, EpisodeMsgValue> episodeStoreBuilder = Util
+        .keyValueStoreBuilder(episodeStoreDetails);
+    builder.addGlobalStore(episodeStoreBuilder, episodeStoreTopic.getName(),
+        episodeStoreTopic.consumedWith(),
+        () -> TrivialProcessor.<EpisodeMsgKey, EpisodeMsgValue>builder()
+            .storeName(episodeStoreDetails.getStoreName()).build());
 
     return builder.build();
   }
