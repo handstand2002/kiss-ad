@@ -1,9 +1,9 @@
 package com.brokencircuits.kissad.showapi.streams;
 
+import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import java.util.Collection;
-import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KafkaStreams;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StreamController extends StreamsService {
 
-  private final Properties streamProperties;
+  private final ClusterConnectionProps clusterConnectionProps;
   private final Collection<KeyValueStoreWrapper<?, ?>> stores;
 
   @Override
@@ -26,7 +26,7 @@ public class StreamController extends StreamsService {
 
   @Override
   protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), streamProperties);
+    return new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
   }
 
   private Topology buildTopology() {

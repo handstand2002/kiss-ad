@@ -1,19 +1,17 @@
 messaging:
-  application-id: rest-show-interface
-  stores:
-    show: show-store-v2
-  topics:
-    show-store: ad.show.store
+  cluster-connection:
+    application.id: show-api
 
 ---
-
 spring:
   profiles: dev
 
 messaging:
-  state-dir: ./target/streams-state-dir
   schema-registry-url: http://192.168.0.254:8081
-  brokers: 192.168.0.254:29092
+  cluster-connection:
+    state.dir: ./target/streams-state-dir
+    bootstrap.servers: 192.168.0.254:29092
+    acks: all
 
 show.default:
   episode-name-pattern: S<SEASON_2>E<EPISODE_3>
