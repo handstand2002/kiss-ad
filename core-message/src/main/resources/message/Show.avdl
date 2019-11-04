@@ -1,0 +1,19 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+
+  record ShowMsgKey {
+    @java-class("com.brokencircuits.kissad.util.Uuid") string showId;
+  }
+
+  record ShowMsgValue {
+    string title;
+    union{null, int} season;
+    map<string> sources;
+    boolean isActive;
+    string releaseScheduleCron;
+    union{null, string} skipEpisodeString = null;
+    string episodeNamePattern;
+    string folderName;
+    @java-class("com.brokencircuits.kissad.util.Uuid") string messageId;
+  }
+}

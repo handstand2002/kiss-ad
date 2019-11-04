@@ -1,9 +1,9 @@
 package com.brokencircuits.kissad.showapi.rest.domain;
 
+import com.brokencircuits.kissad.util.Uuid;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import java.util.Collection;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class ShowObject {
   @NonNull
   private String title;
   private Integer season;
-  private UUID showId;
+  private Uuid showId;
   private Boolean isActive = true;
   private String initialSkipEpisodeString = null;
   private String releaseScheduleCron;

@@ -6,10 +6,10 @@ import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowSource;
+import com.brokencircuits.kissad.util.Uuid;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Sets;
 import org.apache.kafka.streams.KeyValue;
@@ -23,7 +23,7 @@ public class TranslatorConfig {
   @Bean
   Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsgValue>> showLocalToMsgTranslator() {
     return input -> new KeyValue<>(
-        ShowMsgKey.newBuilder().setShowId(input.getShowId().toString()).build(),
+        ShowMsgKey.newBuilder().setShowId(input.getShowId()).build(),
         ShowMsgValue.newBuilder()
             .setTitle(input.getTitle())
             .setSeason(input.getSeason())
@@ -33,7 +33,7 @@ public class TranslatorConfig {
             .setSkipEpisodeString(input.getInitialSkipEpisodeString())
             .setEpisodeNamePattern(input.getEpisodeNamePattern())
             .setFolderName(input.getFolderName())
-            .setMessageId(UUID.randomUUID().toString())
+            .setMessageId(Uuid.randomUUID())
             .build());
   }
 
@@ -48,7 +48,7 @@ public class TranslatorConfig {
     return pair -> ShowObject.builder()
         .title(pair.value.getTitle())
         .season(pair.value.getSeason())
-        .showId(UUID.fromString(pair.key.getShowId()))
+        .showId(pair.key.getShowId())
         .isActive(pair.value.getIsActive())
         .initialSkipEpisodeString(pair.value.getSkipEpisodeString())
         .releaseScheduleCron(pair.value.getReleaseScheduleCron())

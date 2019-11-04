@@ -2,7 +2,7 @@
 protocol Simple {
   import idl "KissShared.avdl";
   import idl "RootShared.avdl";
-  import schema "Show.avsc";
+  import idl "Show.avdl";
 
   record KissEpisodePageKey {
     string showName;

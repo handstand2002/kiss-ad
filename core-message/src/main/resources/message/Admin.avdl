@@ -1,0 +1,19 @@
+@namespace("com.brokencircuits.messages")
+protocol Simple {
+
+  record AdminCommandKey {
+    string applicationId;
+    string commandId;
+  }
+
+  enum Command {
+    CHECK_NEW_EPISODES
+  }
+
+  record AdminCommandValue {
+    Command command;
+    array<string> parameters;
+    timestamp_ms sendTime;
+  }
+
+}

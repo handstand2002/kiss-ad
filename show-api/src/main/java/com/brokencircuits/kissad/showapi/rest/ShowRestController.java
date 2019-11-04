@@ -6,10 +6,11 @@ import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
+import com.brokencircuits.kissad.util.Uuid;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class ShowRestController {
@@ -63,7 +65,7 @@ public class ShowRestController {
     }
 
     if (newShowObject.getShowId() == null) {
-      newShowObject.setShowId(UUID.randomUUID());
+      newShowObject.setShowId(Uuid.randomUUID());
     }
 
     if (newShowObject.getEpisodeNamePattern() == null) {
@@ -89,7 +91,7 @@ public class ShowRestController {
   }
 
   @GetMapping(path = "/getShow/{id}", produces = CONTENT_TYPE_JSON)
-  public ShowObject getShow(@PathVariable final String id) {
+  public ShowObject getShow(@PathVariable final Uuid id) {
     ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
     ShowMsgValue showMessage = showMsgStore.get(lookupKey);
 
@@ -98,7 +100,7 @@ public class ShowRestController {
   }
 
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
-  public ShowObject deleteShow(@PathVariable final String id) {
+  public ShowObject deleteShow(@PathVariable final Uuid id) {
     ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
     ShowMsgValue showMessage = showMsgStore.get(lookupKey);
     ShowObject showObject = null;
