@@ -12,6 +12,8 @@ import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
+import com.brokencircuits.messages.AdminCommandKey;
+import com.brokencircuits.messages.AdminCommandValue;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.avro.specific.SpecificRecord;
@@ -30,6 +32,15 @@ public class TopicUtil {
   public static final String TOPIC_EPISODE_QUEUE = "ad.episode.queue";
   public static final String TOPIC_DOWNLOAD_COMMAND = "download.command";
   public static final String TOPIC_DOWNLOAD_STATUS = "download.status";
+  public static final String TOPIC_ADMIN = "admin.command";
+
+  /**
+   * Topic containing interest list of shows
+   */
+  @SuppressWarnings("unchecked")
+  public static Topic<AdminCommandKey, AdminCommandValue> adminTopic(String schemaRegistryUrl) {
+    return getTopic(TOPIC_ADMIN, schemaRegistryUrl);
+  }
 
   /**
    * Topic containing interest list of shows
