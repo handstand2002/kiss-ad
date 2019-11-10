@@ -21,4 +21,12 @@ public class ClusterConnectionProps {
     clusterConnection.forEach(outputMap::put);
     return outputMap;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    clusterConnection.forEach((key, value) -> sb.append("  ").append(key).append(": ").append(value)
+        .append("\n"));
+    return sb.toString();
+  }
 }
