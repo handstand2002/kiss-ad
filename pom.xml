@@ -16,7 +16,6 @@
     <module>downloader</module>
     <module>scheduler</module>
     <module>download-delegator</module>
-    <module>schema-updater</module>
   </modules>
 
   <parent>
