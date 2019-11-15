@@ -2,7 +2,6 @@ package com.brokencircuits.kissad.download.domain;
 
 import com.brokencircuits.kissad.util.Uuid;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

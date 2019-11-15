@@ -115,7 +115,7 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
 
   private EpisodeMsgValue completedValue(DownloadStatus completedStatus,
       EpisodeMsgValue value, EpisodeLink linkForBestQuality) {
-    return EpisodeMsgValue.newBuilder(value)
+    return EpisodeMsgValue.newBuilder()
         .setDownloadTime(completedStatus.getEndTime())
         .setDownloadedQuality(linkForBestQuality.getQuality())
         .setLatestLinks(value.getLatestLinks())
