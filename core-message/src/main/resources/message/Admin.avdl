@@ -3,7 +3,7 @@ protocol Simple {
 
   record AdminCommandKey {
     string applicationId;
-    string commandId;
+    @java-class("com.brokencircuits.kissad.util.Uuid") string commandId;
   }
 
   enum Command {

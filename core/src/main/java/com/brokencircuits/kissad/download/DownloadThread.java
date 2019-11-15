@@ -7,9 +7,9 @@ import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
+import com.brokencircuits.kissad.util.Uuid;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +18,13 @@ import lombok.extern.slf4j.Slf4j;
 public class DownloadThread extends Thread {
 
   @Getter
-  private final UUID uuid;
+  private final Uuid uuid;
   private final DownloadStatusWrapper statusWrapper;
   private final BiConsumer<DownloadStatus, DownloadThread> onCompletion;
 
   public DownloadThread(DownloadStatusWrapper statusWrapper, DownloadApi api,
-      Publisher<DownloadRequestKey, DownloadRequestValue> requestPublisher, Duration startTimeout, BiConsumer<DownloadStatus, DownloadThread> onCompletion) {
+      Publisher<DownloadRequestKey, DownloadRequestValue> requestPublisher, Duration startTimeout,
+      BiConsumer<DownloadStatus, DownloadThread> onCompletion) {
 
     super(() -> {
       DownloadStatus status = statusWrapper.getStatus();
@@ -36,7 +37,7 @@ public class DownloadThread extends Thread {
       DownloadRequestValue value = DownloadRequestValue.newBuilder()
           .setDestinationFileName(status.getDestinationFileName())
           .setUri(status.getUri())
-          .setDownloadId(status.getDownloadId().toString())
+          .setDownloadId(status.getDownloadId())
           .setDestinationDir(status.getDestinationDir())
           .build();
 
@@ -94,7 +95,9 @@ public class DownloadThread extends Thread {
       onCompletion.accept(statusWrapper.getStatus(), this);
     }
 
-    log.info("Updating status object: {}%: {}", (double) Math.round((bytesDownloaded / (double)bytesTotal)*10000) / 100, statusWrapper.getStatus());
+    log.info("Updating status object: {}%: {}",
+        (double) Math.round((bytesDownloaded / (double) bytesTotal) * 10000) / 100,
+        statusWrapper.getStatus());
   }
 
   private static DownloadType convertDownloadStatus(

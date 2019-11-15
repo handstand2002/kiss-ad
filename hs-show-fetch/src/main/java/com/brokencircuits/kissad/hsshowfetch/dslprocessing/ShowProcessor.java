@@ -12,13 +12,13 @@ import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
+import com.brokencircuits.kissad.util.Uuid;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
@@ -64,7 +64,7 @@ public class ShowProcessor implements Processor<ShowMsgKey, ShowMsgValue> {
             .setDownloadedQuality(0)
             .setLatestLinks(convertUrlList(ep.getUrlList()))
             .setDownloadTime(null)
-            .setMessageId(UUID.randomUUID().toString())
+            .setMessageId(Uuid.randomUUID())
             .build());
   }
 

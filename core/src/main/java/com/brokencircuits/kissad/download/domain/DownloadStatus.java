@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.download.domain;
 
+import com.brokencircuits.kissad.util.Uuid;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -14,7 +15,7 @@ import lombok.ToString;
 @RequiredArgsConstructor
 public class DownloadStatus {
 
-  final private UUID downloadId;
+  final private Uuid downloadId;
   final private String uri;
   final private String destinationDir;
   final private String destinationFileName;

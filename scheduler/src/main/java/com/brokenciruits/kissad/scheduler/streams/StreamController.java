@@ -6,9 +6,9 @@ import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
+import com.brokencircuits.kissad.util.Uuid;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.BiConsumer;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +30,13 @@ public class StreamController extends StreamsService {
   private final KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper;
   private final TaskScheduler taskScheduler;
   private final Publisher<ShowMsgKey, ShowMsgValue> showTriggerPublisher;
-  private Map<String, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
+  private Map<Uuid, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
 
   private final BiConsumer<ShowMsgKey, ShowMsgValue> onSchedule = new BiConsumer<ShowMsgKey, ShowMsgValue>() {
     @Override
     public void accept(ShowMsgKey key, ShowMsgValue value) {
       log.info("Triggered show {} | {}", key, value);
-      value.setMessageId(UUID.randomUUID().toString());
+      value.setMessageId(Uuid.randomUUID());
       showTriggerPublisher.send(key, value);
     }
   };

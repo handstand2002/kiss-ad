@@ -80,6 +80,7 @@ public class TopicUtil {
     return getTopic(TOPIC_DOWNLOAD_STATUS, schemaRegistryUrl);
   }
 
+  @SuppressWarnings("unchecked")
   public static Topic<DownloaderStatusKey, DownloaderStatusValue> downloaderStatusTopic(
       String schemaRegistryUrl) {
     return getTopic(TOPIC_DOWNLOADER_STATUS, schemaRegistryUrl);

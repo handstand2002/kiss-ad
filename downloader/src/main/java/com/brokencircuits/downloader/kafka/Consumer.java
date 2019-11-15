@@ -11,6 +11,7 @@ import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.downloader.publish.DownloaderStatusApi;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.topics.TopicUtil;
+import com.brokencircuits.kissad.util.Uuid;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class Consumer {
   private final DownloaderStatusApi downloaderStatusApi;
 
   @Value("${download.downloader-id}")
-  long downloaderId;
+  private long downloaderId;
 
   @KafkaListener(topics = TopicUtil.TOPIC_DOWNLOAD_COMMAND)
   public void listen(ConsumerRecord<DownloadRequestKey, DownloadRequestValue> message,
@@ -47,26 +48,28 @@ public class Consumer {
           isMagnet = true;
         }
         try {
-          downloadController.doDownload(message.value().getUri(), message.value().getDestinationDir(),
-              message.value().getDestinationFileName(), isMagnet,
-              status -> downloadStatusPublisher
-                  .send(downloadStatus(message.value().getDownloadId(), status)),
-              (downloadedFile, completeStatus) -> downloadStatusPublisher
-                  .send(downloadStatus(message.value().getDownloadId(), completeStatus)));
+          downloadController
+              .doDownload(message.value().getUri(), message.value().getDestinationDir(),
+                  message.value().getDestinationFileName(), isMagnet,
+                  status -> downloadStatusPublisher
+                      .send(downloadStatus(message.value().getDownloadId(), status)),
+                  (downloadedFile, completeStatus) -> downloadStatusPublisher
+                      .send(downloadStatus(message.value().getDownloadId(), completeStatus)));
 
         } catch (IOException | InterruptedException e) {
           log.error("Error occurred during download:", e);
-          downloadStatusPublisher.send(errorStatus(message.value().getDownloadId(), e.getMessage()));
+          downloadStatusPublisher
+              .send(errorStatus(message.value().getDownloadId(), e.getMessage()));
         } finally {
           downloaderStatusApi.tellClusterStatus(true);
         }
       } else {
-        log.info("Ignoring {}, as it was for a different downloader");
+        log.info("Ignoring {}, as it was for a different downloader", message);
       }
     }).start();
   }
 
-  private KeyValue<DownloadStatusKey, DownloadStatusValue> errorStatus(String downloadId,
+  private KeyValue<DownloadStatusKey, DownloadStatusValue> errorStatus(Uuid downloadId,
       String errorMsg) {
     return new KeyValue<>(
         DownloadStatusKey
@@ -86,7 +89,7 @@ public class Consumer {
             .build());
   }
 
-  private KeyValue<DownloadStatusKey, DownloadStatusValue> downloadStatus(String downloadId,
+  private KeyValue<DownloadStatusKey, DownloadStatusValue> downloadStatus(Uuid downloadId,
       AriaResponseStatus status) {
     DownloadResult result = status.getResult();
     return new KeyValue<>(

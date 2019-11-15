@@ -12,13 +12,13 @@ import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
+import com.brokencircuits.kissad.util.Uuid;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -119,7 +119,7 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
         .setDownloadTime(completedStatus.getEndTime())
         .setDownloadedQuality(linkForBestQuality.getQuality())
         .setLatestLinks(value.getLatestLinks())
-        .setMessageId(UUID.randomUUID().toString())
+        .setMessageId(Uuid.randomUUID())
         .build();
   }
 
