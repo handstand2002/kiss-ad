@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.showApi
+    application.id: ad.showApi2
 
 ---
 spring:
@@ -12,6 +12,7 @@ messaging:
     state.dir: ./target/streams-state-dir
     bootstrap.servers: 192.168.0.254:29092
     acks: all
+    schema-registry-url: http://192.168.0.254:8081
 
 show.default:
   episode-name-pattern: S<SEASON_2>E<EPISODE_3>

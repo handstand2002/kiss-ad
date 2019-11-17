@@ -26,7 +26,7 @@ public class TopicUtil {
   private static Map<String, Topic> topicCache = new HashMap<>();
 
   public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status";
-  public static final String TOPIC_SHOW_STORE = "ad.show.store";
+  public static final String TOPIC_SHOW_STORE = "ad.show.store2";
   public static final String TOPIC_SHOW_QUEUE = "ad.show.queue";
   public static final String TOPIC_EPISODE_STORE = "ad.episode.store";
   public static final String TOPIC_EPISODE_QUEUE = "ad.episode.queue";

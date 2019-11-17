@@ -28,13 +28,13 @@ public class KafkaConfig {
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return TopicUtil.showStoreTopic(schemaRegistryUrl);
   }
-
-  @Bean
-  TopicKeyUpdater<ShowMsgKey, ShowMsgValue> showKeyUpdater(
-      ClusterConnectionProps clusterConnectionProps, Topic<ShowMsgKey, ShowMsgValue> showTopic)
-      throws Exception {
-    return new TopicKeyUpdater<>(showTopic, clusterConnectionProps);
-  }
+//
+//  @Bean
+//  TopicKeyUpdater<ShowMsgKey, ShowMsgValue> showKeyUpdater(
+//      ClusterConnectionProps clusterConnectionProps, Topic<ShowMsgKey, ShowMsgValue> showTopic)
+//      throws Exception {
+//    return new TopicKeyUpdater<>(showTopic, clusterConnectionProps);
+//  }
 
   @Bean
   KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper(

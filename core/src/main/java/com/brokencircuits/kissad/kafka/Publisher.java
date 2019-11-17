@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 
 @Slf4j
@@ -16,7 +17,7 @@ import org.apache.kafka.streams.KeyValue;
 @ToString
 public class Publisher<K, V> {
 
-  private final Producer<K, V> producer;
+  private final Producer producer;
   private final Topic<K, V> topic;
 
   public Publisher(Properties producerProperties, Topic<K, V> topic) {
