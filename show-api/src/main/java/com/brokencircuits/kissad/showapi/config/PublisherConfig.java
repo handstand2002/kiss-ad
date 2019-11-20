@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.showapi.config;
 
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
@@ -14,8 +15,8 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<ShowMsgKey, ShowMsgValue> showMessagePublisher(
-      Topic<ShowMsgKey, ShowMsgValue> showTopic, ClusterConnectionProps clusterProps) {
+  Publisher<ByteKey<ShowMsgKey>, ShowMsgValue> showMessagePublisher(
+      Topic<ByteKey<ShowMsgKey>, ShowMsgValue> showTopic, ClusterConnectionProps clusterProps) {
 
     return new Publisher<>(clusterProps.asProperties(), showTopic);
   }

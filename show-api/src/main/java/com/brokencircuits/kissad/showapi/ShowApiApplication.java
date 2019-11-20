@@ -13,5 +13,4 @@ public class ShowApiApplication {
   public static void main(String[] args) {
     SpringApplication.run(ShowApiApplication.class, args);
   }
-
 }

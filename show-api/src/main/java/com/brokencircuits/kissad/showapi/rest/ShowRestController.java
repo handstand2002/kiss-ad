@@ -1,6 +1,7 @@
 package com.brokencircuits.kissad.showapi.rest;
 
 import com.brokencircuits.kissad.Translator;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
@@ -25,10 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ShowRestController {
 
-  private final Publisher<ShowMsgKey, ShowMsgValue> showMessagePublisher;
-  private final Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsgValue>> showLocalToMsgTranslator;
-  private final Translator<KeyValue<ShowMsgKey, ShowMsgValue>, ShowObject> showMsgToLocalTranslator;
-  private final KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showMsgStore;
+  private final Publisher<ByteKey<ShowMsgKey>, ShowMsgValue> showMessagePublisher;
+  private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>> showLocalToMsgTranslator;
+  private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>, ShowObject> showMsgToLocalTranslator;
+  private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsgValue> showMsgStore;
 
   @Value("${show.default.episode-name-pattern}")
   private String defaultEpisodeNamePattern;
@@ -76,7 +77,8 @@ public class ShowRestController {
       newShowObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
     }
 
-    KeyValue<ShowMsgKey, ShowMsgValue> message = showLocalToMsgTranslator.translate(newShowObject);
+    KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue> message = showLocalToMsgTranslator
+        .translate(newShowObject);
 
     showMessagePublisher.send(message);
     return newShowObject;
@@ -92,16 +94,16 @@ public class ShowRestController {
 
   @GetMapping(path = "/getShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject getShow(@PathVariable final Uuid id) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
     ShowMsgValue showMessage = showMsgStore.get(lookupKey);
 
     return showMessage != null ? showMsgToLocalTranslator
-        .translate(new KeyValue<>(lookupKey, showMessage)) : null;
+        .translate(KeyValue.pair(lookupKey, showMessage)) : null;
   }
 
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject deleteShow(@PathVariable final Uuid id) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
     ShowMsgValue showMessage = showMsgStore.get(lookupKey);
     ShowObject showObject = null;
     if (showMessage != null) {

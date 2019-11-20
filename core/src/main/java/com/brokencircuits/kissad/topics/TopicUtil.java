@@ -6,6 +6,8 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.downloader.messages.DownloaderStatusKey;
 import com.brokencircuits.downloader.messages.DownloaderStatusValue;
+import com.brokencircuits.kissad.kafka.ByteKey;
+import com.brokencircuits.kissad.kafka.ByteKeySerde;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -46,7 +48,7 @@ public class TopicUtil {
    * Topic containing interest list of shows
    */
   @SuppressWarnings("unchecked")
-  public static Topic<ShowMsgKey, ShowMsgValue> showStoreTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<ShowMsgKey>, ShowMsgValue> showStoreTopic(String schemaRegistryUrl) {
     return getTopic(TOPIC_SHOW_STORE, schemaRegistryUrl);
   }
 
@@ -90,7 +92,7 @@ public class TopicUtil {
   private static Topic getTopic(String topicName, String schemaRegistryUrl) {
     if (!topicCache.containsKey(topicName)) {
       topicCache.put(topicName,
-          new Topic<>(topicName, getKeySerde(schemaRegistryUrl), getValueSerde(schemaRegistryUrl)));
+          new Topic<>(topicName, new ByteKeySerde<>(), getValueSerde(schemaRegistryUrl)));
     }
     return topicCache.get(topicName);
   }

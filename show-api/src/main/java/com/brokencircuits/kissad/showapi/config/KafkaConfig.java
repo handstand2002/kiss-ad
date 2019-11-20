@@ -1,9 +1,9 @@
 package com.brokencircuits.kissad.showapi.config;
 
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Topic;
-import com.brokencircuits.kissad.kafka.TopicKeyUpdater;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.topics.TopicUtil;
@@ -24,21 +24,14 @@ public class KafkaConfig {
   }
 
   @Bean
-  Topic<ShowMsgKey, ShowMsgValue> showStoreTopic(
+  Topic<ByteKey<ShowMsgKey>, ShowMsgValue> showStoreTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return TopicUtil.showStoreTopic(schemaRegistryUrl);
   }
 
   @Bean
-  TopicKeyUpdater<ShowMsgKey, ShowMsgValue> showKeyUpdater(
-      ClusterConnectionProps clusterConnectionProps, Topic<ShowMsgKey, ShowMsgValue> showTopic)
-      throws Exception {
-    return new TopicKeyUpdater<>(showTopic, clusterConnectionProps);
-  }
-
-  @Bean
-  KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper(
-      Topic<ShowMsgKey, ShowMsgValue> showStoreTopic) {
+  KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsgValue> showStoreWrapper(
+      Topic<ByteKey<ShowMsgKey>, ShowMsgValue> showStoreTopic) {
     return new KeyValueStoreWrapper<>(STORE_SHOW, showStoreTopic);
   }
 

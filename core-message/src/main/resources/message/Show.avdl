@@ -6,6 +6,7 @@ protocol Simple {
   }
 
   record ShowMsgValue {
+    ShowMsgKey key;
     string title;
     union{null, int} season;
     map<string> sources;
