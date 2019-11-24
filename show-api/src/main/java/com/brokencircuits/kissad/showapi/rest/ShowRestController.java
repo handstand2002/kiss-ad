@@ -86,6 +86,8 @@ public class ShowRestController {
     if (msg.value.getValue().getSkipEpisodeString() != null) {
       adminInterface.sendCommand(TopicUtil.MODULE_DOWNLOAD_DELEGATOR, Command.SKIP_EPISODE_RANGE,
           msg.value.getKey().getShowId().toString(), msg.value.getValue().getSkipEpisodeString());
+
+      msg.value.getValue().setSkipEpisodeString(null);
     }
 
     showMessagePublisher.send(msg);
