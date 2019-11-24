@@ -1,6 +1,7 @@
 package com.brokencircuits.kissad.kafka;
 
 import com.apple.foundationdb.tuple.Tuple;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -24,16 +25,14 @@ public class ByteKey<T extends SpecificRecordBase> {
     Objects.requireNonNull(inner);
 
     Schema schema = inner.getSchema();
-    List<Field> fields = schema.getFields();
+    List<Field> fields = new ArrayList<>(schema.getFields());
     fields.sort(Comparator.comparing(Field::name));
 
     Tuple tuple = new Tuple();
     for (Field field : fields) {
       Object fieldValue = inner.get(field.pos());
       if (fieldValue != null) {
-
         try {
-
           tuple = tuple.addObject(fieldValue);
         } catch (IllegalArgumentException e) {
           tuple = tuple.add(fieldValue.toString());

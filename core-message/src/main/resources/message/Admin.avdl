@@ -7,13 +7,19 @@ protocol Simple {
   }
 
   enum Command {
-    CHECK_NEW_EPISODES
+    CHECK_NEW_EPISODES, SKIP_EPISODE_RANGE
   }
 
   record AdminCommandValue {
+    AdminCommandKey key;
     Command command;
     array<string> parameters;
     timestamp_ms sendTime;
+  }
+
+  record AdminCommandMsg {
+    AdminCommandKey key;
+    union {null, AdminCommandValue} value;
   }
 
 }

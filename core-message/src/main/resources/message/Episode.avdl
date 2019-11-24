@@ -10,6 +10,7 @@ protocol Simple {
   }
 
   record KissEpisodePageMessage {
+    KissEpisodePageKey key;
     string url;
     string episodeName;
     string showName;
@@ -22,7 +23,7 @@ protocol Simple {
   record EpisodeMsgKey {
     ShowMsgKey showId;
     union{null, long} episodeNumber;
-    /** Should only be populated if episodeNumber is not */
+  /** Should only be populated if episodeNumber is not */
     union{null, string} rawTitle = null;
   }
 
@@ -33,9 +34,15 @@ protocol Simple {
   }
 
   record EpisodeMsgValue {
+    EpisodeMsgKey key;
     union{null, timestamp_ms} downloadTime = null;
     int downloadedQuality = 0;
     array<EpisodeLink> latestLinks;
     @java-class("com.brokencircuits.kissad.util.Uuid") string messageId;
+  }
+
+  record EpisodeMsg {
+    EpisodeMsgKey key;
+    union{null, EpisodeMsgValue} value;
   }
 }

@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.showFetch.hs
+    application.id: ad.showFetch.hs.v2
 
 logging.level:
   com.gargoylesoftware.htmlunit: ERROR

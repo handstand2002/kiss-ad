@@ -7,8 +7,6 @@ import com.brokencircuits.kissad.messages.ExternalDownloadLinkMessage;
 import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.StreamsConfig;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,15 +17,15 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   @Bean
-  Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> externalLinkTopic(
+  Topic<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> externalLinkTopic(
       @Value("${messaging.topics.episode-link}") String topic,
-      Serde<KissEpisodePageKey> keySerde,
+      Serde<ByteKey<KissEpisodePageKey>> keySerde,
       Serde<ExternalEpisodeLinkMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }
 
   @Bean
-  Serde<KissEpisodePageKey> episodeKeySerde(
+  Serde<ByteKey<KissEpisodePageKey>> episodeKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, true);
   }
@@ -39,15 +37,15 @@ public class KafkaConfig {
   }
 
   @Bean
-  Topic<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> topic(
+  Topic<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> topic(
       @Value("${messaging.topics.episode-download-link}") String topic,
-      Serde<ExternalDownloadLinkKey> keySerde,
+      Serde<ByteKey<ExternalDownloadLinkKey>> keySerde,
       Serde<ExternalDownloadLinkMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }
 
   @Bean
-  Serde<ExternalDownloadLinkKey> externalDownloadLinkKeySerde(
+  Serde<ByteKey<ExternalDownloadLinkKey>> externalDownloadLinkKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, true);
   }

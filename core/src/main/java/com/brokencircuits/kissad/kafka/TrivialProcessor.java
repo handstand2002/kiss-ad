@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
@@ -15,7 +16,7 @@ import org.apache.logging.log4j.util.TriConsumer;
 
 @Slf4j
 @Builder
-public class TrivialProcessor<K, V> implements Processor<K, V> {
+public class TrivialProcessor<K, V extends SpecificRecordBase> implements Processor<K, V> {
 
   private TriConsumer<K, V, V> onRecordActionWithPrevious;
   private BiConsumer<K, V> onRecordAction;
@@ -51,7 +52,13 @@ public class TrivialProcessor<K, V> implements Processor<K, V> {
     if (storeName != null) {
       log.debug("Updating store with new value: {} | {}", key, newValue);
       oldValue = internalStore.get().get(key);
-      internalStore.get().put(key, newValue);
+
+      Object nestedValue = newValue.get("value");
+      if (nestedValue == null) {
+        internalStore.get().delete(key);
+      } else {
+        internalStore.get().put(key, newValue);
+      }
     }
 
     if (onRecordActionWithPrevious != null) {

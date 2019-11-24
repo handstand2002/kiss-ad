@@ -1,6 +1,5 @@
 package com.brokencircuits.kissad.streamepisodelink.streamprocessing;
 
-import com.brokencircuits.kissad.kafka.KeyValueStore;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kissweb.KissWebFetcher;
 import com.brokencircuits.kissad.messages.DownloadAvailability;
@@ -29,11 +28,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class EpisodeMessageProcessor implements
-    Processor<KissEpisodePageKey, KissEpisodePageMessage> {
+    Processor<ByteKey<KissEpisodePageKey>, KissEpisodePageMessage> {
 
   final private static String myVideoDivSelector = "#divMyVideo";
 
-  final private Publisher<KissEpisodePageKey, ExternalEpisodeLinkMessage> episodeLinkPublisher;
+  final private Publisher<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> episodeLinkPublisher;
   final private KissWebFetcher webFetcher;
 
   @Value("${messaging.stores.download-availability}")

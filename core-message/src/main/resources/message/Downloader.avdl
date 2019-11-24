@@ -15,6 +15,11 @@ protocol Simple {
     string uri;
   }
 
+  record DownloadRequestMsg {
+    DownloadRequestKey key;
+    union{null, DownloadRequestValue} value;
+  }
+
   record DownloadStatusKey {
     @java-class("com.brokencircuits.kissad.util.Uuid") string downloadId;
   }
@@ -33,6 +38,11 @@ protocol Simple {
     string status;
   }
 
+  record DownloadStatusMsg {
+    DownloadStatusKey key;
+    union{null, DownloadStatusValue} value;
+  }
+
   record DownloaderStatusKey {
     long downloaderId;
   }
@@ -40,4 +50,10 @@ protocol Simple {
   record DownloaderStatusValue {
     boolean isAvailable;
   }
+
+  record DownloaderStatusMsg {
+    DownloaderStatusKey key;
+    union{null, DownloaderStatusValue} value;
+  }
+
 }

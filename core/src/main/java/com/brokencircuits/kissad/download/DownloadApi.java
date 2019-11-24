@@ -1,12 +1,12 @@
 package com.brokencircuits.kissad.download;
 
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
-import com.brokencircuits.downloader.messages.DownloadRequestValue;
-import com.brokencircuits.downloader.messages.DownloadStatusKey;
-import com.brokencircuits.downloader.messages.DownloadStatusValue;
+import com.brokencircuits.downloader.messages.DownloadRequestMsg;
+import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
 import com.brokencircuits.kissad.download.domain.DownloadType;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.util.Uuid;
 import java.time.Duration;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DownloadApi {
 
-  private final Publisher<DownloadRequestKey, DownloadRequestValue> requestPublisher;
+  private final Publisher<ByteKey<DownloadRequestKey>, DownloadRequestMsg> requestPublisher;
   private Map<Uuid, DownloadThread> activeDownloadThreads = new HashMap<>();
 
   public DownloadStatus submitDownload(String uri, DownloadType downloadType,
@@ -51,12 +51,12 @@ public class DownloadApi {
     return 1L;
   }
 
-  public void onDownloadStatusMessage(DownloadStatusKey key, DownloadStatusValue value) {
+  public void onDownloadStatusMessage(DownloadStatusMsg msg) {
 
-    if (activeDownloadThreads.containsKey(key.getDownloadId())) {
-      activeDownloadThreads.get(key.getDownloadId()).onStatusMessage(value);
+    if (activeDownloadThreads.containsKey(msg.getKey().getDownloadId())) {
+      activeDownloadThreads.get(msg.getKey().getDownloadId()).onStatusMessage(msg.getValue());
     } else {
-      log.info("Download status message for inactive download: {} | {}", key, value);
+      log.info("Download status message for inactive download: {}", msg);
     }
   }
 }

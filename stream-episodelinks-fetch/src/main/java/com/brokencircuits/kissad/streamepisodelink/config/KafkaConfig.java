@@ -18,15 +18,15 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   @Bean
-  Topic<KissEpisodePageKey, KissEpisodePageMessage> episodeTopic(
+  Topic<ByteKey<KissEpisodePageKey>, KissEpisodePageMessage> episodeTopic(
       @Value("${messaging.topics.episode}") String topic,
-      Serde<KissEpisodePageKey> keySerde,
+      Serde<ByteKey<KissEpisodePageKey>> keySerde,
       Serde<KissEpisodePageMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }
 
   @Bean
-  Serde<KissEpisodePageKey> episodeKeySerde(
+  Serde<ByteKey<KissEpisodePageKey>> episodeKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, true);
   }
@@ -38,9 +38,9 @@ public class KafkaConfig {
   }
 
   @Bean
-  Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> externalLinkTopic(
+  Topic<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> externalLinkTopic(
       @Value("${messaging.topics.episode-link}") String topic,
-      Serde<KissEpisodePageKey> keySerde,
+      Serde<ByteKey<KissEpisodePageKey>> keySerde,
       Serde<ExternalEpisodeLinkMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }

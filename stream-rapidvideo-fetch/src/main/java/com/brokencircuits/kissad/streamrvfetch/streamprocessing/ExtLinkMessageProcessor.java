@@ -10,13 +10,9 @@ import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 import org.joda.time.DateTime;
@@ -27,10 +23,10 @@ import org.w3c.dom.NamedNodeMap;
 @Component
 @RequiredArgsConstructor
 public class ExtLinkMessageProcessor implements
-    Processor<KissEpisodePageKey, ExternalEpisodeLinkMessage> {
+    Processor<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> {
 
   final private WebFetcher webFetcher;
-  final private Publisher<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> episodeLinkPublisher;
+  final private Publisher<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> episodeLinkPublisher;
 
   @Override
   public void init(ProcessorContext processorContext) {

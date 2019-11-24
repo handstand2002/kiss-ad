@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.scheduler
+    application.id: ad.scheduler.v2
 
 ---
 

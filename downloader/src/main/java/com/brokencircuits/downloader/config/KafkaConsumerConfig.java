@@ -1,7 +1,8 @@
 package com.brokencircuits.downloader.config;
 
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
-import com.brokencircuits.downloader.messages.DownloadRequestValue;
+import com.brokencircuits.downloader.messages.DownloadRequestMsg;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Topic;
 import java.util.HashMap;
@@ -28,9 +29,9 @@ public class KafkaConsumerConfig {
   }
 
   @Bean
-  public ConsumerFactory<DownloadRequestKey, DownloadRequestValue> consumerFactory(
+  public ConsumerFactory<ByteKey<DownloadRequestKey>, DownloadRequestMsg> consumerFactory(
       ClusterConnectionProps kafkaProps,
-      Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic,
+      Topic<ByteKey<DownloadRequestKey>, DownloadRequestMsg> downloadRequestTopic,
       @Value("${download.downloader-id}") int downloaderId) {
     Map<String, Object> props = new HashMap<>(kafkaProps.getClusterConnection());
 
@@ -49,10 +50,10 @@ public class KafkaConsumerConfig {
   }
 
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<DownloadRequestKey, DownloadRequestValue> kafkaListenerContainerFactory(
-      ConsumerFactory<DownloadRequestKey, DownloadRequestValue> consumerFactory) {
+  public ConcurrentKafkaListenerContainerFactory<ByteKey<DownloadRequestKey>, DownloadRequestMsg> kafkaListenerContainerFactory(
+      ConsumerFactory<ByteKey<DownloadRequestKey>, DownloadRequestMsg> consumerFactory) {
 
-    ConcurrentKafkaListenerContainerFactory<DownloadRequestKey, DownloadRequestValue> factory
+    ConcurrentKafkaListenerContainerFactory<ByteKey<DownloadRequestKey>, DownloadRequestMsg> factory
         = new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory);
     factory.getContainerProperties().setAckMode(AckMode.MANUAL);

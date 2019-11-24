@@ -11,6 +11,7 @@ protocol Simple {
   }
 
   record DownloadedEpisodeMessage {
+    DownloadedEpisodeKey key;
     timestamp_ms retrieveTime;
   }
 }

@@ -6,7 +6,6 @@ protocol Simple {
   }
 
   record ShowMsgValue {
-    ShowMsgKey key;
     string title;
     union{null, int} season;
     map<string> sources;
@@ -17,4 +16,10 @@ protocol Simple {
     string folderName;
     @java-class("com.brokencircuits.kissad.util.Uuid") string messageId;
   }
+
+  record ShowMsg {
+    ShowMsgKey key;
+    union{null, ShowMsgValue} value;
+  }
+
 }

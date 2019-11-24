@@ -2,6 +2,7 @@ package com.brokencircuits.kissad.showapi.config;
 
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.ByteKey;
+import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
@@ -22,23 +23,23 @@ import org.springframework.context.annotation.Configuration;
 public class TranslatorConfig {
 
   @Bean
-  Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>> showLocalToMsgTranslator() {
+  Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator() {
     return input -> {
       ShowMsgKey key = ShowMsgKey.newBuilder().setShowId(input.getShowId()).build();
+      ShowMsgValue value = ShowMsgValue.newBuilder()
+          .setTitle(input.getTitle())
+          .setSeason(input.getSeason())
+          .setSources(convertSources(input.getSources()))
+          .setIsActive(input.getIsActive())
+          .setReleaseScheduleCron(input.getReleaseScheduleCron())
+          .setSkipEpisodeString(input.getInitialSkipEpisodeString())
+          .setEpisodeNamePattern(input.getEpisodeNamePattern())
+          .setFolderName(input.getFolderName())
+          .setMessageId(Uuid.randomUUID())
+          .build();
       return new KeyValue<>(
           new ByteKey<>(key),
-          ShowMsgValue.newBuilder()
-              .setKey(key)
-              .setTitle(input.getTitle())
-              .setSeason(input.getSeason())
-              .setSources(convertSources(input.getSources()))
-              .setIsActive(input.getIsActive())
-              .setReleaseScheduleCron(input.getReleaseScheduleCron())
-              .setSkipEpisodeString(input.getInitialSkipEpisodeString())
-              .setEpisodeNamePattern(input.getEpisodeNamePattern())
-              .setFolderName(input.getFolderName())
-              .setMessageId(Uuid.randomUUID())
-              .build());
+          ShowMsg.newBuilder().setKey(key).setValue(value).build());
     };
   }
 
@@ -49,17 +50,17 @@ public class TranslatorConfig {
   }
 
   @Bean
-  Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>, ShowObject> showMsgToLocalTranslator() {
+  Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator() {
     return pair -> ShowObject.builder()
-        .title(pair.value.getTitle())
-        .season(pair.value.getSeason())
+        .title(pair.value.getValue().getTitle())
+        .season(pair.value.getValue().getSeason())
         .showId(pair.value.getKey().getShowId())
-        .isActive(pair.value.getIsActive())
-        .initialSkipEpisodeString(pair.value.getSkipEpisodeString())
-        .releaseScheduleCron(pair.value.getReleaseScheduleCron())
-        .sources(convertSources(pair.value.getSources()))
-        .episodeNamePattern(pair.value.getEpisodeNamePattern())
-        .folderName(pair.value.getFolderName())
+        .isActive(pair.value.getValue().getIsActive())
+        .initialSkipEpisodeString(pair.value.getValue().getSkipEpisodeString())
+        .releaseScheduleCron(pair.value.getValue().getReleaseScheduleCron())
+        .sources(convertSources(pair.value.getValue().getSources()))
+        .episodeNamePattern(pair.value.getValue().getEpisodeNamePattern())
+        .folderName(pair.value.getValue().getFolderName())
         .build();
   }
 

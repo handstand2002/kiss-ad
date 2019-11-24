@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: downloader
+    application.id: downloader.v2
 
 ---
 spring:
@@ -18,6 +18,6 @@ download:
   aria:
     temp-download-dir: "D:\\Unsorted"
     port: 9000
-    path: "C:\\Users\\Grant\\Downloads\\aria2-1.34.0-win-64bit-build1\\aria2-1.34.0-win-64bit-build1\\aria2c.exe"
+    path: "\\aria2-1.34.0-win-64bit-build1\\aria2c.exe"
     status-poll-interval: 5s
     inactivity-timeout: 10m

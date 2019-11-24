@@ -22,15 +22,15 @@ public class KafkaConfig {
    * Topic that contains download links for this module to download
    */
   @Bean
-  Topic<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> topic(
+  Topic<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> topic(
       @Value("${messaging.topics.episode-download-link}") String topic,
-      Serde<ExternalDownloadLinkKey> keySerde,
+      Serde<ByteKey<ExternalDownloadLinkKey>> keySerde,
       Serde<ExternalDownloadLinkMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }
 
   @Bean
-  Serde<ExternalDownloadLinkKey> externalDownloadLinkKeySerde(
+  Serde<ByteKey<ExternalDownloadLinkKey>> externalDownloadLinkKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, true);
   }
@@ -61,15 +61,15 @@ public class KafkaConfig {
    * Topic for storing the episodes that have been downloaded
    */
   @Bean
-  Topic<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodeTopic(
+  Topic<ByteKey<DownloadedEpisodeKey>, DownloadedEpisodeMessage> downloadedEpisodeTopic(
       @Value("${messaging.topics.downloaded-episode}") String topic,
-      Serde<DownloadedEpisodeKey> keySerde,
+      Serde<ByteKey<DownloadedEpisodeKey>> keySerde,
       Serde<DownloadedEpisodeMessage> msgSerde) {
     return new Topic<>(topic, keySerde, msgSerde);
   }
 
   @Bean
-  Serde<DownloadedEpisodeKey> downloadedEpisodeKeySerde(
+  Serde<ByteKey<DownloadedEpisodeKey>> downloadedEpisodeKeySerde(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return Util.createAvroSerde(schemaRegistryUrl, true);
   }

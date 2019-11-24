@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 public class EpisodeStreams extends StreamsService {
 
   private final Properties streamProperties;
-  private final Topic<KissEpisodePageKey, KissEpisodePageMessage> episodeTopic;
+  private final Topic<ByteKey<KissEpisodePageKey>, KissEpisodePageMessage> episodeTopic;
   private final Topic<String, DownloadAvailability> downloadAvailabilityTopic;
   private final EpisodeMessageProcessor showMessageProcessor;
 

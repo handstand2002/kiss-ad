@@ -4,7 +4,6 @@ import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.ExternalEpisodeLinkMessage;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
-import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -16,8 +15,8 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<KissEpisodePageKey, ExternalEpisodeLinkMessage> episodeLinkPublisher(
-      Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> topic,
+  Publisher<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> episodeLinkPublisher(
+      Topic<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> topic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, topic);
   }

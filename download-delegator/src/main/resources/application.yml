@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.downloadDelegator
+    application.id: ad.downloadDelegator.v2
 
 ---
 

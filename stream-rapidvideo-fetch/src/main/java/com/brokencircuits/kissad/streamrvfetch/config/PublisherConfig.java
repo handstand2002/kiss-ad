@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> episodeLinkPublisher(
-      Topic<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> topic,
+  Publisher<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> episodeLinkPublisher(
+      Topic<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> topic,
       Properties producerProperties) {
     return new Publisher<>(producerProperties, topic);
   }

@@ -26,7 +26,7 @@ public class Publisher<K, V> {
   }
 
   public Future<RecordMetadata> send(K key, V message) {
-    log.info("Sending {} | {}", key, message);
+    log.info("Sending to topic {}: {} | {}", topic.getName(), key, message);
     return producer.send(new ProducerRecord<>(topic.getName(), key, message));
   }
 

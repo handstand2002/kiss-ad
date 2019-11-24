@@ -5,14 +5,17 @@ import static com.brokencircuits.kissad.util.PathUtil.addTrailingSlashToPath;
 import com.brokencircuits.kissad.download.DownloadApi;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadType;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.messages.EpisodeLink;
+import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
+import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.util.Uuid;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -32,30 +35,30 @@ import org.apache.kafka.streams.state.KeyValueStore;
 
 @Slf4j
 @RequiredArgsConstructor
-public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValue> {
+public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, EpisodeMsg> {
 
   private static final Pattern SEASON_PATTERN = Pattern.compile("<SEASON_(\\d+)>");
   private static final Pattern EPISODE_PATTERN = Pattern.compile("<EPISODE_(\\d+)>");
 
-  private static final Queue<KeyValue<EpisodeMsgKey, EpisodeMsgValue>> episodesToDownload = new LinkedBlockingQueue<>();
+  private static final Queue<KeyValue<ByteKey<EpisodeMsgKey>, EpisodeMsg>> episodesToDownload = new LinkedBlockingQueue<>();
   private static final Set<DownloadStatus> activeDownloads = new HashSet<>();
 
   private final DownloadApi downloadApi;
-  private final Publisher<EpisodeMsgKey, EpisodeMsgValue> episodeStorePublisher;
-  private final StateStoreDetails<ShowMsgKey, ShowMsgValue> showStoreDetails;
-  private final StateStoreDetails<EpisodeMsgKey, EpisodeMsgValue> episodeStoreDetails;
+  private final Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher;
+  private final StateStoreDetails<ByteKey<ShowMsgKey>, ShowMsg> showStoreDetails;
+  private final StateStoreDetails<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreDetails;
   private final long minQualityGoal;
   private final String downloadFolder;
 
-  private KeyValueStore<ShowMsgKey, ShowMsgValue> showStore;
-  private KeyValueStore<EpisodeMsgKey, EpisodeMsgValue> episodeStore;
+  private KeyValueStore<ByteKey<ShowMsgKey>, ShowMsg> showStore;
+  private KeyValueStore<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStore;
 
   @Override
   public void init(ProcessorContext context) {
     episodeStore = episodeStoreDetails.getStore(context);
     showStore = showStoreDetails.getStore(context);
 
-    context.schedule(10000, PunctuationType.WALL_CLOCK_TIME, l -> {
+    context.schedule(Duration.ofSeconds(10), PunctuationType.WALL_CLOCK_TIME, l -> {
       activeDownloads.forEach(download -> {
         if (download.isFinished() || download.getErrorCode() != 0) {
           activeDownloads.remove(download);
@@ -63,64 +66,66 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
       });
 
       if (activeDownloads.isEmpty() && !episodesToDownload.isEmpty()) {
-        KeyValue<EpisodeMsgKey, EpisodeMsgValue> entry = episodesToDownload.poll();
+        KeyValue<ByteKey<EpisodeMsgKey>, EpisodeMsg> entry = episodesToDownload.poll();
         submitDownload(entry.key, entry.value);
       }
     });
   }
 
   @Override
-  public void process(EpisodeMsgKey key, EpisodeMsgValue value) {
-    EpisodeMsgValue previousEpisodeDownload = episodeStore.get(key);
-    if (previousEpisodeDownload != null && previousEpisodeDownload.getDownloadTime() != null) {
-      log.info("Episode has already been downloaded, skipping: {}|{}", key, value);
+  public void process(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
+    EpisodeMsg previousEpisodeDownload = episodeStore.get(key);
+    if (previousEpisodeDownload != null && previousEpisodeDownload.getValue() != null
+        && previousEpisodeDownload.getValue().getDownloadTime() != null) {
+      log.info("Episode has already been downloaded, skipping: {}|{}", key, msg);
       return;
     }
 
     if (activeDownloads.isEmpty()) {
-      submitDownload(key, value);
+      submitDownload(key, msg);
     } else {
-      episodesToDownload.add(new KeyValue<>(key, value));
+      episodesToDownload.add(new KeyValue<>(key, msg));
     }
   }
 
-  private void submitDownload(EpisodeMsgKey key, EpisodeMsgValue value) {
-    ShowMsgValue showMsg = showStore.get(key.getShowId());
+  private void submitDownload(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
+    ShowMsg showMsg = showStore.get(new ByteKey<>(msg.getKey().getShowId()));
 
     String destinationDir = addTrailingSlashToPath(downloadFolder);
     String destinationFileName = "UNKNOWN_" + Instant.now().getEpochSecond();
     if (showMsg == null) {
       log.warn("Show with ID {} has no entry in GKT; Downloading to {} with filename {}",
-          key.getShowId(),
+          msg.getKey().getShowId(),
           destinationDir, destinationFileName);
     } else {
-      destinationDir += addTrailingSlashToPath(showMsg.getFolderName());
-      destinationFileName = createFileName(showMsg.getEpisodeNamePattern(), showMsg.getSeason(),
-          key.getEpisodeNumber());
+      destinationDir += addTrailingSlashToPath(showMsg.getValue().getFolderName());
+      destinationFileName = createFileName(showMsg.getValue().getEpisodeNamePattern(),
+          showMsg.getValue().getSeason(), msg.getKey().getEpisodeNumber());
     }
 
-    EpisodeLink linkForBestQuality = selectLink(value);
+    EpisodeLink linkForBestQuality = selectLink(msg);
 
     DownloadStatus downloadStatus = downloadApi.submitDownload(linkForBestQuality.getUrl(),
         DownloadType.valueOf(linkForBestQuality.getType().name()), destinationDir,
         destinationFileName, completedStatus -> {
           if (completedStatus.isFinished() && completedStatus.getErrorCode() == 0) {
             episodeStorePublisher
-                .send(key, completedValue(completedStatus, value, linkForBestQuality));
+                .send(key, completedValue(completedStatus, msg, linkForBestQuality));
           }
         });
 
     activeDownloads.add(downloadStatus);
   }
 
-  private EpisodeMsgValue completedValue(DownloadStatus completedStatus,
-      EpisodeMsgValue value, EpisodeLink linkForBestQuality) {
-    return EpisodeMsgValue.newBuilder()
+  private EpisodeMsg completedValue(DownloadStatus completedStatus,
+      EpisodeMsg msg, EpisodeLink linkForBestQuality) {
+    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
         .setDownloadTime(completedStatus.getEndTime())
         .setDownloadedQuality(linkForBestQuality.getQuality())
-        .setLatestLinks(value.getLatestLinks())
+        .setLatestLinks(msg.getValue().getLatestLinks())
         .setMessageId(Uuid.randomUUID())
         .build();
+    return EpisodeMsg.newBuilder().setKey(msg.getKey()).setValue(value).build();
   }
 
   private String createFileName(String episodeNamePattern, Integer seasonNum, Long episodeNum) {
@@ -148,8 +153,8 @@ public class EpisodeProcessor implements Processor<EpisodeMsgKey, EpisodeMsgValu
     return episodeNamePattern;
   }
 
-  private EpisodeLink selectLink(EpisodeMsgValue value) {
-    List<EpisodeLink> latestLinks = value.getLatestLinks();
+  private EpisodeLink selectLink(EpisodeMsg value) {
+    List<EpisodeLink> latestLinks = value.getValue().getLatestLinks();
     latestLinks.sort(Comparator.comparingInt(EpisodeLink::getQuality));
     EpisodeLink bestLink = null;
     for (EpisodeLink latestLink : latestLinks) {

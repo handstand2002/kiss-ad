@@ -1,10 +1,11 @@
 package com.brokencircuits.kissad.hsshowfetch.streams;
 
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,8 @@ import org.springframework.stereotype.Component;
 public class StreamController extends StreamsService {
 
   private final ClusterConnectionProps clusterConnectionProps;
-  private final Topic<ShowMsgKey, ShowMsgValue> showQueueTopic;
-  private final ProcessorSupplier<ShowMsgKey, ShowMsgValue> showProcessorSupplier;
+  private final Topic<ByteKey<ShowMsgKey>, ShowMsg> showQueueTopic;
+  private final ProcessorSupplier<ByteKey<ShowMsgKey>, ShowMsg> showProcessorSupplier;
 
   @Override
   protected KafkaStreams getStreams() {
@@ -32,13 +33,13 @@ public class StreamController extends StreamsService {
   private Topology buildTopology() {
     builder = new StreamsBuilder();
 
-    KStream<ShowMsgKey, ShowMsgValue> showStream = builder
+    KStream<ByteKey<ShowMsgKey>, ShowMsg> showStream = builder
         .stream(showQueueTopic.getName(), showQueueTopic.consumedWith())
         .peek(StreamsService::logConsume);
 
-    KStream<ShowMsgKey, ShowMsgValue>[] branches = showStream.branch(
-        (key, value) -> value.getSources().containsKey(SourceName.HORRIBLESUBS.name()),
-        (key, value) -> true
+    KStream<ByteKey<ShowMsgKey>, ShowMsg>[] branches = showStream.branch(
+        (key, msg) -> msg.getValue().getSources().containsKey(SourceName.HORRIBLESUBS.name()),
+        (key, msg) -> true
     );
 
     branches[1].foreach((key, value) -> log.info("Ignoring show as it does not have a valid "

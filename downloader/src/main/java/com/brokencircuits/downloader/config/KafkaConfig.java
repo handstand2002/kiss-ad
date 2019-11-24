@@ -1,11 +1,12 @@
 package com.brokencircuits.downloader.config;
 
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
-import com.brokencircuits.downloader.messages.DownloadRequestValue;
+import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadStatusKey;
-import com.brokencircuits.downloader.messages.DownloadStatusValue;
+import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.downloader.messages.DownloaderStatusKey;
-import com.brokencircuits.downloader.messages.DownloaderStatusValue;
+import com.brokencircuits.downloader.messages.DownloaderStatusMsg;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.topics.TopicUtil;
@@ -26,19 +27,19 @@ public class KafkaConfig {
   }
 
   @Bean
-  Topic<DownloadRequestKey, DownloadRequestValue> downloadRequestTopic(
+  Topic<ByteKey<DownloadRequestKey>, DownloadRequestMsg> downloadRequestTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return TopicUtil.downloadRequestTopic(schemaRegistryUrl);
   }
 
   @Bean
-  Topic<DownloadStatusKey, DownloadStatusValue> downloadStatusTopic(
+  Topic<ByteKey<DownloadStatusKey>, DownloadStatusMsg> downloadStatusTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return TopicUtil.downloadStatusTopic(schemaRegistryUrl);
   }
 
   @Bean
-  Topic<DownloaderStatusKey, DownloaderStatusValue> downloaderStatusTopic(
+  Topic<ByteKey<DownloaderStatusKey>, DownloaderStatusMsg> downloaderStatusTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return TopicUtil.downloaderStatusTopic(schemaRegistryUrl);
   }

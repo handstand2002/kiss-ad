@@ -1,11 +1,12 @@
 package com.brokenciruits.kissad.scheduler.streams;
 
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StreamsService;
+import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.util.Uuid;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,47 +28,47 @@ import org.springframework.stereotype.Component;
 public class StreamController extends StreamsService {
 
   private final ClusterConnectionProps clusterConnectionProps;
-  private final KeyValueStoreWrapper<ShowMsgKey, ShowMsgValue> showStoreWrapper;
+  private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showStoreWrapper;
   private final TaskScheduler taskScheduler;
-  private final Publisher<ShowMsgKey, ShowMsgValue> showTriggerPublisher;
-  private Map<Uuid, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
+  private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showTriggerPublisher;
+  private Map<ByteKey<ShowMsgKey>, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
 
-  private final BiConsumer<ShowMsgKey, ShowMsgValue> onSchedule = new BiConsumer<ShowMsgKey, ShowMsgValue>() {
+  private final BiConsumer<ByteKey<ShowMsgKey>, ShowMsg> onSchedule = new BiConsumer<ByteKey<ShowMsgKey>, ShowMsg>() {
     @Override
-    public void accept(ShowMsgKey key, ShowMsgValue value) {
-      log.info("Triggered show {} | {}", key, value);
-      value.setMessageId(Uuid.randomUUID());
-      showTriggerPublisher.send(key, value);
+    public void accept(ByteKey<ShowMsgKey> key, ShowMsg msg) {
+      log.info("Triggered show {} | {}", key, msg);
+      msg.getValue().setMessageId(Uuid.randomUUID());
+      showTriggerPublisher.send(key, msg);
     }
   };
 
   @Override
   protected void afterStreamsStart(KafkaStreams streams) {
     showStoreWrapper.initialize(streams);
-    try (KeyValueIterator<ShowMsgKey, ShowMsgValue> iterator = showStoreWrapper.all()) {
+    try (KeyValueIterator<ByteKey<ShowMsgKey>, ShowMsg> iterator = showStoreWrapper.all()) {
       iterator.forEachRemaining(entry -> scheduleShow(entry.key, entry.value));
     }
   }
 
-  private void scheduleShow(ShowMsgKey key, ShowMsgValue value) {
-    log.info("Scheduling {} | {}", key, value);
-    ScheduledFuture<?> scheduledJob = scheduledJobs.get(key.getShowId());
+  private void scheduleShow(ByteKey<ShowMsgKey> key, ShowMsg msg) {
+    log.info("Scheduling {}", msg);
+    ScheduledFuture<?> scheduledJob = scheduledJobs.get(key);
     if (scheduledJob != null) {
       scheduledJob.cancel(false);
-      log.info("Cancelled job for show ID: {}", key.getShowId());
-      scheduledJobs.remove(key.getShowId());
+      log.info("Cancelled job for show ID: {}", msg.getKey().getShowId());
+      scheduledJobs.remove(key);
     }
 
-    if (value != null) {
+    if (msg != null) {
       try {
-        ScheduledFuture<?> job = taskScheduler.schedule(() -> onSchedule.accept(key, value),
-            new CronTrigger(value.getReleaseScheduleCron()));
-        scheduledJobs.put(key.getShowId(), job);
-        log.info("Scheduled check for show {} on schedule {}", value.getTitle(),
-            value.getReleaseScheduleCron());
+        ScheduledFuture<?> job = taskScheduler.schedule(() -> onSchedule.accept(key, msg),
+            new CronTrigger(msg.getValue().getReleaseScheduleCron()));
+        scheduledJobs.put(key, job);
+        log.info("Scheduled check for show {} on schedule {}", msg.getValue().getTitle(),
+            msg.getValue().getReleaseScheduleCron());
       } catch (IllegalArgumentException e) {
         log.warn("Illegal cron expression , not scheduling check for this show: {} | {}", key,
-            value);
+            msg);
       }
     }
   }

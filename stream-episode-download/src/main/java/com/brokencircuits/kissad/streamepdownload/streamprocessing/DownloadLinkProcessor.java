@@ -25,10 +25,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class DownloadLinkProcessor implements
-    Processor<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> {
+    Processor<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> {
 
   final private Publisher<String, DownloadAvailability> availabilityPublisher;
-  final private Publisher<DownloadedEpisodeKey, DownloadedEpisodeMessage> downloadedEpisodePublisher;
+  final private Publisher<ByteKey<DownloadedEpisodeKey>, DownloadedEpisodeMessage> downloadedEpisodePublisher;
   final private static Pattern dirHasTrailingSlashPattern = Pattern.compile("([\\\\/])$");
 
   @Value("${messaging.application-id}")

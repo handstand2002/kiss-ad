@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class DownloadLinkStreams extends StreamsService {
 
   private final Properties streamProperties;
-  private final Topic<ExternalDownloadLinkKey, ExternalDownloadLinkMessage> downloadLinkTopic;
+  private final Topic<ByteKey<ExternalDownloadLinkKey>, ExternalDownloadLinkMessage> downloadLinkTopic;
   private final DownloadLinkProcessor downloadLinkProcessor;
 
   @Override

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class ExtLinkStreams extends StreamsService {
 
   private final Properties streamProperties;
-  private final Topic<KissEpisodePageKey, ExternalEpisodeLinkMessage> externalLinkTopic;
+  private final Topic<ByteKey<KissEpisodePageKey>, ExternalEpisodeLinkMessage> externalLinkTopic;
   private final ExtLinkMessageProcessor extLinkMessageProcessor;
 
   @Override

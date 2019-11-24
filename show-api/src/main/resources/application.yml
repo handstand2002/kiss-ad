@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.showApi
+    application.id: ad.showApi.v2
 
 ---
 spring:

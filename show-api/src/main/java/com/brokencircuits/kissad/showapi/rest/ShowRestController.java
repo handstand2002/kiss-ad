@@ -1,13 +1,16 @@
 package com.brokencircuits.kissad.showapi.rest;
 
 import com.brokencircuits.kissad.Translator;
+import com.brokencircuits.kissad.kafka.AdminInterface;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
+import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.showapi.rest.domain.ShowObject;
+import com.brokencircuits.kissad.topics.TopicUtil;
 import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.messages.Command;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ShowRestController {
 
-  private final Publisher<ByteKey<ShowMsgKey>, ShowMsgValue> showMessagePublisher;
-  private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>> showLocalToMsgTranslator;
-  private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue>, ShowObject> showMsgToLocalTranslator;
-  private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsgValue> showMsgStore;
+  private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showMessagePublisher;
+  private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator;
+  private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator;
+  private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showMsgStore;
+  private final AdminInterface adminInterface;
 
   @Value("${show.default.episode-name-pattern}")
   private String defaultEpisodeNamePattern;
@@ -77,10 +81,15 @@ public class ShowRestController {
       newShowObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
     }
 
-    KeyValue<ByteKey<ShowMsgKey>, ShowMsgValue> message = showLocalToMsgTranslator
+    KeyValue<ByteKey<ShowMsgKey>, ShowMsg> msg = showLocalToMsgTranslator
         .translate(newShowObject);
 
-    showMessagePublisher.send(message);
+    if (msg.value.getValue().getSkipEpisodeString() != null) {
+      adminInterface.sendCommand(TopicUtil.MODULE_DOWNLOAD_DELEGATOR, Command.SKIP_EPISODE_RANGE,
+          msg.value.getKey().getShowId().toString(), msg.value.getValue().getSkipEpisodeString());
+    }
+
+    showMessagePublisher.send(msg);
     return newShowObject;
   }
 
@@ -95,7 +104,7 @@ public class ShowRestController {
   @GetMapping(path = "/getShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject getShow(@PathVariable final Uuid id) {
     ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
-    ShowMsgValue showMessage = showMsgStore.get(lookupKey);
+    ShowMsg showMessage = showMsgStore.get(lookupKey);
 
     return showMessage != null ? showMsgToLocalTranslator
         .translate(KeyValue.pair(lookupKey, showMessage)) : null;
@@ -104,7 +113,7 @@ public class ShowRestController {
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject deleteShow(@PathVariable final Uuid id) {
     ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
-    ShowMsgValue showMessage = showMsgStore.get(lookupKey);
+    ShowMsg showMessage = showMsgStore.get(lookupKey);
     ShowObject showObject = null;
     if (showMessage != null) {
       showObject = showMsgToLocalTranslator

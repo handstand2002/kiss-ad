@@ -2,10 +2,12 @@ package com.brokencircuits.kissad.download;
 
 import com.brokencircuits.download.messages.DownloadType;
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
+import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
+import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.util.Uuid;
 import java.time.Duration;
@@ -23,7 +25,8 @@ public class DownloadThread extends Thread {
   private final BiConsumer<DownloadStatus, DownloadThread> onCompletion;
 
   public DownloadThread(DownloadStatusWrapper statusWrapper, DownloadApi api,
-      Publisher<DownloadRequestKey, DownloadRequestValue> requestPublisher, Duration startTimeout,
+      Publisher<ByteKey<DownloadRequestKey>, DownloadRequestMsg> requestPublisher,
+      Duration startTimeout,
       BiConsumer<DownloadStatus, DownloadThread> onCompletion) {
 
     super(() -> {
@@ -43,7 +46,8 @@ public class DownloadThread extends Thread {
 
       statusWrapper.setDownloaderId(key.getDownloaderId());
       statusWrapper.setStartTime(Instant.now());
-      requestPublisher.send(key, value);
+      requestPublisher.send(ByteKey.from(key),
+          DownloadRequestMsg.newBuilder().setKey(key).setValue(value).build());
 
       Instant timeoutAtInstant = Instant.now().plus(startTimeout);
       try {

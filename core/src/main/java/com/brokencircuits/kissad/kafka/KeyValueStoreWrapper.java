@@ -2,6 +2,7 @@ package com.brokencircuits.kissad.kafka;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.state.KeyValueIterator;
@@ -11,7 +12,7 @@ import org.apache.logging.log4j.util.BiConsumer;
 import org.apache.logging.log4j.util.TriConsumer;
 
 @Slf4j
-public class KeyValueStoreWrapper<K, V> extends StateStoreDetails<K, V> implements
+public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends StateStoreDetails<K, V> implements
     ReadOnlyKeyValueStore<K, V> {
 
   @Getter
