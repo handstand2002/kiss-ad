@@ -28,13 +28,16 @@ public class AnonymousConsumer<K, V> implements Service {
   private final Topic<K, V> topic;
   private final ClusterConnectionProps kafkaProperties;
   private final ConcurrentKafkaListenerContainerFactory<K, V> containerFactory;
+  private final SeekPosition startPosition;
   private ConcurrentMessageListenerContainer<K, V> container;
   @Setter
   private MessageListener<K, V> messageListener;
 
-  public AnonymousConsumer(Topic<K, V> topic, ClusterConnectionProps kafkaProperties) {
+  public AnonymousConsumer(Topic<K, V> topic, ClusterConnectionProps kafkaProperties,
+      SeekPosition startPosition) {
     this.topic = topic;
     this.kafkaProperties = kafkaProperties;
+    this.startPosition = startPosition;
 
     containerFactory = kafkaListenerContainerFactory(topic, kafkaProperties.asObjectMap());
     messageListener = record -> log.info("Received record {}", record);
@@ -61,13 +64,12 @@ public class AnonymousConsumer<K, V> implements Service {
     return factory;
   }
 
-  private static Collection<TopicPartitionInitialOffset> partitionsAtBeginning(
-      Collection<PartitionInfo> partitions) {
+  private static Collection<TopicPartitionInitialOffset> partitionsAtPosition(
+      Collection<PartitionInfo> partitions, SeekPosition startPosition) {
     Collection<TopicPartitionInitialOffset> partitionsAtBeginning = new HashSet<>();
     for (PartitionInfo partition : partitions) {
       partitionsAtBeginning.add(
-          new TopicPartitionInitialOffset(partition.topic(), partition.partition(),
-              SeekPosition.BEGINNING));
+          new TopicPartitionInitialOffset(partition.topic(), partition.partition(), startPosition));
     }
     return partitionsAtBeginning;
   }
@@ -117,7 +119,8 @@ public class AnonymousConsumer<K, V> implements Service {
   public void start() throws Exception {
     log.info("[{}] State: STARTING; Properties:\n{}", topic.getName(), kafkaProperties.toString());
 
-    container = containerFactory.createContainer(partitionsAtBeginning(queryPartitions()));
+    container = containerFactory
+        .createContainer(partitionsAtPosition(queryPartitions(), startPosition));
 
     container.setErrorHandler((thrownException, data) -> {
       log.error("[{}] Exception occurred while processing record; shutting down. Record: {}",

@@ -13,6 +13,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.Serdes;
+import org.springframework.kafka.support.TopicPartitionInitialOffset.SeekPosition;
 
 @Slf4j
 public class TopicKeyUpdater<K, V> {
@@ -42,7 +43,7 @@ public class TopicKeyUpdater<K, V> {
         Serdes.ByteArray());
 
     AnonymousConsumer<byte[], byte[]> consumer = new AnonymousConsumer<>(byteTopic,
-        clusterConnectionProps);
+        clusterConnectionProps, SeekPosition.BEGINNING);
 
     Map<TopicPartition, TopicPartitionOffsets> uncaughtUpPartitions = new HashMap<>();
     Map<TopicPartition, TopicPartitionOffsets> partitionOffsets = consumer

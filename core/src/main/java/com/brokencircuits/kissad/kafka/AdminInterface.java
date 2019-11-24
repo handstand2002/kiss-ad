@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.StreamsConfig;
+import org.springframework.kafka.support.TopicPartitionInitialOffset.SeekPosition;
 
 @Slf4j
 public class AdminInterface implements Service, Closeable {
@@ -35,8 +36,7 @@ public class AdminInterface implements Service, Closeable {
 
     topic = TopicUtil.adminTopic(schemaRegistryUrl);
 
-    consumer = new AnonymousConsumer<>(
-        topic, connectionProps);
+    consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
     consumer.setMessageListener(pair -> {
       if (pair.value().getKey().getApplicationId().equals(applicationId)) {
         log.info("Accepting command {}", pair.value());
