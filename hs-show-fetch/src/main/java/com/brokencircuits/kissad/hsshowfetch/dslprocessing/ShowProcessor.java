@@ -63,7 +63,6 @@ public class ShowProcessor implements Processor<ByteKey<ShowMsgKey>, ShowMsg> {
         .setShowId(showKey)
         .build();
     EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
-        .setKey(key)
         .setDownloadedQuality(0)
         .setLatestLinks(convertUrlList(ep.getUrlList()))
         .setDownloadTime(null)

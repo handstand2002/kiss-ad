@@ -12,11 +12,21 @@ import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.topics.TopicUtil;
+import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.Command;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.streams.KeyValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -91,24 +101,65 @@ public class KafkaConfig {
   }
 
   @Bean
-  Publisher<ByteKey<DownloadRequestKey>, DownloadRequestMsg> publisher(
-      ClusterConnectionProps props,
-      Topic<ByteKey<DownloadRequestKey>, DownloadRequestMsg> downloadRequestTopic) {
-    return new Publisher<>(props.asProperties(), downloadRequestTopic);
-  }
-
-  @Bean
   AdminInterface adminInterface(@Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
-      ClusterConnectionProps props) throws Exception {
+      ClusterConnectionProps props,
+      Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher) throws Exception {
     AdminInterface adminInterface = new AdminInterface(schemaRegistryUrl, props);
     adminInterface.registerCommand(Command.SKIP_EPISODE_RANGE, command -> {
-      log.info("doing nothing with {}", command);
-//      EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
-//          .setRawTitle()
-//          .build()
+
+      List<String> parameters = command.getValue().getParameters();
+
+      Uuid showUuid = Uuid.fromString(parameters.get(0));
+      Set<Long> episodesToPublish = episodesFromRangeCsv(parameters.get(1));
+
+      episodesToPublish.forEach(episodeNum -> {
+        KeyValue<ByteKey<EpisodeMsgKey>, EpisodeMsg> kvPair = downloadedEpisodeMsg(showUuid,
+            episodeNum);
+        episodeStorePublisher.send(kvPair);
+      });
     });
     adminInterface.start();
     return adminInterface;
+  }
+
+  private Set<Long> episodesFromRangeCsv(String rangeCsv) {
+    String[] ranges = rangeCsv.split(" *, *");
+    HashSet<Long> episodesToPublish = new HashSet<>();
+    Pattern rangePattern = Pattern.compile("\\s*(\\d+)\\s*(-\\s*(\\d+)\\s*)?");
+    for (String range : ranges) {
+      Matcher matcher = rangePattern.matcher(range);
+      if (matcher.find()) {
+        int startRange = Integer.parseInt(matcher.group(1));
+        int endRange = startRange;
+        String endRangeString = matcher.group(3);
+        if (endRangeString != null) {
+          endRange = Integer.parseInt(endRangeString);
+        }
+        for (long i = startRange; i <= endRange; i++) {
+          episodesToPublish.add(i);
+        }
+      }
+    }
+    return episodesToPublish;
+  }
+
+  private KeyValue<ByteKey<EpisodeMsgKey>, EpisodeMsg> downloadedEpisodeMsg(Uuid showUuid,
+      Long episodeNum) {
+    EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
+        .setEpisodeNumber(episodeNum)
+        .setShowId(ShowMsgKey.newBuilder().setShowId(showUuid).build())
+        .build();
+    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
+        .setMessageId(Uuid.randomUUID())
+        .setLatestLinks(new ArrayList<>())
+        .setDownloadTime(Instant.now())
+        .setDownloadedQuality(-1)
+        .build();
+    EpisodeMsg msg = EpisodeMsg.newBuilder()
+        .setKey(key)
+        .setValue(value)
+        .build();
+    return KeyValue.pair(ByteKey.from(key), msg);
   }
 
 }

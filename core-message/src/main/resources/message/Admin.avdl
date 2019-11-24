@@ -11,7 +11,6 @@ protocol Simple {
   }
 
   record AdminCommandValue {
-    AdminCommandKey key;
     Command command;
     array<string> parameters;
     timestamp_ms sendTime;

@@ -81,8 +81,7 @@ public class ShowRestController {
       newShowObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
     }
 
-    KeyValue<ByteKey<ShowMsgKey>, ShowMsg> msg = showLocalToMsgTranslator
-        .translate(newShowObject);
+    KeyValue<ByteKey<ShowMsgKey>, ShowMsg> msg = showLocalToMsgTranslator.translate(newShowObject);
 
     if (msg.value.getValue().getSkipEpisodeString() != null) {
       adminInterface.sendCommand(TopicUtil.MODULE_DOWNLOAD_DELEGATOR, Command.SKIP_EPISODE_RANGE,

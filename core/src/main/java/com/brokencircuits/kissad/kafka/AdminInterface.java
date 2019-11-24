@@ -41,7 +41,11 @@ public class AdminInterface implements Service, Closeable {
       if (pair.value().getKey().getApplicationId().equals(applicationId)) {
         log.info("Accepting command {}", pair.value());
         if (registeredCommands.containsKey(pair.value().getValue().getCommand())) {
-          registeredCommands.get(pair.value().getValue().getCommand()).accept(pair.value());
+          try {
+            registeredCommands.get(pair.value().getValue().getCommand()).accept(pair.value());
+          } catch (RuntimeException e) {
+            log.error("Could not complete command {}", pair.value(), e);
+          }
         } else {
           log.warn("Command {} has no registered action, ignoring",
               pair.value().getValue().getCommand());
@@ -66,7 +70,6 @@ public class AdminInterface implements Service, Closeable {
         .build();
     AdminCommandValue value = AdminCommandValue.newBuilder()
         .setCommand(command)
-        .setKey(key)
         .setSendTime(Instant.now())
         .setParameters(Arrays.asList(parameters))
         .build();
