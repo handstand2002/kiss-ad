@@ -94,6 +94,30 @@ public class ShowRestController {
     return newShowObject;
   }
 
+  @GetMapping(path = "/checkShow", produces = CONTENT_TYPE_JSON)
+  public List<ShowObject> checkShow() {
+    List<ShowObject> outputList = new ArrayList<>();
+    showMsgStore.all()
+        .forEachRemaining(pair -> outputList.add(checkShow(pair.value.getKey().getShowId())));
+
+    return outputList;
+  }
+
+  @GetMapping(path = "/checkShow/{id}", produces = CONTENT_TYPE_JSON)
+  public ShowObject checkShow(@PathVariable final Uuid id) {
+    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
+    ShowMsg showMessage = showMsgStore.get(lookupKey);
+
+    if (showMessage != null) {
+      adminInterface
+          .sendCommand(TopicUtil.MODULE_SCHEDULER, Command.CHECK_NEW_EPISODES, id.toString());
+    }
+
+    return showMessage != null ? showMsgToLocalTranslator
+        .translate(KeyValue.pair(lookupKey, showMessage)) : null;
+  }
+
+
   @GetMapping(path = "/getShow", produces = CONTENT_TYPE_JSON)
   public List<ShowObject> getShowList() {
     List<ShowObject> outputList = new ArrayList<>();

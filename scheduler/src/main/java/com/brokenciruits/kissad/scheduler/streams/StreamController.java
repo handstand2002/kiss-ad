@@ -3,7 +3,6 @@ package com.brokenciruits.kissad.scheduler.streams;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
-import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
@@ -11,7 +10,7 @@ import com.brokencircuits.kissad.util.Uuid;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
-import java.util.function.BiConsumer;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KafkaStreams;
@@ -30,17 +29,8 @@ public class StreamController extends StreamsService {
   private final ClusterConnectionProps clusterConnectionProps;
   private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showStoreWrapper;
   private final TaskScheduler taskScheduler;
-  private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showTriggerPublisher;
+  private final Function<Uuid, Boolean> triggerShowMethod;
   private Map<ByteKey<ShowMsgKey>, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
-
-  private final BiConsumer<ByteKey<ShowMsgKey>, ShowMsg> onSchedule = new BiConsumer<ByteKey<ShowMsgKey>, ShowMsg>() {
-    @Override
-    public void accept(ByteKey<ShowMsgKey> key, ShowMsg msg) {
-      log.info("Triggered show {} | {}", key, msg);
-      msg.getValue().setMessageId(Uuid.randomUUID());
-      showTriggerPublisher.send(key, msg);
-    }
-  };
 
   @Override
   protected void afterStreamsStart(KafkaStreams streams) {
@@ -59,10 +49,11 @@ public class StreamController extends StreamsService {
       scheduledJobs.remove(key);
     }
 
-    if (msg != null) {
+    if (msg != null && msg.getValue() != null) {
       try {
-        ScheduledFuture<?> job = taskScheduler.schedule(() -> onSchedule.accept(key, msg),
-            new CronTrigger(msg.getValue().getReleaseScheduleCron()));
+        ScheduledFuture<?> job = taskScheduler
+            .schedule(() -> triggerShowMethod.apply(msg.getKey().getShowId()),
+                new CronTrigger(msg.getValue().getReleaseScheduleCron()));
         scheduledJobs.put(key, job);
         log.info("Scheduled check for show {} on schedule {}", msg.getValue().getTitle(),
             msg.getValue().getReleaseScheduleCron());
