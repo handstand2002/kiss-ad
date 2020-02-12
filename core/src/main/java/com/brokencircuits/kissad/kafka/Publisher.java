@@ -30,6 +30,10 @@ public class Publisher<K, V> {
     return producer.send(new ProducerRecord<>(topic.getName(), key, message));
   }
 
+  public Future<RecordMetadata> send(K key, V value, String toTopic) {
+    return producer.send(new ProducerRecord<>(toTopic, key, value));
+  }
+
   public Future<RecordMetadata> send(KeyValue<K, V> pair) {
     return send(pair.key, pair.value);
   }

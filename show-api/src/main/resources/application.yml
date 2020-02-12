@@ -1,6 +1,7 @@
 messaging:
   cluster-connection:
-    application.id: ad.showApi.v2
+    application.id: stream-task-tester
+    num.stream.threads: 1
 
 ---
 spring:

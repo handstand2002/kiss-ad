@@ -18,7 +18,7 @@ public abstract class StreamsService {
     log.info("No actions taken in afterStreamsStart()");
   }
 
-  void start() {
+  public void start() {
     log.info("Starting streams");
     streams = getStreams();
 
@@ -39,7 +39,7 @@ public abstract class StreamsService {
     streams.start();
   }
 
-  void stop() {
+  public void stop() {
     streams.close();
   }
 
