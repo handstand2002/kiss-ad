@@ -1,0 +1,23 @@
+@namespace("com.brokencircuits.messages")
+protocol Simple {
+
+  record KissCaptchaImgKey {
+    string imgHash;
+  }
+
+  record KissCaptchaImgMsg {
+    KissCaptchaImgKey key;
+    bytes imgBytes;
+  }
+
+  record KissCaptchaBatchKey {
+    timestamp_ms batchTime;
+  }
+
+  record KissCaptchaBatchMsg {
+    KissCaptchaBatchKey key;
+    array<KissCaptchaImgKey> imageKeys;
+    array<string> keywords;
+  }
+
+}

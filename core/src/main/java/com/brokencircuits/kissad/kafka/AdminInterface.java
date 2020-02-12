@@ -15,7 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.streams.StreamsConfig;
+import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.support.TopicPartitionInitialOffset.SeekPosition;
 
 @Slf4j
@@ -26,6 +28,7 @@ public class AdminInterface implements Service, Closeable {
   private final AnonymousConsumer<ByteKey<AdminCommandKey>, AdminCommandMsg> consumer;
   private final Publisher<ByteKey<AdminCommandKey>, AdminCommandMsg> publisher;
   private final Map<Command, Consumer<AdminCommandMsg>> registeredCommands = new HashMap<>();
+  private final MessageListener<ByteKey<AdminCommandKey>, AdminCommandMsg> messageListener;
 
   public AdminInterface(String schemaRegistryUrl, ClusterConnectionProps connectionProps) {
 
@@ -34,10 +37,7 @@ public class AdminInterface implements Service, Closeable {
       throw new NullPointerException("property application.id cannot be null for AdminInterface");
     }
 
-    topic = TopicUtil.adminTopic(schemaRegistryUrl);
-
-    consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
-    consumer.setMessageListener(pair -> {
+    messageListener = pair -> {
       if (pair.value().getKey().getApplicationId().equals(applicationId)) {
         log.info("Accepting command {}", pair.value());
         if (registeredCommands.containsKey(pair.value().getValue().getCommand())) {
@@ -51,11 +51,23 @@ public class AdminInterface implements Service, Closeable {
               pair.value().getValue().getCommand());
         }
       }
-    });
+    };
+
+    topic = TopicUtil.adminTopic(schemaRegistryUrl);
+
+    consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
+    consumer.setMessageListener(messageListener);
 
     publisher = new Publisher<>(connectionProps.asProperties(), topic);
 
     log.info("Configured AdminClient to receive commands for application.id {}", applicationId);
+  }
+
+  public void handleCommandManual(AdminCommandMsg command) {
+
+    ConsumerRecord<ByteKey<AdminCommandKey>, AdminCommandMsg> record = new ConsumerRecord<>("dummy",
+        0, -1, new ByteKey<>(command.getKey()), command);
+    messageListener.onMessage(record);
   }
 
   public void registerCommand(Command command, Consumer<AdminCommandMsg> consumer) {

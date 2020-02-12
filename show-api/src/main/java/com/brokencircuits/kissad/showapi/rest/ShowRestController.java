@@ -137,7 +137,8 @@ public class ShowRestController {
 
   @DeleteMapping(path = "/deleteShow/{id}", produces = CONTENT_TYPE_JSON)
   public ShowObject deleteShow(@PathVariable final Uuid id) {
-    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
+    ShowMsgKey key = ShowMsgKey.newBuilder().setShowId(id).build();
+    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(key);
     ShowMsg showMessage = showMsgStore.get(lookupKey);
     ShowObject showObject = null;
     if (showMessage != null) {
@@ -145,7 +146,7 @@ public class ShowRestController {
           .translate(new KeyValue<>(lookupKey, showMessage));
     }
     if (showObject != null) {
-      showMessagePublisher.send(lookupKey, null);
+      showMessagePublisher.send(lookupKey, ShowMsg.newBuilder().setKey(key).setValue(null).build());
     }
     return showObject;
   }

@@ -16,6 +16,8 @@ import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.messages.AdminCommandKey;
 import com.brokencircuits.messages.AdminCommandMsg;
+import com.brokencircuits.messages.KissCaptchaImgKey;
+import com.brokencircuits.messages.KissCaptchaImgMsg;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.avro.specific.SpecificRecord;
@@ -27,6 +29,7 @@ public class TopicUtil {
   private static Serde<SpecificRecord> valueSerde = null;
   private static Map<String, Topic> topicCache = new HashMap<>();
 
+  public static final String TOPIC_KISS_CAPTCHA_PICTURE = "ad.kiss.captcha.picture.store";
   public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status.v2";
   public static final String TOPIC_SHOW_STORE = "ad.show.store.v2";
   public static final String TOPIC_SHOW_QUEUE = "ad.show.queue.v2";
@@ -46,7 +49,8 @@ public class TopicUtil {
    * Topic containing interest list of shows
    */
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_ADMIN, schemaRegistryUrl);
   }
 
@@ -67,13 +71,21 @@ public class TopicUtil {
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_STORE, schemaRegistryUrl);
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeQueueTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeQueueTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_QUEUE, schemaRegistryUrl);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg> kissCaptchaPictureTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_CAPTCHA_PICTURE, schemaRegistryUrl);
   }
 
   @SuppressWarnings("unchecked")

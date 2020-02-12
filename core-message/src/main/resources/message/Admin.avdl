@@ -7,7 +7,7 @@ protocol Simple {
   }
 
   enum Command {
-    CHECK_NEW_EPISODES, SKIP_EPISODE_RANGE
+    CHECK_NEW_EPISODES, SKIP_EPISODE_RANGE, QUERY_CAPTCHA_PICS
   }
 
   record AdminCommandValue {

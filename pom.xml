@@ -16,6 +16,7 @@
     <module>downloader</module>
     <module>scheduler</module>
     <module>download-delegator</module>
+    <module>kiss-captcha-capture</module>
   </modules>
 
   <parent>

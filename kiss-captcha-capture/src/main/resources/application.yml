@@ -1,0 +1,20 @@
+messaging:
+  cluster-connection:
+    application.id: ad.kissCaptchaCapture
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  schema-registry-url: http://192.168.0.254:8081
+  cluster-connection:
+    state.dir: ./target/streams-state-dir
+    bootstrap.servers: 192.168.0.254:29092
+
+kiss.captcha:
+  base-url: "https://kissanime.ru"
+  url: ${kiss.captcha.base-url}/Special/AreYouHuman2?reUrl=
+  all-img-css-selector: "#container #formVerify1 img"
+  all-keyword-css-selector: "#container #formVerify1 span"
