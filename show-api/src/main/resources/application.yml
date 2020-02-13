@@ -2,6 +2,8 @@ messaging:
   cluster-connection:
     application.id: stream-task-tester
     num.stream.threads: 1
+    consumer.max.poll.records: 100
+
 
 ---
 spring:

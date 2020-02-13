@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.showapi.rest.domain;
 
+import com.brokencircuits.kissad.showapi.rest.domain.PublishString.PublishStringBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.AllArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.Data;
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
-@JsonDeserialize(builder = PublishString.ShowObjectBuilder.class)
+@JsonDeserialize(builder = PublishStringBuilder.class)
 public class PublishString {
 
   private String topic;
@@ -17,7 +18,7 @@ public class PublishString {
   private String value;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ShowObjectBuilder {
+  public static class PublishStringBuilder {
 
   }
 

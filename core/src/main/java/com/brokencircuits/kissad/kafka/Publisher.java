@@ -31,6 +31,7 @@ public class Publisher<K, V> {
   }
 
   public Future<RecordMetadata> send(K key, V value, String toTopic) {
+    log.info("Sending to topic {}: {} | {}", toTopic, key, value);
     return producer.send(new ProducerRecord<>(toTopic, key, value));
   }
 

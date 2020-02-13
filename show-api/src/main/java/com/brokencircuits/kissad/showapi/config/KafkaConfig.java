@@ -17,34 +17,41 @@ public class KafkaConfig {
     return new ClusterConnectionProps();
   }
 
+  public static final String TOPIC_IN = "inTopic";
+  public static final String TOPIC_PART1 = "repartTopic1";
+  public static final String TOPIC_PART2 = "repartTopic2";
+  public static final String TOPIC_PART3 = "repartTopic3";
+  public static final String TOPIC_OUT = "outTopic";
+
+
   @Bean
   Topic<String, String> inTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return new Topic<>("inTopic", Serdes.String(), Serdes.String());
+    return new Topic<>(TOPIC_IN, Serdes.String(), Serdes.String());
   }
 
   @Bean
   Topic<String, String> repartition1Topic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return new Topic<>("repartTopic1", Serdes.String(), Serdes.String());
+    return new Topic<>(TOPIC_PART1, Serdes.String(), Serdes.String());
   }
 
   @Bean
   Topic<String, String> repartition2Topic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return new Topic<>("repartTopic2", Serdes.String(), Serdes.String());
+    return new Topic<>(TOPIC_PART2, Serdes.String(), Serdes.String());
   }
 
   @Bean
   Topic<String, String> repartition3Topic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return new Topic<>("repartTopic3", Serdes.String(), Serdes.String());
+    return new Topic<>(TOPIC_PART3, Serdes.String(), Serdes.String());
   }
 
   @Bean
   Topic<String, String> outTopic(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
-    return new Topic<>("outTopic", Serdes.String(), Serdes.String());
+    return new Topic<>(TOPIC_OUT, Serdes.String(), Serdes.String());
   }
 
 }
