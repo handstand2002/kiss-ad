@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class PublisherConfig {
 
   @Bean
-  Publisher<String, String> showMessagePublisher(Topic<String, String> topic,
+  Publisher<String, String> showMessagePublisher(Topic<String, String> inTopic,
       ClusterConnectionProps clusterProps) {
 
-    return new Publisher<>(clusterProps.asProperties(), topic);
+    return new Publisher<>(clusterProps.asProperties(), inTopic);
   }
 
 }
