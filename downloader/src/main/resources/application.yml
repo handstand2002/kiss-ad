@@ -2,6 +2,10 @@ messaging:
   cluster-connection:
     application.id: downloader.v2
 
+download.rename:
+  retry-count: 30
+  retry-delay: 10s
+
 ---
 spring:
   profiles: dev
