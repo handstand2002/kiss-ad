@@ -45,7 +45,7 @@ public class StreamController extends StreamsService {
     ScheduledFuture<?> scheduledJob = scheduledJobs.get(key);
     if (scheduledJob != null) {
       scheduledJob.cancel(false);
-      log.info("Cancelled job for show ID: {}", msg.getKey().getShowId());
+      log.info("Cancelled job for show ID: {}", key);
       scheduledJobs.remove(key);
     }
 
