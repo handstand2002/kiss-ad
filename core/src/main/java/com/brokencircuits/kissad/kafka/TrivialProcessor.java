@@ -53,7 +53,10 @@ public class TrivialProcessor<K, V extends SpecificRecordBase> implements Proces
       log.debug("Updating store with new value: {} | {}", key, newValue);
       oldValue = internalStore.get().get(key);
 
-      Object nestedValue = newValue.get("value");
+      Object nestedValue = null;
+      if (newValue != null) {
+        nestedValue = newValue.get("value");
+      }
       if (nestedValue == null) {
         internalStore.get().delete(key);
       } else {
