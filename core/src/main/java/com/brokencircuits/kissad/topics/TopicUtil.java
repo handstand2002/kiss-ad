@@ -46,7 +46,8 @@ public class TopicUtil {
    * Topic containing interest list of shows
    */
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_ADMIN, schemaRegistryUrl);
   }
 
@@ -67,12 +68,14 @@ public class TopicUtil {
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_STORE, schemaRegistryUrl);
   }
 
   @SuppressWarnings("unchecked")
-  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeQueueTopic(String schemaRegistryUrl) {
+  public static Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeQueueTopic(
+      String schemaRegistryUrl) {
     return getTopic(TOPIC_EPISODE_QUEUE, schemaRegistryUrl);
   }
 

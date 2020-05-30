@@ -27,7 +27,7 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends State
 
   public void initialize(KafkaStreams streams) {
     store = streams.store(getStoreName(), QueryableStoreTypes.keyValueStore());
-    log.info("Initialized store '{}'", getStoreName());
+    log.info("Initialized store '{}' on topic {}", getStoreName(), builtOnTopic.getName());
   }
 
   private void checkStoreInitialized() {

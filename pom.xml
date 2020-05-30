@@ -16,6 +16,7 @@
     <module>downloader</module>
     <module>scheduler</module>
     <module>download-delegator</module>
+    <module>ui-server</module>
   </modules>
 
   <parent>

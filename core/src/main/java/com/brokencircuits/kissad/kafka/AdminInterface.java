@@ -27,14 +27,14 @@ public class AdminInterface implements Service, Closeable {
   private final Publisher<ByteKey<AdminCommandKey>, AdminCommandMsg> publisher;
   private final Map<Command, Consumer<AdminCommandMsg>> registeredCommands = new HashMap<>();
 
-  public AdminInterface(String schemaRegistryUrl, ClusterConnectionProps connectionProps) {
+  public AdminInterface(ClusterConnectionProps connectionProps) {
 
     applicationId = connectionProps.asProperties().getProperty(StreamsConfig.APPLICATION_ID_CONFIG);
     if (applicationId == null) {
       throw new NullPointerException("property application.id cannot be null for AdminInterface");
     }
 
-    topic = TopicUtil.adminTopic(schemaRegistryUrl);
+    topic = TopicUtil.adminTopic(connectionProps.getSchemaRegistryUrl());
 
     consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
     consumer.setMessageListener(pair -> {
