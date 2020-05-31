@@ -13,11 +13,17 @@ import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
 import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.Command;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.state.KeyValueIterator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,11 +62,34 @@ public class ShowController {
   @RequestMapping(value = "/shows", method = RequestMethod.GET)
   public String showsList(Model model) {
     List<ShowObject> outputList = new ArrayList<>();
-    showMsgStore.all()
-        .forEachRemaining(pair -> outputList.add(showMsgToLocalTranslator.translate(pair)));
+    try (KeyValueIterator<ByteKey<ShowMsgKey>, ShowMsg> iterator = showMsgStore.all()) {
+      iterator.forEachRemaining(pair -> outputList.add(showMsgToLocalTranslator.translate(pair)));
+    }
 
-    model.addAttribute("shows", outputList);
+    List<ShowObject> sortedShows = outputList.stream().sorted(getShowScheduleComparator())
+        .collect(Collectors.toList());
+
+    model.addAttribute("shows", sortedShows);
     return "shows";
+  }
+
+  private static Comparator<ShowObject> getShowScheduleComparator() {
+    return (o1, o2) -> {
+      CronTrigger trigger1 = new CronTrigger(o1.getReleaseScheduleCron());
+      Date nextTrigger1 = trigger1.nextExecutionTime(new SimpleTriggerContext());
+      CronTrigger trigger2 = new CronTrigger(o2.getReleaseScheduleCron());
+      Date nextTrigger2 = trigger2.nextExecutionTime(new SimpleTriggerContext());
+
+      if (nextTrigger1 == null && nextTrigger2 == null) {
+        return 0;
+      } else if (nextTrigger1 == null) {
+        return -1;
+      } else if (nextTrigger2 == null) {
+        return 1;
+      } else {
+        return nextTrigger1.compareTo(nextTrigger2);
+      }
+    };
   }
 
   @RequestMapping(value = "/addShow", method = RequestMethod.GET)
