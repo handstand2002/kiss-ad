@@ -25,6 +25,7 @@ public class ShowObject {
   private Collection<ShowSource> sources;
   private String episodeNamePattern = null;
   private String folderName;
+  private String nextEpisode;
 
   @JsonPOJOBuilder(withPrefix = "")
   public static class ShowObjectBuilder {

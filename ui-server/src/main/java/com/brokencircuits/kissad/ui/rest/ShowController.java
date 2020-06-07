@@ -12,6 +12,7 @@ import com.brokencircuits.kissad.ui.rest.domain.HsShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
 import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.Command;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -42,6 +43,9 @@ public class ShowController {
   private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showMsgStore;
   private final AdminInterface adminInterface;
 
+  private static final SimpleDateFormat NEXT_EPISODE_DATE_FORMAT = new SimpleDateFormat(
+      "EEE h:mma");
+
   @Value("${show.default.episode-name-pattern}")
   private String defaultEpisodeNamePattern;
   @Value("${show.default.release-schedule-cron}")
@@ -67,18 +71,34 @@ public class ShowController {
     }
 
     List<ShowObject> sortedShows = outputList.stream().sorted(getShowScheduleComparator())
+        .map(showObject -> {
+          Date nextRun = nextRunTime(showObject.getReleaseScheduleCron());
+          if (nextRun != null) {
+            showObject.setNextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
+          }
+          return showObject;
+        })
         .collect(Collectors.toList());
 
     model.addAttribute("shows", sortedShows);
     return "shows";
   }
 
+  private static Date nextRunTime(String cron) {
+    Date date = null;
+    try {
+      CronTrigger trigger1 = new CronTrigger(cron);
+      date = trigger1.nextExecutionTime(new SimpleTriggerContext());
+    } catch (IllegalArgumentException ignored) {
+
+    }
+    return date;
+  }
+
   private static Comparator<ShowObject> getShowScheduleComparator() {
     return (o1, o2) -> {
-      CronTrigger trigger1 = new CronTrigger(o1.getReleaseScheduleCron());
-      Date nextTrigger1 = trigger1.nextExecutionTime(new SimpleTriggerContext());
-      CronTrigger trigger2 = new CronTrigger(o2.getReleaseScheduleCron());
-      Date nextTrigger2 = trigger2.nextExecutionTime(new SimpleTriggerContext());
+      Date nextTrigger1 = nextRunTime(o1.getReleaseScheduleCron());
+      Date nextTrigger2 = nextRunTime(o2.getReleaseScheduleCron());
 
       if (nextTrigger1 == null && nextTrigger2 == null) {
         return 0;

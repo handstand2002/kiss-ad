@@ -21,6 +21,7 @@
           <tr th:each="show : ${shows}">
             <td>
               <a th:href="@{/show/{id}(id=${show.showId})}" th:text="${show.title}"></a>
+              <span th:text="${show.nextEpisode}" class="next-episode-time"></span>
             </td>
             <td>
               <span>
@@ -36,7 +37,7 @@
       <div class="col-lg-6 col-md-7 col-sm-6">
         <hr/>
         <div class="page-head"><a th:href="@{/addShow}">
-          <button>New...</button>
+          <button>新</button>
         </a></div>
       </div>
     </div>

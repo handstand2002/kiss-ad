@@ -71,3 +71,9 @@ button {
   padding-left: 0px;
   padding-right: 0px;
 }
+
+.next-episode-time {
+  font-size: .8em;
+  margin-left: 10px;
+  white-space: nowrap;
+}
