@@ -3,8 +3,6 @@ package com.brokenciruits.kissad.scheduler.streams;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.StreamsService;
-import com.brokencircuits.kissad.messages.EpisodeMsg;
-import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.util.Uuid;
@@ -34,7 +32,6 @@ public class StreamController extends StreamsService {
 
 
   private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showStoreWrapper;
-  private final KeyValueStoreWrapper<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreWrapper;
   private final Collection<KeyValueStoreWrapper<?, ?>> storeWrappers;
   private final TaskScheduler taskScheduler;
   private final Function<Uuid, Boolean> triggerShowMethod;
@@ -98,11 +95,6 @@ public class StreamController extends StreamsService {
     StreamsBuilder builder = new StreamsBuilder();
 
     showStoreWrapper.addToBuilder(builder, this::scheduleShow);
-    episodeStoreWrapper.addToBuilder(builder, (key, oldMsg, newMsg) -> {
-
-      // TODO: make the updates here reflect in a map that tells when the latest new episode
-      log.info("Received update to episode: {} Old: {}; new: {}", key, oldMsg, newMsg);
-    });
     storeWrappers.forEach(wrapper -> wrapper.addToBuilder(builder));
 
     return builder.build();

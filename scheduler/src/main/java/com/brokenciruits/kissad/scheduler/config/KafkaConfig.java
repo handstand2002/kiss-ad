@@ -100,7 +100,6 @@ public class KafkaConfig {
     };
   }
 
-
   @Bean
   AdminInterface adminInterface(@Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
       ClusterConnectionProps props, Function<Uuid, Boolean> triggerShowMethod) throws Exception {
