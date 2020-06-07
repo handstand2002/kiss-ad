@@ -13,9 +13,7 @@ messaging:
     state.dir: ./target/streams-state-dir
     bootstrap.servers: 192.168.0.254:29092
 
-show.default:
-  episode-name-pattern: S<SEASON_2>E<EPISODE_3>
-  release-schedule-cron: 0 0 12 * * *
-
-server:
-  port: 15000
+show:
+  retry:
+    interval: 15m
+    max-times: 8
