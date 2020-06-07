@@ -23,7 +23,9 @@
               <a th:href="@{/show/{id}(id=${show.showId})}" th:text="${show.title}"></a>
             </td>
             <td>
-              <span>チエック</span>
+              <span>
+                <a th:href="@{/checkShow/{id}(id=${show.showId})}">チエック</a>
+              </span>
             </td>
           </tr>
           </tbody>

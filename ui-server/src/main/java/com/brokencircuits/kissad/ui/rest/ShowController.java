@@ -146,6 +146,28 @@ public class ShowController {
     }
     return "redirect:/shows";
   }
+
+
+  @RequestMapping(path = "/checkShow")
+  public String checkShow() {
+    showMsgStore.all()
+        .forEachRemaining(pair -> checkShow(pair.value.getKey().getShowId()));
+
+    return "redirect:/shows";
+  }
+
+  @RequestMapping(path = "/checkShow/{id}")
+  public String checkShow(@PathVariable final Uuid id) {
+    ByteKey<ShowMsgKey> lookupKey = ByteKey.from(ShowMsgKey.newBuilder().setShowId(id).build());
+    ShowMsg showMessage = showMsgStore.get(lookupKey);
+
+    if (showMessage != null) {
+      adminInterface
+          .sendCommand(TopicUtil.MODULE_SCHEDULER, Command.CHECK_NEW_EPISODES, id.toString());
+    }
+
+    return "redirect:/shows";
+  }
 //
 //  @RequestMapping(value = "/developers", method = RequestMethod.POST)
 //  public String developersAdd(@RequestParam String email,
