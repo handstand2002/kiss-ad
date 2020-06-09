@@ -6,7 +6,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>show-api</module>
     <module>core-message</module>
     <module>core</module>
     <module>hs-show-fetch</module>
