@@ -12,13 +12,17 @@ import org.apache.logging.log4j.util.BiConsumer;
 import org.apache.logging.log4j.util.TriConsumer;
 
 @Slf4j
-public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends StateStoreDetails<K, V> implements
+public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends
+    StateStoreDetails<K, V> implements
     ReadOnlyKeyValueStore<K, V> {
 
   @Getter
   final private Topic<K, V> builtOnTopic;
 
   private ReadOnlyKeyValueStore<K, V> store;
+  private boolean hasBeenAdded = false;
+  @Getter
+  private boolean isInitialized = false;
 
   public KeyValueStoreWrapper(String storeName, Topic<K, V> builtOnTopic) {
     super(storeName, builtOnTopic.getKeySerde(), builtOnTopic.getValueSerde());
@@ -27,7 +31,8 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends State
 
   public void initialize(KafkaStreams streams) {
     store = streams.store(getStoreName(), QueryableStoreTypes.keyValueStore());
-    log.info("Initialized store '{}'", getStoreName());
+    isInitialized = true;
+    log.info("Initialized store '{}' on topic {}", getStoreName(), builtOnTopic.getName());
   }
 
   private void checkStoreInitialized() {
@@ -42,6 +47,10 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends State
 
   public StreamsBuilder addToBuilder(StreamsBuilder builder,
       TriConsumer<K, V, V> onUpdateCallback) {
+    if (hasBeenAdded) {
+      return builder;
+    }
+    hasBeenAdded = true;
     return builder.addGlobalStore(Util.keyValueStoreBuilder(getStoreName(), builtOnTopic),
         builtOnTopic.getName(), builtOnTopic.consumedWith(),
         () -> TrivialProcessor.<K, V>builder().storeName(getStoreName())
@@ -50,6 +59,10 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends State
 
   public StreamsBuilder addToBuilder(StreamsBuilder builder,
       BiConsumer<K, V> onUpdateCallback) {
+    if (hasBeenAdded) {
+      return builder;
+    }
+    hasBeenAdded = true;
     return builder.addGlobalStore(Util.keyValueStoreBuilder(getStoreName(), builtOnTopic),
         builtOnTopic.getName(), builtOnTopic.consumedWith(),
         () -> TrivialProcessor.<K, V>builder().storeName(getStoreName())
@@ -79,4 +92,5 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends State
     checkStoreInitialized();
     return store.approximateNumEntries();
   }
+
 }

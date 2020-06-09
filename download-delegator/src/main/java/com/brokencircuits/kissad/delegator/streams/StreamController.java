@@ -4,7 +4,6 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.kissad.download.DownloadApi;
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import com.brokencircuits.kissad.kafka.Topic;
@@ -16,7 +15,6 @@ import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.processor.ProcessorSupplier;
@@ -29,7 +27,6 @@ import org.springframework.stereotype.Component;
 public class StreamController extends StreamsService {
 
   private final DownloadApi downloadApi;
-  private final ClusterConnectionProps streamProperties;
   private final StateStoreDetails<ByteKey<EpisodeMsgKey>, EpisodeMsg> notDownloadedStoreDetails;
   private final StateStoreDetails<ByteKey<ShowMsgKey>, ShowMsg> showStoreDetails;
   private final StateStoreDetails<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreDetails;
@@ -39,13 +36,8 @@ public class StreamController extends StreamsService {
   private final Topic<ByteKey<ShowMsgKey>, ShowMsg> showStoreTopic;
   private final ProcessorSupplier<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeProcessorSupplier;
 
-  @Override
-  protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), streamProperties.asProperties());
-  }
-
-  private Topology buildTopology() {
-    builder = new StreamsBuilder();
+  protected Topology buildTopology() {
+    StreamsBuilder builder = new StreamsBuilder();
 
     builder.addStateStore(Util.keyValueStoreBuilder(notDownloadedStoreDetails));
 
@@ -54,12 +46,13 @@ public class StreamController extends StreamsService {
         .process(episodeProcessorSupplier, notDownloadedStoreDetails.getStoreName());
 
     builder.stream(downloadStatusTopic.getName(), downloadStatusTopic.consumedWith())
-        .foreach((k,v) -> downloadApi.onDownloadStatusMessage(v));
+        .foreach((k, v) -> downloadApi.onDownloadStatusMessage(v));
 
     KeyValueStoreBuilder<ByteKey<ShowMsgKey>, ShowMsg> showStoreBuilder = Util
         .keyValueStoreBuilder(showStoreDetails);
     builder.addGlobalStore(showStoreBuilder, showStoreTopic.getName(),
-        showStoreTopic.consumedWith(), () -> TrivialProcessor.<ByteKey<ShowMsgKey>, ShowMsg>builder()
+        showStoreTopic.consumedWith(),
+        () -> TrivialProcessor.<ByteKey<ShowMsgKey>, ShowMsg>builder()
             .storeName(showStoreDetails.getStoreName()).build());
 
     KeyValueStoreBuilder<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreBuilder = Util

@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.showapi.config;
+package com.brokencircuits.kissad.ui.config;
 
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;

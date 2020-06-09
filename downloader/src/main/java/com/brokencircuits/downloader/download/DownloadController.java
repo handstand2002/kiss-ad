@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,17 +31,13 @@ public class DownloadController {
   private String downloadFolder;
   @Value("${download.overwrite-permission}")
   private boolean overwritePermission;
+  @Value("${download.rename.retry-count}")
+  private int renameRetryCount;
+  @Value("${download.rename.retry-delay}")
+  private Duration renameRetryDelay;
+
 
   private final static Pattern FOLDER_PATH_PATTERN = Pattern.compile("[\\\\/]$");
-  private final static Pattern FILE_EXTENSION_PATTERN = Pattern.compile("\\.(\\w+)$");
-
-  private String fileExtension(String path) {
-    Matcher matcher = FILE_EXTENSION_PATTERN.matcher(path);
-    if (matcher.find()) {
-      return matcher.group(1);
-    }
-    return "";
-  }
 
   private String addTrailingSlashIfNeeded(String dir) {
     if (!FOLDER_PATH_PATTERN.matcher(dir).find()) {
@@ -106,44 +101,10 @@ public class DownloadController {
       ariaApi.removeDownload(downloadGid);
     }
     if (downloadedToFilename != null) {
-      File downloaded = new File(downloadedToFilename);
-      log.debug("Downloaded: {}", downloaded);
-
-      String downloadedExt = fileExtension(downloaded.getAbsolutePath());
-      String desiredExt = fileExtension(filename);
-      if (!downloadedExt.equals(desiredExt)) {
-        filename += "." + downloadedExt;
-        log.info("Appending original extension ({}) to desired filename. New: {}", downloadedExt,
-            filename);
-      }
-
-      boolean renamed = false;
-      String newFileDir = downloadFolder + destinationDir;
-      {
-        File file = new File(newFileDir);
-        if (!file.exists()) {
-          file.mkdirs();
-        }
-      }
-      String newFilePath = newFileDir + filename;
-
-      File destinationFile = new File(newFilePath);
-      if (destinationFile.exists() && overwritePermission) {
-        destinationFile.delete();
-      }
-
-      for (int i = 0; i < 5 && !renamed; i++) {
-        log.info("Trying to rename file to {}", newFilePath);
-        renamed = downloaded.renameTo(new File(newFilePath));
-        if (!renamed) {
-          Thread.sleep(500);
-        }
-      }
-      log.info("Successful in renaming file: {}", renamed);
-      onDownloadComplete.accept(downloaded, latestStatus);
+      new FileMoveThread(downloadFolder + destinationDir, filename, onDownloadComplete,
+          downloadedToFilename, latestStatus, overwritePermission, renameRetryCount,
+          renameRetryDelay).start();
     }
-
-    log.info("Completed download");
   }
 
   /**

@@ -1,18 +1,22 @@
 package com.brokencircuits.kissad.kafka;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
 @Slf4j
+@Import({StreamsServiceRunner.class, ClusterConnectionProps.class})
 public abstract class StreamsService {
 
+  @Autowired
+  private ClusterConnectionProps clusterConnectionProps;
+
   private KafkaStreams streams;
-  protected StreamsBuilder builder;
   private boolean isRunning = false;
 
-  abstract protected KafkaStreams getStreams();
+  abstract protected Topology buildTopology();
 
   protected void afterStreamsStart(KafkaStreams streams) {
     log.info("No actions taken in afterStreamsStart()");
@@ -20,9 +24,8 @@ public abstract class StreamsService {
 
   void start() {
     log.info("Starting streams");
-    streams = getStreams();
+    streams = new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
 
-    AtomicInteger changedToRunningCount = new AtomicInteger(0);
     streams.setStateListener((newState, oldState) -> {
       if (newState.isRunning() && !isRunning) {
         try {

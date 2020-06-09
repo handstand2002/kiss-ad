@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.showapi.streams;
+package com.brokencircuits.kissad.ui.streams;
 
 import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
@@ -24,13 +24,8 @@ public class StreamController extends StreamsService {
     stores.forEach(store -> store.initialize(streams));
   }
 
-  @Override
-  protected KafkaStreams getStreams() {
-    return new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
-  }
-
-  private Topology buildTopology() {
-    builder = new StreamsBuilder();
+  public Topology buildTopology() {
+    StreamsBuilder builder = new StreamsBuilder();
 
     stores.forEach(store -> store.addToBuilder(builder));
 

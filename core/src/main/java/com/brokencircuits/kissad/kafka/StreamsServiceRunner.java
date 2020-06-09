@@ -1,19 +1,21 @@
 package com.brokencircuits.kissad.kafka;
 
-import java.util.Collection;
+import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor
-public class StreamsServiceRunner implements Runnable {
+@Component
+public class StreamsServiceRunner {
 
-  private final Collection<StreamsService> services;
+  private final StreamsService service;
 
-  @Override
+  @PostConstruct
   public void run() {
     log.info("Starting stream services...");
-    services.forEach(StreamsService::start);
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> services.forEach(StreamsService::stop)));
+    service.start();
+    Runtime.getRuntime().addShutdownHook(new Thread(service::stop));
   }
 }

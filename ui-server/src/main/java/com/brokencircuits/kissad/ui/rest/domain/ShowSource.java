@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.showapi.rest.domain;
+package com.brokencircuits.kissad.ui.rest.domain;
 
 import com.brokencircuits.kissad.messages.SourceName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

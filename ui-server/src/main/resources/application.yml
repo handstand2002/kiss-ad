@@ -1,6 +1,6 @@
 messaging:
   cluster-connection:
-    application.id: ad.showApi.v2
+    application.id: ad.ui.server
 
 ---
 spring:
@@ -18,4 +18,7 @@ show.default:
   release-schedule-cron: 0 0 12 * * *
 
 server:
-  port: 15000
+  port: 15001
+
+logging.level:
+  org.springframework.web: DEBUG

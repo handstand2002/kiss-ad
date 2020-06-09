@@ -1,0 +1,79 @@
+.col-sm-6 {
+  width: 100%;
+}
+
+.container {
+  width: 100%;
+}
+
+body {
+  font-size: 2em;
+  background-color: #454040;
+  color: #89b6c0
+}
+
+.page-head {
+  font-size: 2.2em;
+  width: 100%;
+  text-align: center;
+  text-decoration: underline;
+}
+
+hr {
+  border-top: 1px solid black;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+  background-color: #4d4d4d
+}
+
+.table>tbody>tr>td:nth-of-type(2) {
+  width: 20%;
+  vertical-align: middle;
+  font-size: .7em;
+  padding: 5px;
+}
+
+.table>tbody>tr>td:nth-of-type(2)>span {
+  background-color: #606e7e;
+  border: 6px solid #606e7e;
+}
+
+a {
+  color: #89b6c0;
+}
+
+label {
+  display: block;
+  width: 100%;
+}
+
+.form-control, input {
+  height: 3.2em;
+}
+
+button {
+  background-color: #292929;
+  border: none;
+  border-radius: 16px;
+}
+
+.page-header {
+  margin: .4em 0 21px;
+}
+
+.col-xs-1,.col-sm-1,.col-md-1,.col-lg-1,.col-xs-2,.col-sm-2,.col-md-2,.col-lg-2,.col-xs-3,
+.col-sm-3,.col-md-3,.col-lg-3,.col-xs-4,.col-sm-4,.col-md-4,.col-lg-4,.col-xs-5,.col-sm-5,
+.col-md-5,.col-lg-5,.col-xs-6,.col-sm-6,.col-md-6,.col-lg-6,.col-xs-7,.col-sm-7,.col-md-7,
+.col-lg-7,.col-xs-8,.col-sm-8,.col-md-8,.col-lg-8,.col-xs-9,.col-sm-9,.col-md-9,.col-lg-9,
+.col-xs-10,.col-sm-10,.col-md-10,.col-lg-10,.col-xs-11,.col-sm-11,.col-md-11,.col-lg-11,.col-xs-12,
+.col-sm-12,.col-md-12,.col-lg-12 {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.next-episode-time {
+  font-size: .8em;
+  margin-left: 10px;
+  white-space: nowrap;
+}

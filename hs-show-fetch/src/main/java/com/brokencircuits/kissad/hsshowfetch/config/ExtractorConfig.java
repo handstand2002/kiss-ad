@@ -11,16 +11,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class ExtractorConfig {
 
-  private static final Pattern SHOW_ID_PATTERN = Pattern
-      .compile("var hs_showid = (\\d+);");
+  private static final Pattern SHOW_ID_PATTERN = Pattern.compile("var hs_showid = (\\d+);");
   private static final Pattern FIND_LINK_QUALITY_PATTERN = Pattern
       .compile("\\d+-(\\d+)p", Pattern.CASE_INSENSITIVE);
+  private final static Pattern episodeNumberPattern = Pattern.compile("^\\d+$");
+
 
   @Bean
   Extractor<String, Long> showIdExtractor() {
@@ -45,9 +48,14 @@ public class ExtractorConfig {
         String episodeNum = episodeNode.getAttributes().getNamedItem("id").getNodeValue();
         DomNodeList<DomNode> qualityLinks = episodeNode.querySelectorAll(".rls-link");
 
-        EpisodeDetails details = new EpisodeDetails(Long.parseLong(episodeNum));
-        qualityLinks.forEach(link -> details.getUrlList().add(episodeMagnetUrlFromLinkNode(link)));
-        allEpisodes.add(details);
+        if (episodeNumberPattern.matcher(episodeNum).find()) {
+          EpisodeDetails details = new EpisodeDetails(Long.parseLong(episodeNum));
+          qualityLinks
+              .forEach(link -> details.getUrlList().add(episodeMagnetUrlFromLinkNode(link)));
+          allEpisodes.add(details);
+        } else {
+          log.warn("Unable to parse episode number: {}", episodeNum);
+        }
       });
 
       return allEpisodes;

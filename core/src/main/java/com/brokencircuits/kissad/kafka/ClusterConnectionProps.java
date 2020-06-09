@@ -3,12 +3,21 @@ package com.brokencircuits.kissad.kafka;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import lombok.Data;
 import lombok.Getter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
+@Component
+@ConditionalOnMissingBean(ClusterConnectionProps.class)
+@ConfigurationProperties(prefix = "messaging")
+@Data
 public class ClusterConnectionProps {
 
   @Getter
-  private Map<String, String> clusterConnection = new HashMap<>();
+  private final Map<String, String> clusterConnection = new HashMap<>();
+  private String schemaRegistryUrl;
 
   public Properties asProperties() {
     Properties props = new Properties();
