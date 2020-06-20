@@ -2,7 +2,6 @@ package com.brokencircuits.kissad.kafka;
 
 import com.apple.foundationdb.tuple.Tuple;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
@@ -26,7 +25,6 @@ public class ByteKey<T extends SpecificRecordBase> {
 
     Schema schema = inner.getSchema();
     List<Field> fields = new ArrayList<>(schema.getFields());
-    fields.sort(Comparator.comparing(Field::name));
 
     Tuple tuple = new Tuple();
     for (Field field : fields) {

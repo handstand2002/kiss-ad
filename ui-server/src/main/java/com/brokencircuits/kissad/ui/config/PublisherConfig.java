@@ -16,9 +16,9 @@ public class PublisherConfig {
 
   @Bean
   Publisher<ByteKey<ShowMsgKey>, ShowMsg> showMessagePublisher(
-      Topic<ByteKey<ShowMsgKey>, ShowMsg> showTopic, ClusterConnectionProps clusterProps) {
+      Topic<ByteKey<ShowMsgKey>, ShowMsg> showStoreTopic, ClusterConnectionProps clusterProps) {
 
-    return new Publisher<>(clusterProps.asProperties(), showTopic);
+    return new Publisher<>(clusterProps.asProperties(), showStoreTopic);
   }
 
 }

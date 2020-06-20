@@ -4,6 +4,8 @@ import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.messages.KissCaptchaImgKey;
 import com.brokencircuits.messages.KissCaptchaImgMsg;
+import com.github.kilianB.hashAlgorithms.HashingAlgorithm;
+import com.github.kilianB.hashAlgorithms.PerceptiveHash;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 public class TranslatorConfig {
 
   private final static String IMG_FORMAT = "bmp";
+  private final static HashingAlgorithm perceptiveHash = new PerceptiveHash(32);
 
   @Bean
   Translator<BufferedImage, KeyValue<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg>> imgToMsgTranslator() {
@@ -33,6 +36,7 @@ public class TranslatorConfig {
             .setImgHash(String.valueOf(imgBytes.hashCode())).build();
 
         KissCaptchaImgMsg value = KissCaptchaImgMsg.newBuilder().setKey(key).setImgBytes(imgBytes)
+            .setPerceptualHash(ByteBuffer.wrap(perceptiveHash.hash(img).toByteArray()))
             .build();
 
         return KeyValue.pair(ByteKey.from(key), value);

@@ -25,6 +25,7 @@ public abstract class StreamsService {
   void start() {
     log.info("Starting streams");
     streams = new KafkaStreams(buildTopology(), clusterConnectionProps.asProperties());
+    streams.cleanUp();
 
     streams.setStateListener((newState, oldState) -> {
       if (newState.isRunning() && !isRunning) {

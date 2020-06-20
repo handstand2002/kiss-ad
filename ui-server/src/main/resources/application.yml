@@ -2,6 +2,7 @@ messaging:
   cluster-connection:
     application.id: ad.ui.server
 
+kiss.captcha.request.application-id: ad.kissCaptchaCapture
 ---
 spring:
   profiles: dev

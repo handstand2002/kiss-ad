@@ -23,6 +23,14 @@
       <artifactId>core</artifactId>
       <version>1.0.0</version>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.github.kilianB/JImageHash -->
+    <dependency>
+      <groupId>com.github.kilianB</groupId>
+      <artifactId>JImageHash</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>

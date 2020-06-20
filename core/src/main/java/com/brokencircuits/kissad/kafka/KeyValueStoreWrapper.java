@@ -1,9 +1,12 @@
 package com.brokencircuits.kissad.kafka;
 
+import java.util.LinkedList;
+import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.QueryableStoreTypes;
@@ -91,6 +94,15 @@ public class KeyValueStoreWrapper<K, V extends SpecificRecordBase> extends
   public long approximateNumEntries() {
     checkStoreInitialized();
     return store.approximateNumEntries();
+  }
+
+  public List<KeyValue<K, V>> contents() {
+    checkStoreInitialized();
+    List<KeyValue<K, V>> output = new LinkedList<>();
+    try (KeyValueIterator<K, V> iter = store.all()) {
+      iter.forEachRemaining(output::add);
+    }
+    return output;
   }
 
 }

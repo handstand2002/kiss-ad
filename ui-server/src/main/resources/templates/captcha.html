@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Show</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
+  <link rel="stylesheet" href="/shows.css" media="screen"/>
+</head>
+<body>
+
+<h2 style="margin-left: 50px" th:text="${keyword}"></h2>
+
+<!--<img th:each="imgHash : ${images}" th:src="@{/captcha/image/{id}(id=${imgHash})}" style="margin:10px"/>-->
+
+<form th:each="imgHash : ${images}" action="/captcha-submit" method="post" style="display:inline">
+  <input type="hidden" name="batchId" th:value="${batchId}">
+  <input name="keyword" type="hidden" th:value="${keyword}">
+  <input name="hash" type="hidden" th:value="${imgHash}"/>
+  <button type="submit">
+    <img th:src="@{/captcha/image/{id}(id=${imgHash})}" style="margin:10px"/>
+  </button>
+</form>
+
+</body>
+</html>

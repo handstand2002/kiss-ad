@@ -40,7 +40,7 @@ public class AdminInterface implements Service, Closeable {
     topic = TopicUtil.adminTopic(connectionProps.getSchemaRegistryUrl());
 
     consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
-    consumer.setMessageListener(pair -> {
+    messageListener = pair -> {
       if (pair.value().getKey().getApplicationId().equals(applicationId)) {
         log.info("Accepting command {}", pair.value());
         if (registeredCommands.containsKey(pair.value().getValue().getCommand())) {
@@ -55,10 +55,6 @@ public class AdminInterface implements Service, Closeable {
         }
       }
     };
-
-    topic = TopicUtil.adminTopic(schemaRegistryUrl);
-
-    consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
     consumer.setMessageListener(messageListener);
 
     publisher = new Publisher<>(connectionProps.asProperties(), topic);

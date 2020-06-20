@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.ui.rest.domain;
 
+import com.brokencircuits.kissad.ui.rest.domain.ShowObject.ShowObjectBuilder;
 import com.brokencircuits.kissad.util.Uuid;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -12,7 +13,7 @@ import lombok.NonNull;
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
-@JsonDeserialize(builder = ShowObject.ShowObjectBuilder.class)
+@JsonDeserialize(builder = ShowObjectBuilder.class)
 public class ShowObject {
 
   @NonNull

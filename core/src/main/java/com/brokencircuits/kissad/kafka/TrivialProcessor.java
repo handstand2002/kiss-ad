@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.Processor;
@@ -50,12 +51,15 @@ public class TrivialProcessor<K, V extends SpecificRecordBase> implements Proces
     log.debug("Processing {} | {}", key, newValue);
     V oldValue = null;
     if (storeName != null) {
-      log.debug("Updating store with new value: {} | {}", key, newValue);
+      log.info("Updating store {}: {} | {}", storeName, key, newValue);
       oldValue = internalStore.get().get(key);
 
-      Object nestedValue = null;
+      Object nestedValue = newValue;
       if (newValue != null) {
-        nestedValue = newValue.get("value");
+        Field valueField = newValue.getSchema().getField("value");
+        if (valueField != null) {
+          nestedValue = newValue.get("value");
+        }
       }
       if (nestedValue == null) {
         internalStore.get().delete(key);

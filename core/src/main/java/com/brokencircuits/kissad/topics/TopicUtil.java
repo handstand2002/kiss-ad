@@ -16,8 +16,13 @@ import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.messages.AdminCommandKey;
 import com.brokencircuits.messages.AdminCommandMsg;
+import com.brokencircuits.messages.KissCaptchaBatchKey;
+import com.brokencircuits.messages.KissCaptchaBatchKeywordKey;
+import com.brokencircuits.messages.KissCaptchaBatchKeywordMsg;
+import com.brokencircuits.messages.KissCaptchaBatchMsg;
 import com.brokencircuits.messages.KissCaptchaImgKey;
 import com.brokencircuits.messages.KissCaptchaImgMsg;
+import com.brokencircuits.messages.KissCaptchaMatchedKeywordMsg;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.avro.specific.SpecificRecord;
@@ -29,6 +34,9 @@ public class TopicUtil {
   private static Serde<SpecificRecord> valueSerde = null;
   private static Map<String, Topic> topicCache = new HashMap<>();
 
+  public static final String TOPIC_KISS_CAPTCHA_MATCHED_KEYWORD = "ad.kiss.captcha.keyword.matched.store";
+  public static final String TOPIC_KISS_CAPTCHA_KEYWORD = "ad.kiss.captcha.keyword.store";
+  public static final String TOPIC_KISS_CAPTCHA_BATCH = "ad.kiss.captcha.batch.store";
   public static final String TOPIC_KISS_CAPTCHA_PICTURE = "ad.kiss.captcha.picture.store";
   public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status.v2";
   public static final String TOPIC_SHOW_STORE = "ad.show.store.v2";
@@ -87,6 +95,26 @@ public class TopicUtil {
       String schemaRegistryUrl) {
     return getTopic(TOPIC_KISS_CAPTCHA_PICTURE, schemaRegistryUrl);
   }
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<KissCaptchaBatchKey>, KissCaptchaBatchMsg> kissCaptchaBatchTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_CAPTCHA_BATCH, schemaRegistryUrl);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<KissCaptchaBatchKeywordKey>, KissCaptchaBatchKeywordMsg> kissCaptchaKeywordTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_CAPTCHA_KEYWORD, schemaRegistryUrl);
+  }
+
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<KissCaptchaBatchKeywordKey>, KissCaptchaMatchedKeywordMsg> kissCaptchaMatchedKeywordTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_CAPTCHA_MATCHED_KEYWORD, schemaRegistryUrl);
+  }
+
 
   @SuppressWarnings("unchecked")
   public static Topic<ByteKey<DownloadRequestKey>, DownloadRequestMsg> downloadRequestTopic(
