@@ -6,9 +6,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-public class StreamEpisodeApplication {
+public class KissShowApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(StreamEpisodeApplication.class, args);
+    SpringApplication.run(KissShowApplication.class, args);
   }
 }

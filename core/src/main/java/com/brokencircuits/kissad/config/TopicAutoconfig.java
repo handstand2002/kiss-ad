@@ -10,6 +10,8 @@ import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.topics.TopicUtil;
@@ -37,6 +39,11 @@ public class TopicAutoconfig {
   @Bean
   Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic() {
     return TopicUtil.adminTopic(schemaRegistryUrl);
+  }
+
+  @Bean
+  Topic<ByteKey<KissEpisodePageKey>, KissEpisodePageMessage> kissEpisodePageQueueTopic() {
+    return TopicUtil.kissEpisodePageQueueTopic(schemaRegistryUrl);
   }
 
   @Bean

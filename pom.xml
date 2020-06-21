@@ -9,14 +9,14 @@
     <module>core-message</module>
     <module>core</module>
     <module>hs-show-fetch</module>
-<!--    <module>stream-episodelinks-fetch</module>-->
-<!--    <module>stream-rapidvideo-fetch</module>-->
-<!--    <module>stream-episode-download</module>-->
+    <module>stream-rapidvideo-fetch</module>
+    <module>stream-episode-download</module>
     <module>downloader</module>
     <module>scheduler</module>
     <module>download-delegator</module>
     <module>ui-server</module>
     <module>kiss-captcha-capture</module>
+    <module>kiss-show-fetch</module>
   </modules>
 
   <parent>

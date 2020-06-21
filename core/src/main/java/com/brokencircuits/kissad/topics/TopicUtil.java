@@ -12,6 +12,8 @@ import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageKey;
+import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.messages.AdminCommandKey;
@@ -32,12 +34,14 @@ public class TopicUtil {
 
   private static Serde<SpecificRecord> keySerde = null;
   private static Serde<SpecificRecord> valueSerde = null;
-  private static Map<String, Topic> topicCache = new HashMap<>();
+  private static final Map<String, Topic> topicCache = new HashMap<>();
 
   public static final String TOPIC_KISS_CAPTCHA_MATCHED_KEYWORD = "ad.kiss.captcha.keyword.matched.store";
   public static final String TOPIC_KISS_CAPTCHA_KEYWORD = "ad.kiss.captcha.keyword.store";
   public static final String TOPIC_KISS_CAPTCHA_BATCH = "ad.kiss.captcha.batch.store";
   public static final String TOPIC_KISS_CAPTCHA_PICTURE = "ad.kiss.captcha.picture.store";
+  public static final String TOPIC_KISS_EPISODE_PAGE_QUEUE = "ad.kiss.episode.queue";
+
   public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status.v2";
   public static final String TOPIC_SHOW_STORE = "ad.show.store.v2";
   public static final String TOPIC_SHOW_QUEUE = "ad.show.queue.v2";
@@ -60,6 +64,12 @@ public class TopicUtil {
   public static Topic<ByteKey<AdminCommandKey>, AdminCommandMsg> adminTopic(
       String schemaRegistryUrl) {
     return getTopic(TOPIC_ADMIN, schemaRegistryUrl);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<KissEpisodePageKey>, KissEpisodePageMessage> kissEpisodePageQueueTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_EPISODE_PAGE_QUEUE, schemaRegistryUrl);
   }
 
   /**

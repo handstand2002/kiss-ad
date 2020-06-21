@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.hsshowfetch.streams;
+package com.brokencircuits.kissad.streamepisodelink.streams;
 
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.StreamsService;
@@ -30,7 +30,7 @@ public class StreamController extends StreamsService {
         .peek(StreamsService::logConsume);
 
     KStream<ByteKey<ShowMsgKey>, ShowMsg>[] branches = showStream.branch(
-        (key, msg) -> msg.getValue().getSources().containsKey(SourceName.HORRIBLESUBS.name()),
+        (key, msg) -> msg.getValue().getSources().containsKey(SourceName.KISSANIME.name()),
         (key, msg) -> true
     );
 
@@ -41,5 +41,4 @@ public class StreamController extends StreamsService {
 
     return builder.build();
   }
-
 }
