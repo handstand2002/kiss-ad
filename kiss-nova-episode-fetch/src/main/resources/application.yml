@@ -1,0 +1,18 @@
+messaging:
+  cluster-connection:
+    application.id: kiss-nova-episode-fetch
+
+logging.level.com.gargoylesoftware.htmlunit: ERROR
+
+---
+
+spring:
+  profiles: dev
+
+messaging:
+  schema-registry-url: http://192.168.0.254:8081
+  cluster-connection:
+    state.dir: ./target/streams-state-dir
+    bootstrap.servers: 192.168.0.254:29092
+
+nova.api.root-url: https://www.novelplanet.me/api/source/

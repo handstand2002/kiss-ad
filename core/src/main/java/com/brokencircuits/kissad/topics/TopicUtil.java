@@ -12,6 +12,7 @@ import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.KissEpisodeExternalSrcMsg;
 import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.messages.ShowMsg;
@@ -41,6 +42,7 @@ public class TopicUtil {
   public static final String TOPIC_KISS_CAPTCHA_BATCH = "ad.kiss.captcha.batch.store";
   public static final String TOPIC_KISS_CAPTCHA_PICTURE = "ad.kiss.captcha.picture.store";
   public static final String TOPIC_KISS_EPISODE_PAGE_QUEUE = "ad.kiss.episode.queue";
+  public static final String TOPIC_KISS_EPISODE_EXTERNAL_PAGE_QUEUE = "ad.kiss.episode.external.queue";
 
   public static final String TOPIC_DOWNLOADER_STATUS = "service.downloader.status.v2";
   public static final String TOPIC_SHOW_STORE = "ad.show.store.v2";
@@ -56,6 +58,12 @@ public class TopicUtil {
   public static final String MODULE_FETCHER_HS = "ad.showFetch.hs.v2";
   public static final String MODULE_DOWNLOAD_DELEGATOR = "ad.downloadDelegator.v2";
   public static final String MODULE_DOWNLOADER = "downloader.v2";
+
+  @SuppressWarnings("unchecked")
+  public static Topic<ByteKey<EpisodeMsgKey>, KissEpisodeExternalSrcMsg> kissExternalSourceTopic(
+      String schemaRegistryUrl) {
+    return getTopic(TOPIC_KISS_EPISODE_EXTERNAL_PAGE_QUEUE, schemaRegistryUrl);
+  }
 
   /**
    * Topic containing interest list of shows

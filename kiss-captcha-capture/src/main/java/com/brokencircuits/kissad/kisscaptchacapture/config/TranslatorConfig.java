@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 public class TranslatorConfig {
 
   private final static String IMG_FORMAT = "bmp";
-  private final static HashingAlgorithm perceptiveHash = new PerceptiveHash(32);
+  private final static HashingAlgorithm perceptualHash = new PerceptiveHash(32);
 
   @Bean
   Translator<BufferedImage, KeyValue<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg>> imgToMsgTranslator() {
@@ -36,7 +36,7 @@ public class TranslatorConfig {
             .setImgHash(String.valueOf(imgBytes.hashCode())).build();
 
         KissCaptchaImgMsg value = KissCaptchaImgMsg.newBuilder().setKey(key).setImgBytes(imgBytes)
-            .setPerceptualHash(ByteBuffer.wrap(perceptiveHash.hash(img).toByteArray()))
+            .setPerceptualHash(ByteBuffer.wrap(perceptualHash.hash(img).toByteArray()))
             .build();
 
         return KeyValue.pair(ByteKey.from(key), value);

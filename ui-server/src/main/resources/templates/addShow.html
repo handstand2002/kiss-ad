@@ -16,12 +16,16 @@
       <div class="col-lg-6 col-md-7 col-sm-6">
         <div class="page-head">Add Show</div>
 
-        <form th:action="@{/showsHs}" method="post" enctype="multipart/form-data"
+        <form th:action="@{/addShow}" method="post" enctype="multipart/form-data"
               class="form-horizontal add-show-form">
           <fieldset>
 
-            <label>HS URL</label>
-            <input type="text" class="form-control" name="hsUrl" oninput="deriveShowName(this)"/>
+            <label>URL</label>
+            <input type="text" class="form-control" name="url" oninput="deriveShowName(this)"/>
+            <label>Source</label>
+            <select name="sourceName" class="form-control">
+              <option th:each="source : ${sourceTypes}" th:text="${source}"></option>
+            </select>
             <label>Title</label>
             <input type="text" class="form-control" name="title"/>
             <label>Season</label>

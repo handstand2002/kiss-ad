@@ -17,6 +17,8 @@
     <module>ui-server</module>
     <module>kiss-captcha-capture</module>
     <module>kiss-show-fetch</module>
+    <module>kiss-episode-fetch</module>
+    <module>kiss-nova-episode-fetch</module>
   </modules>
 
   <parent>

@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.apple.foundationdb.Range;
 import com.apple.foundationdb.tuple.Tuple;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.streams.KeyValue;
 
 @Slf4j
 @EqualsAndHashCode
@@ -18,6 +20,12 @@ public class ByteKey<T extends SpecificRecordBase> {
 
   public static <T extends SpecificRecordBase> ByteKey<T> from(T inner) {
     return new ByteKey<>(inner);
+  }
+
+  public static <U extends SpecificRecordBase> KeyValue<ByteKey<U>, ByteKey<U>> rangeFrom(
+      Object... fieldValues) {
+    Range range = Tuple.from(fieldValues).range();
+    return KeyValue.pair(new ByteKey<>(range.begin), new ByteKey<>(range.end));
   }
 
   public ByteKey(T inner) {
