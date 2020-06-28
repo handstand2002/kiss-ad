@@ -1,6 +1,7 @@
 package com.brokencircuits.kissad.kissepisodefetch.streams;
 
 import com.brokencircuits.kissad.Extractor;
+import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
@@ -12,7 +13,11 @@ import com.brokencircuits.kissad.messages.KissEpisodePageKey;
 import com.brokencircuits.kissad.messages.KissEpisodePageMessage;
 import com.brokencircuits.kissad.util.SelectCaptchaImg;
 import com.brokencircuits.kissad.util.SubmitForm;
+import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.KissCaptchaBatchKeywordKey;
+import com.brokencircuits.messages.KissCaptchaBatchKeywordMsg;
+import com.brokencircuits.messages.KissCaptchaImgKey;
+import com.brokencircuits.messages.KissCaptchaImgMsg;
 import com.brokencircuits.messages.KissCaptchaMatchedKeywordMsg;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.github.kilianB.hash.Hash;
@@ -22,8 +27,10 @@ import java.awt.image.BufferedImage;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +56,12 @@ public class EpisodeProcessor implements
   private final Extractor<HtmlPage, Boolean> isCaptchaPageChecker;
   private final Extractor<HtmlPage, String> episodeIframeExtractor;
   private final Publisher<ByteKey<EpisodeMsgKey>, KissEpisodeExternalSrcMsg> externalSrcMsgPublisher;
+
+  private final Publisher<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg> kissCaptchaPicturePublisher;
+  private final Publisher<ByteKey<KissCaptchaBatchKeywordKey>, KissCaptchaBatchKeywordMsg> kissCaptchaKeywordPublisher;
+  private final Translator<BufferedImage, KeyValue<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg>> imgToMsgTranslator;
+
+
   private final static HashingAlgorithm perceptualHash = new PerceptiveHash(32);
 
   private static Hash reconstructHash(ByteBuffer buffer) {
@@ -108,6 +121,7 @@ public class EpisodeProcessor implements
       throws Exception {
     Collection<Integer> captchaImgIndexes;
     Collection<String> keywords;
+    List<BufferedImage> images;
     AtomicReference<HtmlPage> page = new AtomicReference<>(null);
     boolean isCaptchaPage;
     do {
@@ -116,7 +130,7 @@ public class EpisodeProcessor implements
         page.set(webClient.fetchPage(url));
 
         log.info("Extracting images and keywords from page");
-        List<BufferedImage> images = (List<BufferedImage>) imageExtractor.extract(page.get());
+        images = (List<BufferedImage>) imageExtractor.extract(page.get());
         keywords = keywordExtractor.extract(page.get());
 
         List<Hash> pageImgHashes = images.stream().map(perceptualHash::hash)
@@ -124,6 +138,9 @@ public class EpisodeProcessor implements
 
         captchaImgIndexes = solveCaptcha(keywords, pageImgHashes);
         Thread.sleep(5000);
+        if (captchaImgIndexes.size() < keywords.size()) {
+          publishUnsolvedCaptcha(images, keywords);
+        }
       } while (captchaImgIndexes.size() < keywords.size());
 
       for (Integer imgIndex : captchaImgIndexes) {
@@ -138,8 +155,41 @@ public class EpisodeProcessor implements
       page.set(webClient.fetchPage(url));
       isCaptchaPage = isCaptchaPageChecker.extract(page.get());
       log.info("Captcha successfully solved: {}", !isCaptchaPage);
+      if (isCaptchaPage) {
+        publishUnsolvedCaptcha(images, keywords);
+      }
     } while (isCaptchaPage);
     return page.get();
+  }
+
+  private void publishUnsolvedCaptcha(Collection<BufferedImage> images,
+      Collection<String> keywords) {
+
+    if (images.size() > 8) {
+      log.info("Not publishing captcha since it contains too many images");
+      return;
+    }
+    log.info("Publishing captcha that contains unknown keywords or images");
+    Set<KeyValue<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg>> messages = new HashSet<>();
+    images.forEach(img -> messages.add(imgToMsgTranslator.translate(img)));
+
+    Uuid batchId = Uuid.randomUUID();
+
+    keywords.forEach(phrase -> {
+      KissCaptchaBatchKeywordKey key = KissCaptchaBatchKeywordKey.newBuilder()
+          .setBatchId(batchId).setKeyword(phrase).build();
+      ByteKey<KissCaptchaBatchKeywordKey> byteKey = new ByteKey<>(key);
+      KissCaptchaBatchKeywordMsg keywordMsg = KissCaptchaBatchKeywordMsg.newBuilder()
+          .setImageKeys(imageKeys(messages)).setKey(key).build();
+      kissCaptchaKeywordPublisher.send(byteKey, keywordMsg);
+    });
+
+    messages.forEach(kissCaptchaPicturePublisher::send);
+  }
+
+  private List<KissCaptchaImgKey> imageKeys(
+      Set<KeyValue<ByteKey<KissCaptchaImgKey>, KissCaptchaImgMsg>> msgList) {
+    return msgList.stream().map(kvPair -> kvPair.value.getKey()).collect(Collectors.toList());
   }
 
   private Collection<Integer> solveCaptcha(Collection<String> keywords, List<Hash> pageImgHashes) {

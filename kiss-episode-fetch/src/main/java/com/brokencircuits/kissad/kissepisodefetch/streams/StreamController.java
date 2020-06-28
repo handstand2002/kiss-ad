@@ -33,6 +33,7 @@ public class StreamController extends StreamsService {
     StreamsBuilder builder = new StreamsBuilder();
     matchedKeywordsStore.addToBuilder(builder);
 
+    // TODO: filter out episodes that have already been downloaded
     builder.stream(kissEpisodePageQueueTopic.getName(), kissEpisodePageQueueTopic.consumedWith())
         .process(episodeProcessorSupplier);
 

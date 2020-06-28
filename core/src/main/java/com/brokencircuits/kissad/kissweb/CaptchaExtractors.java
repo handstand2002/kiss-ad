@@ -28,7 +28,7 @@ public class CaptchaExtractors {
       if (domNode != null) {
         Matcher matcher = elementRegexPattern.matcher(domNode.getTextContent());
         boolean isCaptchaPage = matcher.find();
-        log.info("Page {} is captcha page?: {}", page.getDocumentURI(), isCaptchaPage);
+        log.info("Page is captcha page?: {}; {}", isCaptchaPage, page.getBaseURL().toString());
         return isCaptchaPage;
       }
       return false;
