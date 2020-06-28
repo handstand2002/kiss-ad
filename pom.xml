@@ -10,7 +10,6 @@
     <module>core</module>
     <module>hs-show-fetch</module>
     <module>stream-rapidvideo-fetch</module>
-    <module>stream-episode-download</module>
     <module>downloader</module>
     <module>scheduler</module>
     <module>download-delegator</module>
@@ -32,7 +31,7 @@
   <artifactId>kiss-ad</artifactId>
   <version>1.0.0</version>
   <name>kiss-ad</name>
-  <description>Kissanime Downloader microservices</description>
+  <description>Anime downloader microservices</description>
 
   <properties>
     <java.version>1.8</java.version>
