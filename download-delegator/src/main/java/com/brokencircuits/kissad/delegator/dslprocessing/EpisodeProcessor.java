@@ -128,10 +128,11 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
     return EpisodeMsg.newBuilder().setKey(msg.getKey()).setValue(value).build();
   }
 
-  private String createFileName(String episodeNamePattern, Integer seasonNum, Long episodeNum) {
+  private static String createFileName(String episodeNamePattern, Integer seasonNum,
+      Long episodeNum) {
 
     Matcher matcher = SEASON_PATTERN.matcher(episodeNamePattern);
-    if (matcher.find()) {
+    while (matcher.find()) {
       int numDigits = Integer.parseInt(matcher.group(1));
       StringBuilder episodeString = new StringBuilder(String.valueOf(seasonNum));
       while (episodeString.length() < numDigits) {
@@ -141,7 +142,7 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
     }
 
     matcher = EPISODE_PATTERN.matcher(episodeNamePattern);
-    if (matcher.find()) {
+    while (matcher.find()) {
       int numDigits = Integer.parseInt(matcher.group(1));
       StringBuilder episodeString = new StringBuilder(String.valueOf(episodeNum));
       while (episodeString.length() < numDigits) {

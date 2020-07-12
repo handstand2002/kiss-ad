@@ -12,6 +12,7 @@
   <artifactId>download-delegator</artifactId>
 
   <dependencies>
+
     <dependency>
       <groupId>com.brokencircuits</groupId>
       <artifactId>core-message</artifactId>

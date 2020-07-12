@@ -101,10 +101,9 @@ public class KafkaConfig {
   }
 
   @Bean
-  AdminInterface adminInterface(@Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
-      ClusterConnectionProps props,
+  AdminInterface adminInterface(ClusterConnectionProps props,
       Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher) throws Exception {
-    AdminInterface adminInterface = new AdminInterface(schemaRegistryUrl, props);
+    AdminInterface adminInterface = new AdminInterface(props);
     adminInterface.registerCommand(Command.SKIP_EPISODE_RANGE, command -> {
 
       List<String> parameters = command.getValue().getParameters();
