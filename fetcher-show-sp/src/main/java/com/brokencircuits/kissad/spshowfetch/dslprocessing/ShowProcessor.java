@@ -20,7 +20,9 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -61,14 +63,19 @@ public class ShowProcessor implements Processor<ByteKey<ShowMsgKey>, ShowMsg> {
       ShowEpisodeResponse episodeResponse = args.getFeignSpShowEpisodeFetcher()
           .findAll(String.valueOf(showId));
 
-      episodeResponse.getEpisode().forEach((epTitle, episode) -> {
-        try {
-          Long epNumber = args.getShowEpisodeExtractor().extract(epTitle);
-          args.getEpisodeMsgPublisher().send(convertEpisodeObj(episode, epNumber, msg.getKey()));
-        } catch (Exception e) {
-          log.error("Unable to process episode {} | {} due to error", epTitle, episode, e);
-        }
-      });
+      episodeResponse.getEpisode().entrySet().stream()
+          .map(e -> {
+            try {
+              Long epNumber = args.getShowEpisodeExtractor().extract(e.getKey());
+              return convertEpisodeObj(e.getValue(), epNumber, msg.getKey());
+            } catch (Exception exception) {
+              log.error("Unable to process episode {} | {} due to error", e.getKey(), e.getValue(), exception);
+              return null;
+            }
+          })
+          .filter(Objects::nonNull)
+          .sorted(Comparator.comparingLong(kv -> kv.value.getKey().getEpisodeNumber()))
+          .forEach(kv -> args.getEpisodeMsgPublisher().send(kv));
 
     } catch (Exception e) {
       log.error("Unable to process {} due to Exception", msg, e);
