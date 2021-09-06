@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+@Deprecated
 @Component
 @ConditionalOnMissingBean(ClusterConnectionProps.class)
 @ConfigurationProperties(prefix = "messaging")

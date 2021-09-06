@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.brokencircuits.kissad.kafka.config.KafkaConfig;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,31 +20,31 @@ import org.springframework.kafka.support.TopicPartitionInitialOffset.SeekPositio
 public class TopicKeyUpdater<K, V> {
 
   private final Topic<K, V> topic;
-  private final ClusterConnectionProps clusterConnectionProps;
+  private final KafkaConfig kafkaConfig;
 
   private Producer<byte[], byte[]> producer;
   private AtomicLong processedRecords = new AtomicLong(0);
   private AtomicLong republishedRecords = new AtomicLong(0);
 
   private void initializeProducer() {
-    Map<String, Object> kafkaProps = clusterConnectionProps.asObjectMap();
+    Map<String, Object> kafkaProps = kafkaConfig.producerMap();
     kafkaProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
     kafkaProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
 
     producer = new KafkaProducer<>(kafkaProps);
   }
 
-  public TopicKeyUpdater(Topic<K, V> topicObj, ClusterConnectionProps clusterConnectionProps)
+  public TopicKeyUpdater(Topic<K, V> topicObj, KafkaConfig kafkaConfig)
       throws Exception {
     this.topic = topicObj;
-    this.clusterConnectionProps = clusterConnectionProps;
+    this.kafkaConfig = kafkaConfig;
     initializeProducer();
 
     Topic<byte[], byte[]> byteTopic = new Topic<>(topicObj.getName(), Serdes.ByteArray(),
         Serdes.ByteArray());
 
     AnonymousConsumer<byte[], byte[]> consumer = new AnonymousConsumer<>(byteTopic,
-        clusterConnectionProps, SeekPosition.BEGINNING);
+        kafkaConfig, SeekPosition.BEGINNING);
 
     Map<TopicPartition, TopicPartitionOffsets> uncaughtUpPartitions = new HashMap<>();
     Map<TopicPartition, TopicPartitionOffsets> partitionOffsets = consumer

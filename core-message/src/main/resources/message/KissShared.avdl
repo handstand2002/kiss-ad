@@ -11,6 +11,6 @@ protocol Simple {
   }
 
   enum SourceName {
-    HORRIBLESUBS, KISSANIME
+    HORRIBLESUBS, KISSANIME, SUBSPLEASE
   }
 }

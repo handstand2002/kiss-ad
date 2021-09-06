@@ -1,6 +1,5 @@
 package com.brokencircuits.kissad.ui.streams;
 
-import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.StreamsService;
 import java.util.Collection;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class StreamController extends StreamsService {
 
-  private final ClusterConnectionProps clusterConnectionProps;
   private final Collection<KeyValueStoreWrapper<?, ?>> stores;
 
   @Override

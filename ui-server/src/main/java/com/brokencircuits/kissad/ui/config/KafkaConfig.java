@@ -2,7 +2,6 @@ package com.brokencircuits.kissad.ui.config;
 
 import com.brokencircuits.kissad.kafka.AdminInterface;
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.ShowMsg;
@@ -29,11 +28,10 @@ public class KafkaConfig {
     return new KeyValueStoreWrapper<>(STORE_SHOW, showStoreTopic);
   }
 
-  @Bean
-  AdminInterface adminInterface(ClusterConnectionProps clusterConnectionProps) throws Exception {
-    AdminInterface adminInterface = new AdminInterface(clusterConnectionProps);
-    adminInterface.start();
-    return adminInterface;
+  @Bean(initMethod = "start")
+  AdminInterface adminInterface(com.brokencircuits.kissad.kafka.config.KafkaConfig kafkaConfig,
+                                @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) throws Exception {
+    return new AdminInterface(kafkaConfig, schemaRegistryUrl);
   }
 
 }

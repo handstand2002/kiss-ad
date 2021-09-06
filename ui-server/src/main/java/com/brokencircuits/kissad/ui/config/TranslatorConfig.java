@@ -11,9 +11,10 @@ import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowSource;
 import com.brokencircuits.kissad.util.Uuid;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Sets;
 import org.apache.kafka.streams.KeyValue;
@@ -31,7 +32,7 @@ public class TranslatorConfig {
       ShowMsgValue value = ShowMsgValue.newBuilder()
           .setTitle(input.getTitle())
           .setSeason(input.getSeason())
-          .setSources(convertSources(input.getSources()))
+          .setSources(convertSources(input.getSourceName(), input.getUrl()))
           .setIsActive(input.getIsActive())
           .setReleaseScheduleCron(input.getReleaseScheduleCron())
           .setSkipEpisodeString(input.getInitialSkipEpisodeString())
@@ -44,42 +45,52 @@ public class TranslatorConfig {
     };
   }
 
-  private static Map<String, String> convertSources(Collection<ShowSource> sources) {
+  private Map<String, String> convertSources(SourceName sourceName, String url) {
     Map<String, String> outputMap = new HashMap<>();
-    sources.forEach(source -> outputMap.put(source.getSourceName().name(), source.getUrl()));
+    outputMap.put(sourceName.name(), url);
     return outputMap;
   }
 
   @Bean
-  Translator<HsShowObject, ShowObject> hsShowTranslator() {
-    return hsShow -> ShowObject.builder()
-        .title(hsShow.getTitle())
-        .season(hsShow.getSeason())
-        .showId(hsShow.getShowId())
-        .isActive(hsShow.getIsActive())
-        .initialSkipEpisodeString(hsShow.getInitialSkipEpisodeString())
-        .releaseScheduleCron(hsShow.getReleaseScheduleCron())
-        .sources(Collections.singleton(
-            ShowSource.builder().sourceName(SourceName.HORRIBLESUBS).url(hsShow.getHsUrl())
-                .build()))
-        .episodeNamePattern(hsShow.getEpisodeNamePattern())
-        .folderName(hsShow.getFolderName())
-        .build();
+  Translator<HsShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> hsShowLocalToMsgTranslator() {
+    return input -> {
+      ShowMsgKey key = ShowMsgKey.newBuilder().setShowId(input.getShowId()).build();
+      ShowMsgValue value = ShowMsgValue.newBuilder()
+          .setTitle(input.getTitle())
+          .setSeason(input.getSeason())
+          .setSources(convertSources(SourceName.HORRIBLESUBS, input.getHsUrl()))
+          .setIsActive(input.getIsActive())
+          .setReleaseScheduleCron(input.getReleaseScheduleCron())
+          .setSkipEpisodeString(input.getInitialSkipEpisodeString())
+          .setEpisodeNamePattern(input.getEpisodeNamePattern())
+          .setFolderName(input.getFolderName())
+          .setMessageId(Uuid.randomUUID())
+          .build();
+      return new KeyValue<>(new ByteKey<>(key),
+          ShowMsg.newBuilder().setKey(key).setValue(value).build());
+    };
   }
 
   @Bean
   Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator() {
-    return pair -> ShowObject.builder()
-        .title(pair.value.getValue().getTitle())
-        .season(pair.value.getValue().getSeason())
-        .showId(pair.value.getKey().getShowId())
-        .isActive(pair.value.getValue().getIsActive())
-        .initialSkipEpisodeString(pair.value.getValue().getSkipEpisodeString())
-        .releaseScheduleCron(pair.value.getValue().getReleaseScheduleCron())
-        .sources(convertSources(pair.value.getValue().getSources()))
-        .episodeNamePattern(pair.value.getValue().getEpisodeNamePattern())
-        .folderName(pair.value.getValue().getFolderName())
-        .build();
+    return pair -> {
+      Map<String, String> sources = pair.value.getValue().getSources();
+      Optional<Entry<String, String>> firstSource = sources.entrySet().stream().findFirst();
+      SourceName sourceName = firstSource.map(src -> SourceName.valueOf(src.getKey())).orElse(null);
+      String url = firstSource.map(Entry::getValue).orElse(null);
+      return ShowObject.builder()
+          .title(pair.value.getValue().getTitle())
+          .season(pair.value.getValue().getSeason())
+          .showId(pair.value.getKey().getShowId())
+          .isActive(pair.value.getValue().getIsActive())
+          .initialSkipEpisodeString(pair.value.getValue().getSkipEpisodeString())
+          .releaseScheduleCron(pair.value.getValue().getReleaseScheduleCron())
+          .sourceName(sourceName)
+          .url(url)
+          .episodeNamePattern(pair.value.getValue().getEpisodeNamePattern())
+          .folderName(pair.value.getValue().getFolderName())
+          .build();
+    };
   }
 
   private static Collection<ShowSource> convertSources(Map<String, String> sources) {

@@ -5,7 +5,7 @@ protocol Simple {
   import idl "Show.avdl";
 
   record KissEpisodePageKey {
-    string showName;
+    ShowMsgKey showKey;
     string episodeName;
   }
 
@@ -13,10 +13,7 @@ protocol Simple {
     KissEpisodePageKey key;
     string url;
     string episodeName;
-    string showName;
     union{null, int} episodeNumber;
-    union{null, int} seasonNumber;
-    union{null, SubOrDub} subOrDub;
     timestamp_ms retrieveTime;
   }
 

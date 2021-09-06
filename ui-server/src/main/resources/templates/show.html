@@ -16,11 +16,16 @@
       <div class="col-lg-8 col-md-7 col-sm-6">
         <div class="page-head" th:text="${show.title}"></div>
 
-        <form class="form-horizontal edit-show-form" th:action="@{/showsHs}" method="post"
+        <form class="form-horizontal edit-show-form" th:action="@{/addShow}" method="post"
               enctype="multipart/form-data">
           <input type="hidden" th:value="${show.showId}" name="showId"/>
           <label>HS URL</label>
-          <input type="text" class="form-control" th:value="${show.sources[0].url}" name="hsUrl"/>
+          <input type="text" class="form-control" th:value="${show.url}" name="url"/>
+          <label>Source</label>
+          <select name="sourceName" class="form-control">
+            <option th:each="source : ${sourceTypes}" th:text="${source}"
+                    th:selected="${source eq show.sourceName}"></option>
+          </select>
           <label>Title</label>
           <input type="text" class="form-control" th:value="${show.title}" name="title"/>
           <label>Season</label>

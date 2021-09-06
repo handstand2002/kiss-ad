@@ -7,9 +7,10 @@ import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.messages.SourceName;
 import com.brokencircuits.kissad.topics.TopicUtil;
-import com.brokencircuits.kissad.ui.rest.domain.HsShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
+import com.brokencircuits.kissad.ui.rest.domain.ShowObject.ShowObjectBuilder;
 import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.Command;
 import java.text.SimpleDateFormat;
@@ -39,7 +40,7 @@ public class ShowController {
   private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showMessagePublisher;
   private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator;
   private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator;
-  private final Translator<HsShowObject, ShowObject> hsShowTranslator;
+
   private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showMsgStore;
   private final AdminInterface adminInterface;
 
@@ -56,6 +57,8 @@ public class ShowController {
     ByteKey<ShowMsgKey> lookupKey = new ByteKey<>(ShowMsgKey.newBuilder().setShowId(id).build());
     ShowMsg showMessage = showMsgStore.get(lookupKey);
 
+    model.addAttribute("sourceTypes", SourceName.values());
+
     if (showMessage != null) {
       model.addAttribute("show",
           showMsgToLocalTranslator.translate(KeyValue.pair(lookupKey, showMessage)));
@@ -64,24 +67,26 @@ public class ShowController {
   }
 
   @RequestMapping(value = "/shows", method = RequestMethod.GET)
-  public String showsList(Model model) {
+  public void showsList(Model model) {
     List<ShowObject> outputList = new ArrayList<>();
     try (KeyValueIterator<ByteKey<ShowMsgKey>, ShowMsg> iterator = showMsgStore.all()) {
       iterator.forEachRemaining(pair -> outputList.add(showMsgToLocalTranslator.translate(pair)));
     }
+    log.info("Found {} shows", outputList.size());
+    outputList.forEach(show -> log.info("Show: {}", show));
 
     List<ShowObject> sortedShows = outputList.stream().sorted(getShowScheduleComparator())
         .map(showObject -> {
+          ShowObjectBuilder builder = showObject.toBuilder();
           Date nextRun = nextRunTime(showObject.getReleaseScheduleCron());
           if (nextRun != null) {
-            showObject.setNextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
+            builder.nextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
           }
-          return showObject;
+          return builder.build();
         })
         .collect(Collectors.toList());
 
     model.addAttribute("shows", sortedShows);
-    return "shows";
   }
 
   private static Date nextRunTime(String cron) {
@@ -114,31 +119,31 @@ public class ShowController {
 
   @RequestMapping(value = "/addShow", method = RequestMethod.GET)
   public String addShow(Model model) {
+
+    model.addAttribute("sourceTypes", SourceName.values());
     return "addShow";
   }
 
-  @RequestMapping(value = "/showsHs", method = RequestMethod.POST)
-  public String addShowHs(HsShowObject showObject, Model model) {
-    ShowObject localShowObject = hsShowTranslator.translate(showObject);
+  @RequestMapping(value = "/addShow", method = RequestMethod.POST)
+  public String addShow(ShowObject showObject, Model model) {
 
-    if (localShowObject.getIsActive() == null) {
-      localShowObject.setIsActive(true);
+    if (showObject.getIsActive() == null) {
+      showObject.setIsActive(true);
     }
 
-    if (localShowObject.getShowId() == null) {
-      localShowObject.setShowId(Uuid.randomUUID());
+    if (showObject.getShowId() == null) {
+      showObject.setShowId(Uuid.randomUUID());
     }
 
-    if (localShowObject.getEpisodeNamePattern() == null) {
-      localShowObject.setEpisodeNamePattern(defaultEpisodeNamePattern);
+    if (showObject.getEpisodeNamePattern() == null) {
+      showObject.setEpisodeNamePattern(defaultEpisodeNamePattern);
     }
 
-    if (localShowObject.getReleaseScheduleCron() == null) {
-      localShowObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
+    if (showObject.getReleaseScheduleCron() == null) {
+      showObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
     }
 
-    KeyValue<ByteKey<ShowMsgKey>, ShowMsg> msg = showLocalToMsgTranslator
-        .translate(localShowObject);
+    KeyValue<ByteKey<ShowMsgKey>, ShowMsg> msg = showLocalToMsgTranslator.translate(showObject);
 
     if (msg.value.getValue().getSkipEpisodeString() != null && !msg.value.getValue()
         .getSkipEpisodeString().isEmpty()) {
@@ -167,7 +172,6 @@ public class ShowController {
     return "redirect:/shows";
   }
 
-
   @RequestMapping(path = "/checkShow")
   public String checkShow() {
     showMsgStore.all()
@@ -188,38 +192,5 @@ public class ShowController {
 
     return "redirect:/shows";
   }
-//
-//  @RequestMapping(value = "/developers", method = RequestMethod.POST)
-//  public String developersAdd(@RequestParam String email,
-//      @RequestParam String firstName, @RequestParam String lastName, Model model) {
-//    Developer newDeveloper = new Developer();
-//    newDeveloper.setEmail(email);
-//    newDeveloper.setFirstName(firstName);
-//    newDeveloper.setLastName(lastName);
-//    repository.save(newDeveloper);
-//
-//    model.addAttribute("developer", newDeveloper);
-//    model.addAttribute("skills", skillRepository.findAll());
-//    return "redirect:/developer/" + newDeveloper.getId();
-//  }
-//
-//  @RequestMapping(value = "/developer/{id}/skills", method = RequestMethod.POST)
-//  public String developersAddSkill(@PathVariable Long id, @RequestParam Long skillId, Model model) {
-//    Skill skill = skillRepository.findOne(skillId);
-//    Developer developer = repository.findOne(id);
-//
-//    if (developer != null) {
-//      if (!developer.hasSkill(skill)) {
-//        developer.getSkills().add(skill);
-//      }
-//      repository.save(developer);
-//      model.addAttribute("developer", repository.findOne(id));
-//      model.addAttribute("skills", skillRepository.findAll());
-//      return "redirect:/developer/" + developer.getId();
-//    }
-//
-//    model.addAttribute("developers", repository.findAll());
-//    return "redirect:/developers";
-//  }
 
 }

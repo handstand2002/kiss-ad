@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.brokencircuits.kissad.kafka.config.KafkaConfig;
 import com.brokencircuits.kissad.util.Service;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,20 +27,20 @@ import org.springframework.kafka.support.TopicPartitionInitialOffset.SeekPositio
 public class AnonymousConsumer<K, V> implements Service {
 
   private final Topic<K, V> topic;
-  private final ClusterConnectionProps kafkaProperties;
+  private final KafkaConfig kafkaProperties;
   private final ConcurrentKafkaListenerContainerFactory<K, V> containerFactory;
   private final SeekPosition startPosition;
   private ConcurrentMessageListenerContainer<K, V> container;
   @Setter
   private MessageListener<K, V> messageListener;
 
-  public AnonymousConsumer(Topic<K, V> topic, ClusterConnectionProps kafkaProperties,
-      SeekPosition startPosition) {
+  public AnonymousConsumer(Topic<K, V> topic, KafkaConfig kafkaProperties,
+                           SeekPosition startPosition) {
     this.topic = topic;
     this.kafkaProperties = kafkaProperties;
     this.startPosition = startPosition;
 
-    containerFactory = kafkaListenerContainerFactory(topic, kafkaProperties.asObjectMap());
+    containerFactory = kafkaListenerContainerFactory(topic, kafkaProperties.consumerMap());
     messageListener = record -> log.info("Received record {}", record);
     log.info("[{}] State: CREATED", topic.getName());
   }

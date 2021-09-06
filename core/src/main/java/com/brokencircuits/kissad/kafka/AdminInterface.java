@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.brokencircuits.kissad.kafka.config.KafkaConfig;
 import com.brokencircuits.kissad.topics.TopicUtil;
 import com.brokencircuits.kissad.util.Service;
 import com.brokencircuits.kissad.util.Uuid;
@@ -27,14 +28,14 @@ public class AdminInterface implements Service, Closeable {
   private final Publisher<ByteKey<AdminCommandKey>, AdminCommandMsg> publisher;
   private final Map<Command, Consumer<AdminCommandMsg>> registeredCommands = new HashMap<>();
 
-  public AdminInterface(ClusterConnectionProps connectionProps) {
+  public AdminInterface(KafkaConfig connectionProps, String schemaRegistryUrl) {
 
-    applicationId = connectionProps.asProperties().getProperty(StreamsConfig.APPLICATION_ID_CONFIG);
+    applicationId = connectionProps.streamsProps().getProperty(StreamsConfig.APPLICATION_ID_CONFIG);
     if (applicationId == null) {
       throw new NullPointerException("property application.id cannot be null for AdminInterface");
     }
 
-    topic = TopicUtil.adminTopic(connectionProps.getSchemaRegistryUrl());
+    topic = TopicUtil.adminTopic(schemaRegistryUrl);
 
     consumer = new AnonymousConsumer<>(topic, connectionProps, SeekPosition.END);
     consumer.setMessageListener(pair -> {
@@ -53,7 +54,7 @@ public class AdminInterface implements Service, Closeable {
       }
     });
 
-    publisher = new Publisher<>(connectionProps.asProperties(), topic);
+    publisher = new Publisher<>(connectionProps.producerProps(), topic);
 
     log.info("Configured AdminClient to receive commands for application.id {}", applicationId);
   }
