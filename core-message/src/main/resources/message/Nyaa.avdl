@@ -1,0 +1,21 @@
+@namespace("com.brokencircuits.kissad.messages")
+protocol Simple {
+
+  record NyaaRssItemMsg {
+    string title;
+    string link;
+    string guid;
+    timestamp_ms pubDate;
+    int seeders;
+    int leechers;
+    int downloads;
+    string infoHash;
+    string categoryId;
+    string category;
+    string size;
+    long comments;
+    boolean trusted;
+    boolean remake;
+  }
+
+}
