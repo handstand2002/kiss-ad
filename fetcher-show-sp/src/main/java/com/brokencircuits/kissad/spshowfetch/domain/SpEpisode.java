@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class SpEpisode {
-  private int episode;
+  private String episode;
   private String releaseDate;
   private String show;
   private List<SpEpisodeDownloadEntry> downloads;

@@ -6,10 +6,10 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.kissad.kafka.AdminInterface;
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.ClusterConnectionProps;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.kafka.config.KafkaConfig;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
@@ -28,23 +28,18 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Slf4j
 @Configuration
-public class KafkaConfig {
+@Import(KafkaConfig.class)
+public class MessagingConfig {
 
   private static final String NOT_DOWNLOADED_EPISODE_STORE_NAME = "not-downloaded-episodes";
   private static final String STORE_SHOW = "shows";
   private static final String STORE_EPISODE = "episodes";
-
-  @Bean
-  @ConfigurationProperties(prefix = "messaging")
-  ClusterConnectionProps clusterConnectionProps() {
-    return new ClusterConnectionProps();
-  }
 
   @Bean
   StateStoreDetails<ByteKey<EpisodeMsgKey>, EpisodeMsg> notDownloadedStoreDetails(
@@ -102,9 +97,9 @@ public class KafkaConfig {
 
   @Bean
   AdminInterface adminInterface(@Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
-      ClusterConnectionProps props,
-      Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher) throws Exception {
-    AdminInterface adminInterface = new AdminInterface(schemaRegistryUrl, props);
+                                KafkaConfig props,
+                                Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher) throws Exception {
+    AdminInterface adminInterface = new AdminInterface(props, schemaRegistryUrl);
     adminInterface.registerCommand(Command.SKIP_EPISODE_RANGE, command -> {
 
       List<String> parameters = command.getValue().getParameters();
@@ -144,7 +139,7 @@ public class KafkaConfig {
   }
 
   private KeyValue<ByteKey<EpisodeMsgKey>, EpisodeMsg> downloadedEpisodeMsg(Uuid showUuid,
-      Long episodeNum) {
+                                                                            Long episodeNum) {
     EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
         .setEpisodeNumber(episodeNum)
         .setShowId(ShowMsgKey.newBuilder().setShowId(showUuid).build())

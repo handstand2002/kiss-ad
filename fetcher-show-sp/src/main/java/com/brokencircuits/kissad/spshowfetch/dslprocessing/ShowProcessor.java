@@ -66,7 +66,7 @@ public class ShowProcessor implements Processor<ByteKey<ShowMsgKey>, ShowMsg> {
       episodeResponse.getEpisode().entrySet().stream()
           .map(e -> {
             try {
-              Long epNumber = args.getShowEpisodeExtractor().extract(e.getKey());
+              Long epNumber = Long.parseLong(e.getValue().getEpisode());
               return convertEpisodeObj(e.getValue(), epNumber, msg.getKey());
             } catch (Exception exception) {
               log.error("Unable to process episode {} | {} due to error", e.getKey(), e.getValue(), exception);

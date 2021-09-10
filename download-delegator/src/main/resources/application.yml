@@ -1,14 +1,15 @@
-messaging:
-  cluster-connection:
-    application.id: ad.downloadDelegator.v2
+kafka.streams.'application.id': ad.downloadDelegator.v2
 
 ---
 
 spring:
   profiles: dev
 
+kafka:
+  global:
+    'bootstrap.servers': 192.168.0.254:29092
+  streams:
+    state.dir: ./target/streams-state-dir
+
 messaging:
   schema-registry-url: http://192.168.0.254:8081
-  cluster-connection:
-    state.dir: ./target/streams-state-dir
-    bootstrap.servers: 192.168.0.254:29092

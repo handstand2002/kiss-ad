@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -75,8 +76,12 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
   @Override
   public void process(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
     EpisodeMsg previousEpisodeDownload = episodeStore.get(key);
-    if (previousEpisodeDownload != null && previousEpisodeDownload.getValue() != null
-        && previousEpisodeDownload.getValue().getDownloadTime() != null) {
+    boolean isDownloaded = Optional.ofNullable(previousEpisodeDownload)
+        .map(EpisodeMsg::getValue)
+        .map(EpisodeMsgValue::getDownloadTime).isPresent();
+    log.debug("Episode previously downloaded entry: {} | {}", key, previousEpisodeDownload);
+
+    if (isDownloaded) {
       log.info("Episode has already been downloaded, skipping: {}|{}", key, msg);
       return;
     }
