@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Show</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
+  <link rel="stylesheet" href="/shows.css" media="screen"/>
+  <script src="/editShow.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="page-header" id="banner">
+    <div class="row">
+      <div class="col-lg-8 col-md-7 col-sm-6">
+        <div class="page-head" th:text="${show.title}"></div>
+
+        <table class="table table-striped">
+          <tbody>
+          <tr th:each="episode : ${episodes}">
+            <td th:text="${episode.episodeNumber}"></td>
+            <td style="white-space: nowrap" th:text="${episode.downloadTime}"></td>
+            <td th:text="${episode.downloadedQuality}"></td>
+            <td><a
+                th:href="@{/deleteEpisode/{id}/{episodeNum}(episodeNum=${episode.episodeNumber},id=${show.showId})}"
+                th:text="消す"></a></td>
+          </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

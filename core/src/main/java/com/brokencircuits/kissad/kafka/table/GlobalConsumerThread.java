@@ -42,7 +42,8 @@ public class GlobalConsumerThread extends Thread {
 
   public GlobalConsumerThread(String name, ConsumerProvider consumerProvider,
                               Collection<Topic<?, ?>> topics,
-                              Map<String, Collection<RecordProcessAction<?, ?>>> recordHandlers, Properties consumerProps) {
+                              Map<String, Collection<RecordProcessAction<?, ?>>> recordHandlers,
+                              Properties consumerProps) {
     super(name);
     this.topics = topics;
     this.recordHandlers = new HashMap<>(recordHandlers);

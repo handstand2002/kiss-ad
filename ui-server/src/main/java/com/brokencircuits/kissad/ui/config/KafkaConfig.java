@@ -4,6 +4,8 @@ import com.brokencircuits.kissad.kafka.AdminInterface;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Topic;
+import com.brokencircuits.kissad.messages.EpisodeMsg;
+import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.topics.TopicUtil;
@@ -15,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
   public static final String STORE_SHOW = "show";
+  private static final String STORE_EPISODE = "episode";
 
   @Bean
   Topic<ByteKey<ShowMsgKey>, ShowMsg> showStoreTopic(
@@ -23,14 +26,26 @@ public class KafkaConfig {
   }
 
   @Bean
+  Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return TopicUtil.episodeStoreTopic(schemaRegistryUrl);
+  }
+
+  @Bean
   KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showStoreWrapper(
       Topic<ByteKey<ShowMsgKey>, ShowMsg> showStoreTopic) {
     return new KeyValueStoreWrapper<>(STORE_SHOW, showStoreTopic);
   }
 
+  @Bean
+  KeyValueStoreWrapper<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreWrapper(
+      Topic<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreTopic) {
+    return new KeyValueStoreWrapper<>(STORE_EPISODE, episodeStoreTopic);
+  }
+
   @Bean(initMethod = "start")
   AdminInterface adminInterface(com.brokencircuits.kissad.kafka.config.KafkaConfig kafkaConfig,
-                                @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) throws Exception {
+                                @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
     return new AdminInterface(kafkaConfig, schemaRegistryUrl);
   }
 

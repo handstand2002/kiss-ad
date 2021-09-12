@@ -1,19 +1,18 @@
 function deriveShowName(urlField) {
-  console.log(urlField);
   var currentUrl = urlField.value;
-  console.log("currentUrl", currentUrl);
   currentUrl = trimAfterLastInstance(currentUrl, "#");
-  console.log("currentUrl", currentUrl);
   currentUrl = trimTrailing(currentUrl, "/");
-  console.log("currentUrl", currentUrl);
   var showName = getTrailingPath(currentUrl);
-  console.log("showName", showName);
   showName = capitalizeEachWord(showName);
-  console.log("showName", showName);
 
   urlField.form.title.value=showName;
   urlField.form.folderName.value=showName;
   urlField.value=currentUrl;
+
+  var isSubsPlease = urlField.value.match(/subsplease/i) != null;
+  if (isSubsPlease) {
+    urlField.form.sourceName.value = "SUBSPLEASE";
+  }
 }
 
 function trimAfterLastInstance(str, character) {

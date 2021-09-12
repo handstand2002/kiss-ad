@@ -5,19 +5,26 @@ import com.brokencircuits.kissad.kafka.AdminInterface;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValueStoreWrapper;
 import com.brokencircuits.kissad.kafka.Publisher;
+import com.brokencircuits.kissad.messages.EpisodeMsg;
+import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.SourceName;
 import com.brokencircuits.kissad.topics.TopicUtil;
+import com.brokencircuits.kissad.ui.rest.domain.EpisodeObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject.ShowObjectBuilder;
 import com.brokencircuits.kissad.util.Uuid;
 import com.brokencircuits.messages.Command;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +45,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 public class ShowController {
 
   private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showMessagePublisher;
+  private final Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> showEpisodePublisher;
   private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator;
   private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator;
 
   private final KeyValueStoreWrapper<ByteKey<ShowMsgKey>, ShowMsg> showMsgStore;
+  private final KeyValueStoreWrapper<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStore;
   private final AdminInterface adminInterface;
 
   private static final SimpleDateFormat NEXT_EPISODE_DATE_FORMAT = new SimpleDateFormat(
       "EEE h:mma");
+  private static final DateTimeFormatter downloadTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd h:mm a");
 
   @Value("${show.default.episode-name-pattern}")
   private String defaultEpisodeNamePattern;
@@ -64,6 +74,40 @@ public class ShowController {
           showMsgToLocalTranslator.translate(KeyValue.pair(lookupKey, showMessage)));
     }
     return "show";
+  }
+
+  @RequestMapping("/showEpisodes/{id}")
+  public String showEpisodes(@PathVariable Uuid id, Model model) {
+    ByteKey<ShowMsgKey> lookupKey = new ByteKey<>(ShowMsgKey.newBuilder().setShowId(id).build());
+    ShowMsg showMessage = showMsgStore.get(lookupKey);
+
+    model.addAttribute("sourceTypes", SourceName.values());
+
+    if (showMessage != null) {
+      model.addAttribute("show",
+          showMsgToLocalTranslator.translate(KeyValue.pair(lookupKey, showMessage)));
+    }
+
+    Map<Long, EpisodeObject> downloadedEpisodes = new HashMap<>();
+
+    try (KeyValueIterator<ByteKey<EpisodeMsgKey>, EpisodeMsg> iterator = episodeStore.all()) {
+      iterator.forEachRemaining(kv -> {
+        if (kv.value.getKey().getShowId().getShowId().equals(id)) {
+          downloadedEpisodes.put(kv.value.getKey().getEpisodeNumber(), EpisodeObject.builder()
+              .episodeNumber(kv.value.getKey().getEpisodeNumber())
+              .downloadedQuality(kv.value.getValue().getDownloadedQuality())
+              .downloadTime(kv.value.getValue().getDownloadTime()
+                  .atZone(ZoneId.systemDefault())
+                  .toLocalDateTime()
+                  .format(downloadTimeFormatter))
+              .build());
+        }
+      });
+    }
+    model.addAttribute("episodes", downloadedEpisodes.values().stream()
+        .sorted(Comparator.comparingLong(EpisodeObject::getEpisodeNumber).reversed())
+        .collect(Collectors.toList()));
+    return "showEpisodes";
   }
 
   @RequestMapping(value = "/shows", method = RequestMethod.GET)
@@ -191,6 +235,20 @@ public class ShowController {
     }
 
     return "redirect:/shows";
+  }
+
+  @RequestMapping(path = "/deleteEpisode/{showId}/{epNum}")
+  public String deleteShow(@PathVariable final Uuid showId, @PathVariable final Long epNum) {
+    EpisodeMsgKey epKey = EpisodeMsgKey.newBuilder()
+        .setShowId(ShowMsgKey.newBuilder()
+            .setShowId(showId)
+            .build())
+        .setEpisodeNumber(epNum)
+        .build();
+    ByteKey<EpisodeMsgKey> key = new ByteKey<>(epKey);
+    showEpisodePublisher.send(key, null);
+
+    return "redirect:/showEpisodes/" + showId;
   }
 
 }

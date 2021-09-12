@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -15,6 +16,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 @EqualsAndHashCode
 public class ByteKey<T extends SpecificRecordBase> {
 
+  @Getter
   private final byte[] innerBytes;
 
   public static <T extends SpecificRecordBase> ByteKey<T> from(T inner) {

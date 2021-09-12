@@ -15,6 +15,9 @@
     <div class="row">
       <div class="col-lg-8 col-md-7 col-sm-6">
         <div class="page-head" th:text="${show.title}"></div>
+        <div style="width: 100%; margin: auto; text-align: center">
+          <a th:href="@{/showEpisodes/{id}(id=${show.showId})}">Downloaded Episodes</a>
+        </div>
 
         <form class="form-horizontal edit-show-form" th:action="@{/addShow}" method="post"
               enctype="multipart/form-data">
