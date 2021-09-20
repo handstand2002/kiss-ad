@@ -2,6 +2,9 @@ package com.brokencircuits.downloader.download;
 
 import com.brokencircuits.downloader.domain.AriaResponseStatus;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -14,9 +17,9 @@ public class FileMoveThread extends Thread {
   private final static Pattern FILE_EXTENSION_PATTERN = Pattern.compile("\\.(\\w+)$");
 
   public FileMoveThread(String destinationDir, String outputFilename,
-      BiConsumer<File, AriaResponseStatus> onDownloadComplete, String downloadedToFilename,
-      AriaResponseStatus latestStatus, boolean overwritePermission, int renameRetryCount,
-      Duration renameRetryDelay) {
+                        BiConsumer<File, AriaResponseStatus> onDownloadComplete, String downloadedToFilename,
+                        AriaResponseStatus latestStatus, boolean overwritePermission, int renameRetryCount,
+                        Duration renameRetryDelay) {
     super(() -> {
       File downloaded = new File(downloadedToFilename);
       log.info("Downloaded: {}", downloaded);
@@ -40,15 +43,18 @@ public class FileMoveThread extends Thread {
         }
       }
 
-      boolean renamed;
+      boolean renamed = false;
       int renameAttempt = 0;
       do {
         log.info("Trying to rename file from {} to {}", downloaded.getAbsolutePath(), newFilePath);
-        renamed = downloaded.renameTo(new File(newFilePath));
-        if (!renamed) {
+        try {
+          Files.move(downloaded.toPath(), new File(newFilePath).toPath(),
+              StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+          renamed = true;
+        } catch (IOException e) {
           log.info("Failed to move file (attempt {} of {}) {} to {}; waiting {}ms", ++renameAttempt,
               renameRetryCount, downloaded.getAbsolutePath(), newFilePath,
-              renameRetryDelay.toMillis());
+              renameRetryDelay.toMillis(), e);
           trySleep(renameRetryDelay.toMillis());
         }
       } while (!renamed && renameAttempt < renameRetryCount);
@@ -67,7 +73,7 @@ public class FileMoveThread extends Thread {
   }
 
   private static String resolveOutputExtension(String downloadedFullPath,
-      String requestedFilename) {
+                                               String requestedFilename) {
     String downloadedExt = fileExtension(downloadedFullPath);
     String desiredExt = fileExtension(requestedFilename);
 
