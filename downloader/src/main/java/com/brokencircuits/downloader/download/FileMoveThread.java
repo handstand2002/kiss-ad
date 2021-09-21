@@ -4,7 +4,8 @@ import com.brokencircuits.downloader.domain.AriaResponseStatus;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -48,8 +49,9 @@ public class FileMoveThread extends Thread {
       do {
         log.info("Trying to rename file from {} to {}", downloaded.getAbsolutePath(), newFilePath);
         try {
-          Files.move(downloaded.toPath(), new File(newFilePath).toPath(),
-              StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+          Path newPath = new File(newFilePath).toPath();
+          maybeDelete(newPath);
+          Files.move(downloaded.toPath(), newPath);
           renamed = true;
         } catch (IOException e) {
           log.info("Failed to move file (attempt {} of {}) {} to {}; waiting {}ms", ++renameAttempt,
@@ -62,6 +64,16 @@ public class FileMoveThread extends Thread {
       log.info("Successful in renaming file: {}", renamed);
       onDownloadComplete.accept(downloaded, latestStatus);
     });
+  }
+
+  private static void maybeDelete(Path newPath) {
+    try {
+      Files.delete(newPath);
+    } catch (NoSuchFileException e) {
+      // expected
+    } catch (IOException e) {
+      log.error("Could not delete existing file {}", newPath, e);
+    }
   }
 
   private static void trySleep(long millis) {
