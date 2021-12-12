@@ -44,24 +44,27 @@ public class FileMoveThread extends Thread {
         }
       }
 
-      boolean renamed = false;
+      boolean copied = false;
+      boolean deleted = false;
       int renameAttempt = 0;
       do {
         log.info("Trying to rename file from {} to {}", downloaded.getAbsolutePath(), newFilePath);
         try {
           Path newPath = new File(newFilePath).toPath();
           maybeDelete(newPath);
-          Files.move(downloaded.toPath(), newPath);
-          renamed = true;
+          Files.copy(downloaded.toPath(), newPath);
+          copied = true;
+          Files.delete(downloaded.toPath());
+          deleted = true;
         } catch (IOException e) {
-          log.info("Failed to move file (attempt {} of {}) {} to {}; waiting {}ms", ++renameAttempt,
-              renameRetryCount, downloaded.getAbsolutePath(), newFilePath,
-              renameRetryDelay.toMillis(), e);
+          log.info("Failed file finalization (Copied={}, DeleteOriginal={}). attempt {} of {} - {} " +
+                  "to {}; waiting {}ms", copied, deleted, ++renameAttempt, renameRetryCount,
+              downloaded.getAbsolutePath(), newFilePath, renameRetryDelay.toMillis(), e);
           trySleep(renameRetryDelay.toMillis());
         }
-      } while (!renamed && renameAttempt < renameRetryCount);
+      } while (!deleted && renameAttempt < renameRetryCount);
 
-      log.info("Successful in renaming file: {}", renamed);
+      log.info("Successful in renaming file: {}", copied);
       onDownloadComplete.accept(downloaded, latestStatus);
     });
   }
