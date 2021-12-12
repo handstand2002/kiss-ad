@@ -51,9 +51,11 @@ public class FileMoveThread extends Thread {
         log.info("Trying to rename file from {} to {}", downloaded.getAbsolutePath(), newFilePath);
         try {
           Path newPath = new File(newFilePath).toPath();
-          maybeDelete(newPath);
-          Files.copy(downloaded.toPath(), newPath);
-          copied = true;
+          if (!copied) {
+            maybeDelete(newPath);
+            Files.copy(downloaded.toPath(), newPath);
+            copied = true;
+          }
           Files.delete(downloaded.toPath());
           deleted = true;
         } catch (IOException e) {
