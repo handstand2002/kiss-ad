@@ -17,27 +17,25 @@ public class FileMoveThread extends Thread {
 
   private final static Pattern FILE_EXTENSION_PATTERN = Pattern.compile("\\.(\\w+)$");
 
-  public FileMoveThread(String destinationDir, String outputFilename,
+  public FileMoveThread(File destinationDir, String outputFilename,
                         BiConsumer<File, AriaResponseStatus> onDownloadComplete, String downloadedToFilename,
                         AriaResponseStatus latestStatus, boolean overwritePermission, int renameRetryCount,
                         Duration renameRetryDelay) {
     super(() -> {
       File downloaded = new File(downloadedToFilename);
-      log.info("Downloaded: {}", downloaded);
+      log.info("Downloaded: {}; exists: {}", downloaded, downloaded.exists());
 
       String resolvedOutputFilename = resolveOutputExtension(downloaded.getAbsolutePath(),
           outputFilename);
 
-      File file = new File(destinationDir);
-      if (!file.exists()) {
-        if (!file.mkdirs()) {
+      if (!destinationDir.exists()) {
+        if (!destinationDir.mkdirs()) {
           log.warn("Unable to create folder structure for destination file: {}",
-              file.getAbsolutePath());
+              destinationDir.getAbsolutePath());
         }
       }
-      String newFilePath = destinationDir + resolvedOutputFilename;
+      File destinationFile = new File(destinationDir, resolvedOutputFilename);
 
-      File destinationFile = new File(newFilePath);
       if (destinationFile.exists() && overwritePermission) {
         if (!destinationFile.delete()) {
           log.warn("Unable to overwrite existing file {}", destinationFile.getAbsolutePath());
@@ -47,21 +45,22 @@ public class FileMoveThread extends Thread {
       boolean copied = false;
       boolean deleted = false;
       int renameAttempt = 0;
+      Path newPath = destinationFile.toPath();
+      Path source = downloaded.toPath();
       do {
-        log.info("Trying to rename file from {} to {}", downloaded.getAbsolutePath(), newFilePath);
+        log.info("Trying to rename file from {} to {}", source, newPath);
         try {
-          Path newPath = new File(newFilePath).toPath();
           if (!copied) {
             maybeDelete(newPath);
-            Files.copy(downloaded.toPath(), newPath);
+            Files.copy(source, newPath);
             copied = true;
           }
-          Files.delete(downloaded.toPath());
+          Files.delete(source);
           deleted = true;
         } catch (IOException e) {
           log.info("Failed file finalization (Copied={}, DeleteOriginal={}). attempt {} of {} - {} " +
                   "to {}; waiting {}ms", copied, deleted, ++renameAttempt, renameRetryCount,
-              downloaded.getAbsolutePath(), newFilePath, renameRetryDelay.toMillis(), e);
+              source, newPath, renameRetryDelay.toMillis(), e);
           trySleep(renameRetryDelay.toMillis());
         }
       } while (!deleted && renameAttempt < renameRetryCount);

@@ -47,12 +47,9 @@ public class DownloadController {
   }
 
   public void doDownload(String uri, String destinationDir, String filename, boolean isMagnet,
-      Consumer<AriaResponseStatus> onStatusPoll,
-      BiConsumer<File, AriaResponseStatus> onDownloadComplete)
+                         Consumer<AriaResponseStatus> onStatusPoll,
+                         BiConsumer<File, AriaResponseStatus> onDownloadComplete)
       throws IOException, InterruptedException {
-
-    downloadFolder = addTrailingSlashIfNeeded(downloadFolder);
-    destinationDir = addTrailingSlashIfNeeded(destinationDir);
 
     AriaResponseUriSubmit response = ariaApi.submitUri("test", uri);
     log.info("Response from request: {}", response);
@@ -101,7 +98,7 @@ public class DownloadController {
       ariaApi.removeDownload(downloadGid);
     }
     if (downloadedToFilename != null) {
-      new FileMoveThread(downloadFolder + destinationDir, filename, onDownloadComplete,
+      new FileMoveThread(new File(downloadFolder, destinationDir), filename, onDownloadComplete,
           downloadedToFilename, latestStatus, overwritePermission, renameRetryCount,
           renameRetryDelay).start();
     }
