@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +35,8 @@ public class FileMoveThread extends Thread {
               destinationDir.getAbsolutePath());
         }
       }
-      File destinationFile = new File(destinationDir, resolvedOutputFilename);
+
+      File destinationFile = parseFile(destinationDir.getAbsolutePath(), resolvedOutputFilename);
 
       if (destinationFile.exists() && overwritePermission) {
         if (!destinationFile.delete()) {
@@ -68,6 +70,30 @@ public class FileMoveThread extends Thread {
       log.info("Successful in renaming file: {}", copied);
       onDownloadComplete.accept(downloaded, latestStatus);
     });
+  }
+
+  private static File parseFile(String filePath, String... children) {
+    File file = null;
+    String[] split = filePath.split("[/\\\\]");
+
+    for (String s : split) {
+      if (file == null) {
+        file = new File(s);
+      } else {
+        file = new File(file, s);
+      }
+    }
+
+    Objects.requireNonNull(file);
+    for (String child : children) {
+      String[] splitChild = child.split("[/\\\\]");
+
+      for (String s : splitChild) {
+        file = new File(file, s);
+      }
+    }
+
+    return file;
   }
 
   private static void maybeDelete(Path newPath) {
