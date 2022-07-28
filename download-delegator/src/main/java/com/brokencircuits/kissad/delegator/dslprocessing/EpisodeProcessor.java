@@ -8,6 +8,7 @@ import com.brokencircuits.kissad.download.domain.DownloadType;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.kafka.StateStoreDetails;
+import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.messages.EpisodeLink;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -15,6 +16,7 @@ import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.util.Uuid;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -26,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.KeyValue;
@@ -46,6 +49,7 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
 
   private final DownloadApi downloadApi;
   private final Publisher<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStorePublisher;
+  private final Publisher<ByteKey<ShowMsgKey>, ShowMsg> showQueuePublisher;
   private final StateStoreDetails<ByteKey<ShowMsgKey>, ShowMsg> showStoreDetails;
   private final StateStoreDetails<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeStoreDetails;
   private final long minQualityGoal;
@@ -94,14 +98,14 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
   }
 
   private void submitDownload(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
-    ShowMsg showMsg = showStore.get(new ByteKey<>(msg.getKey().getShowId()));
+    ByteKey<ShowMsgKey> showKey = new ByteKey<>(msg.getKey().getShowId());
+    ShowMsg showMsg = showStore.get(showKey);
 
     String destinationDir = addTrailingSlashToPath(downloadFolder);
-    String destinationFileName = "UNKNOWN_" + Instant.now().getEpochSecond();
+    String destinationFileName;
     if (showMsg == null) {
-      log.warn("Show with ID {} has no entry in GKT; Downloading to {} with filename {}",
-          msg.getKey().getShowId(),
-          destinationDir, destinationFileName);
+      log.error("Show with ID {} has no entry in GKT; Aborting download of episode {}", msg.getKey().getShowId(), destinationDir);
+      return;
     } else {
       destinationDir += addTrailingSlashToPath(showMsg.getValue().getFolderName());
       destinationFileName = createFileName(showMsg.getValue().getEpisodeNamePattern(),
@@ -116,6 +120,9 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
           if (completedStatus.isFinished() && completedStatus.getErrorCode() == 0) {
             episodeStorePublisher
                 .send(key, completedValue(completedStatus, msg, linkForBestQuality));
+          } else if (completedStatus.getErrorCode() == 404) {
+            log.info("Episode failed to download, requesting retry for show {}", msg.getKey().getRawTitle());
+            showQueuePublisher.send(showKey, showMsg);
           }
         });
 
@@ -123,7 +130,7 @@ public class EpisodeProcessor implements Processor<ByteKey<EpisodeMsgKey>, Episo
   }
 
   private EpisodeMsg completedValue(DownloadStatus completedStatus,
-      EpisodeMsg msg, EpisodeLink linkForBestQuality) {
+                                    EpisodeMsg msg, EpisodeLink linkForBestQuality) {
     EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
         .setDownloadTime(completedStatus.getEndTime())
         .setDownloadedQuality(linkForBestQuality.getQuality())

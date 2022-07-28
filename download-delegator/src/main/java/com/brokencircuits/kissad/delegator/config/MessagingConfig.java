@@ -80,6 +80,12 @@ public class MessagingConfig {
   }
 
   @Bean
+  Topic<ByteKey<ShowMsgKey>, ShowMsg> showQueueTopic(
+      @Value("${messaging.schema-registry-url}") String schemaRegistryUrl) {
+    return TopicUtil.showQueueTopic(schemaRegistryUrl);
+  }
+
+  @Bean
   StateStoreDetails<ByteKey<ShowMsgKey>, ShowMsg> showStoreDetails(
       @Value("${messaging.schema-registry-url}") String schemaRegistryUrl,
       Topic<ByteKey<ShowMsgKey>, ShowMsg> showStoreTopic) {

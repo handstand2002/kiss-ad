@@ -8,6 +8,8 @@ import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.config.KafkaConfig;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsg;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,4 +29,13 @@ public class PublisherConfig {
       Topic<ByteKey<DownloadRequestKey>, DownloadRequestMsg> downloadRequestTopic) {
     return new Publisher<>(kafkaConfig.producerProps(), downloadRequestTopic);
   }
+
+  @Bean
+  Publisher<ByteKey<ShowMsgKey>, ShowMsg> showQueuePublisher(
+      KafkaConfig kafkaConfig,
+      Topic<ByteKey<ShowMsgKey>, ShowMsg> showQueueTopic) {
+    return new Publisher<>(kafkaConfig.producerProps(), showQueueTopic);
+  }
+
+
 }
