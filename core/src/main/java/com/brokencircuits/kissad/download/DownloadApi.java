@@ -37,8 +37,8 @@ public class DownloadApi {
     DownloadThread downloadThread = new DownloadThread(statusWrapper, this, requestPublisher,
         Duration.ofSeconds(30), (completeStatus, thread) -> {
       log.info("Completed download: {}", completeStatus);
-      activeDownloadThreads.remove(thread.getUuid());
       onCompletion.accept(completeStatus);
+      activeDownloadThreads.remove(thread.getUuid());
     });
     downloadThread.start();
     activeDownloadThreads.put(downloadId, downloadThread);

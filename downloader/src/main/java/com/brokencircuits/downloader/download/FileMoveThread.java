@@ -9,10 +9,12 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.brokencircuits.downloader.domain.download.DownloadResult;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -70,7 +72,12 @@ public class FileMoveThread extends Thread {
       } while (!deleted && renameAttempt < renameRetryCount);
 
       log.info("Successful in renaming file: {}", copied);
-      if (copied) {
+      if (!copied) {
+        onDownloadComplete.accept(downloaded, new AriaResponseStatus(latestStatus.getId(), latestStatus.getRpcVersion(), latestStatus.getResult().toBuilder()
+            .errorCode(404)
+            .errorMessage("Could not copy file to final destination")
+            .build()));
+      } else {
         onDownloadComplete.accept(downloaded, latestStatus);
       }
     });
