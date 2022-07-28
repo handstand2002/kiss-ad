@@ -1,6 +1,7 @@
 package com.brokencircuits.downloader.download;
 
 import com.brokencircuits.downloader.domain.AriaResponseStatus;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -68,7 +70,9 @@ public class FileMoveThread extends Thread {
       } while (!deleted && renameAttempt < renameRetryCount);
 
       log.info("Successful in renaming file: {}", copied);
-      onDownloadComplete.accept(downloaded, latestStatus);
+      if (copied) {
+        onDownloadComplete.accept(downloaded, latestStatus);
+      }
     });
   }
 
