@@ -14,7 +14,9 @@ import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.topics.TopicUtil;
 import com.brokencircuits.kissad.util.Uuid;
+
 import java.io.IOException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -38,7 +40,7 @@ public class Consumer {
 
   @KafkaListener(topics = TopicUtil.TOPIC_DOWNLOAD_COMMAND)
   public void listen(ConsumerRecord<ByteKey<DownloadRequestKey>, DownloadRequestMsg> message,
-      Acknowledgment acknowledgment) {
+                     Acknowledgment acknowledgment) {
     log.info("Received Message: {}", message);
     acknowledgment.acknowledge();
 
@@ -54,8 +56,12 @@ public class Consumer {
               .doDownload(message.value().getValue().getUri(),
                   message.value().getValue().getDestinationDir(),
                   message.value().getValue().getDestinationFileName(), isMagnet,
-                  status -> downloadStatusPublisher
-                      .send(downloadStatus(message.value().getValue().getDownloadId(), status)),
+                  status -> {
+                    downloadStatusPublisher
+                        .send(downloadStatus(message.value().getValue().getDownloadId(), status));
+                    String pcntComplete = String.format("%.2f", (100 * ((double) status.getResult().getCompletedLength() / status.getResult().getTotalLength())));
+                    log.info("{} {}% complete", status.getResult().getFiles().get(0).getPath(), pcntComplete);
+                  },
                   (downloadedFile, completeStatus) -> downloadStatusPublisher
                       .send(downloadStatus(message.value().getValue().getDownloadId(),
                           completeStatus)));
@@ -74,7 +80,7 @@ public class Consumer {
   }
 
   private KeyValue<ByteKey<DownloadStatusKey>, DownloadStatusMsg> errorStatus(Uuid downloadId,
-      String errorMsg) {
+                                                                              String errorMsg) {
     DownloadStatusKey key = DownloadStatusKey.newBuilder().setDownloadId(downloadId).build();
     DownloadStatusValue value = DownloadStatusValue.newBuilder()
         .setDestinationPath("")
@@ -95,7 +101,7 @@ public class Consumer {
   }
 
   private KeyValue<ByteKey<DownloadStatusKey>, DownloadStatusMsg> downloadStatus(Uuid downloadId,
-      AriaResponseStatus status) {
+                                                                                 AriaResponseStatus status) {
     DownloadResult result = status.getResult();
     DownloadStatusKey key = DownloadStatusKey.newBuilder().setDownloadId(downloadId).build();
     DownloadStatusValue value = DownloadStatusValue.newBuilder()
