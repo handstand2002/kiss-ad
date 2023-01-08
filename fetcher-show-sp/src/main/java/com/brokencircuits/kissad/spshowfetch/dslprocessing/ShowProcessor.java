@@ -66,7 +66,15 @@ public class ShowProcessor implements Processor<ByteKey<ShowMsgKey>, ShowMsg> {
       episodeResponse.getEpisode().entrySet().stream()
           .map(e -> {
             try {
-              Long epNumber = Long.parseLong(e.getValue().getEpisode());
+              String episodeNumberString = e.getValue().getEpisode();
+              if (episodeNumberString.contains("v") || episodeNumberString.contains("V")) {
+                int lastIndex = episodeNumberString.indexOf("v");
+                if (lastIndex == -1) {
+                  lastIndex = episodeNumberString.indexOf("V");
+                }
+                episodeNumberString = episodeNumberString.substring(0, lastIndex);
+              }
+              Long epNumber = Long.parseLong(episodeNumberString);
               return convertEpisodeObj(e.getValue(), epNumber, msg.getKey());
             } catch (Exception exception) {
               log.error("Unable to process episode {} | {} due to error", e.getKey(), e.getValue(), exception);
