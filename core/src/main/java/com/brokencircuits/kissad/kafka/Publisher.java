@@ -9,7 +9,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.streams.KeyValue;
 
 @Slf4j
 @EqualsAndHashCode
@@ -31,7 +30,7 @@ public class Publisher<K, V> {
   }
 
   public Future<RecordMetadata> send(KeyValue<K, V> pair) {
-    return send(pair.key, pair.value);
+    return send(pair.getKey(), pair.getValue());
   }
 
 }

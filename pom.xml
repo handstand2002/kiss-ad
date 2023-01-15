@@ -8,16 +8,7 @@
   <modules>
     <module>core-message</module>
     <module>core</module>
-    <module>fetcher-show-hs</module>
-    <module>fetcher-show-sp</module>
-    <!--    <module>stream-episodelinks-fetch</module>-->
-    <!--    <module>stream-rapidvideo-fetch</module>-->
-    <!--    <module>stream-episode-download</module>-->
-    <module>downloader</module>
-    <module>scheduler</module>
-    <module>download-delegator</module>
-    <module>ui-server</module>
-    <module>nyaa-feed-reader</module>
+    <module>unified-service</module>
   </modules>
 
   <parent>
@@ -51,12 +42,6 @@
 
     <dependency>
       <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-streams</artifactId>
-      <version>2.7.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
       <version>2.7.1</version>
     </dependency>
@@ -86,34 +71,6 @@
       <id>confluent</id>
       <url>https://packages.confluent.io/maven/</url>
     </repository>
-    <repository>
-      <id>spring-snapshots</id>
-      <name>Spring Snapshots</name>
-      <url>https://repo.spring.io/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-    </repository>
   </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>spring-snapshots</id>
-      <name>Spring Snapshots</name>
-      <url>https://repo.spring.io/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>spring-milestones</id>
-      <name>Spring Milestones</name>
-      <url>https://repo.spring.io/milestone</url>
-    </pluginRepository>
-  </pluginRepositories>
 
 </project>

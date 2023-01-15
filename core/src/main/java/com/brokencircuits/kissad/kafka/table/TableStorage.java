@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 public interface TableStorage<K, V> {
 
-  V put(K key, V value);
+  void put(K key, V value);
 
   V get(K key);
 

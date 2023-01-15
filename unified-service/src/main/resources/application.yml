@@ -1,0 +1,52 @@
+kiss.captcha.request.application-id: ad.kissCaptchaCapture
+
+messaging:
+# schema registry is environment specific, has to be in external yml
+#  schema-registry-url: http://192.168.0.254:8081
+
+#kafka:
+# bootstrap servers are environment specific, has to be in external yml
+#  global.'bootstrap.servers': 192.168.0.254:29092
+
+show.default:
+  episode-name-pattern: S<SEASON_2>E<EPISODE_3>
+  release-schedule-cron: 0 0 12 * * *
+
+server:
+  port: 15001
+
+show:
+  retry:
+    interval: 15m
+    max-times: 8
+
+download:
+  rename:
+    retry-count: 30
+    retry-delay: 10s
+# download folder is environment specific, has to be in external yml
+#  download-folder-root: "/mnt/d_drive/"
+  overwrite-permission: true
+  aria:
+# tmp folder is environment specific, has to be in external yml
+#    temp-download-dir: "/mnt/d_drive/Unsorted"
+    port: 9000
+# path is environment specific, has to be in external yml
+#    path: "/usr/bin/aria2c"
+    status-poll-interval: 5s
+    inactivity-timeout: 10m
+
+logging.level:
+  com.gargoylesoftware.htmlunit: ERROR
+
+org.subsplease:
+  url: https://subsplease.org
+  show-page:
+    get-show-id-pattern: 'id="show-release-table"[^>]* sid="(\d+)"'
+    get-episode-number-pattern: "(\\d+)$"
+  get-show-endpoint: /api/?f=show&tz=America/New_York&sid=<SHOWID>
+
+# user preferences
+#delegator:
+#  min-quality: 99999
+#  download-folder: Anime

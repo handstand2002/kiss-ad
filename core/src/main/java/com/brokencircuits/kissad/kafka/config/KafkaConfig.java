@@ -4,9 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Import(InternalKafkaConfig.class)
@@ -14,6 +18,29 @@ import org.springframework.stereotype.Component;
 public class KafkaConfig {
 
   private final InternalKafkaConfig inner;
+
+  @PostConstruct
+  public void logging() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("\nConsumer:");
+    addPropsToLog(sb, consumerProps());
+    sb.append("\nProducer");
+    addPropsToLog(sb, producerProps());
+    sb.append("\nStreams");
+    addPropsToLog(sb, streamsProps());
+    sb.append("\nAdmin");
+    addPropsToLog(sb, adminProps());
+
+    log.info("Effective KafkaConfig: {}", sb);
+  }
+
+  private void addPropsToLog(StringBuilder sb, Properties consumerProps) {
+    consumerProps.forEach((k, v) -> sb.append("\n\t").append(k).append(": ").append(v));
+    if (consumerProps.isEmpty()) {
+      sb.append("\n\t --- EMPTY ---");
+    }
+  }
 
   public Properties consumerProps() {
     Properties props = new Properties();
