@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,6 +56,7 @@ public class ShowController {
   private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator;
   private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator;
   private final Consumer<Uuid> triggerShowCheckMethod;
+  private final BiConsumer<ByteKey<ShowMsgKey>, ShowMsg> onShowUpdate;
   private final TaskExecutor taskExecutor;
 
   private static final SimpleDateFormat NEXT_EPISODE_DATE_FORMAT = new SimpleDateFormat(
@@ -122,12 +124,9 @@ public class ShowController {
   public void showsList(Model model) {
     List<ShowObject> outputList = new ArrayList<>();
     showTable.all(pair -> {
-      log.info("Show {}: {}", pair.getValue().getKey().getShowId(),
-          Arrays.toString(pair.getKey().getBytes()));
       outputList.add(showMsgToLocalTranslator.translate(pair));
     });
     log.info("Found {} shows", outputList.size());
-    outputList.forEach(show -> log.info("Show: {}", show));
 
     List<ShowObject> sortedShows = outputList.stream().sorted(getShowScheduleComparator())
         .map(showObject -> {
@@ -214,7 +213,9 @@ public class ShowController {
       msg.getValue().getValue().setSkipEpisodeString(null);
     }
 
+    log.info("Updating show: {}", msg.getValue());
     showTable.put(msg.getKey(), msg.getValue());
+    onShowUpdate.accept(msg.getKey(), msg.getValue());
     return "redirect:/shows";
   }
 
@@ -276,6 +277,7 @@ public class ShowController {
           episodeTable.put(kv.getKey(), null);
         }
       });
+      onShowUpdate.accept(lookupKey, null);
       log.info("Deleted show {} and removed {} associated episodes", id, episodeCounter.get());
     }
     return "redirect:/shows";

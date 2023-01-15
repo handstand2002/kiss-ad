@@ -7,20 +7,26 @@ import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
+import com.brokencircuits.kissad.messages.ShowMsg;
+import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.ui.delegator.DelegatorController;
 import com.brokencircuits.kissad.ui.downloader.aria.AriaResponseStatus;
 import com.brokencircuits.kissad.ui.downloader.controller.DownloadController;
 import com.brokencircuits.kissad.ui.fetcher.FetcherController;
+import com.brokencircuits.kissad.ui.scheduler.SchedulerController;
 import com.brokencircuits.kissad.util.Uuid;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
 @Slf4j
 @Configuration
@@ -29,6 +35,20 @@ public class FlowConfig {
   @Bean
   TaskExecutor taskExecutor() {
     return new ConcurrentTaskExecutor();
+  }
+
+  @Bean
+  TaskScheduler taskScheduler() {
+    return new ConcurrentTaskScheduler();
+  }
+
+  @Bean
+  BiConsumer<ByteKey<ShowMsgKey>, ShowMsg> onShowUpdate(SchedulerController controller) {
+    return (key, msg) -> {
+      log.info("Show was updated, updating schedule for {}", key);
+      controller.scheduleShow(key, msg);
+      log.info("Finished updating schedule for show {}", key);
+    };
   }
 
   @Bean

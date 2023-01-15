@@ -14,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class SchedulerController {
 
@@ -29,8 +31,8 @@ public class SchedulerController {
     showTable.all(kv -> scheduleShow(kv.getKey(), kv.getValue()));
   }
 
-  private void scheduleShow(ByteKey<ShowMsgKey> key, ShowMsg msg) {
-    log.info("Scheduling {}", msg);
+  public synchronized void scheduleShow(ByteKey<ShowMsgKey> key, ShowMsg msg) {
+    log.info("Scheduling {} | {}", key, msg);
     ScheduledFuture<?> scheduledJob = scheduledJobs.get(key);
     if (scheduledJob != null) {
       scheduledJob.cancel(false);
