@@ -3,7 +3,6 @@ package com.brokencircuits.kissad.kafka.table;
 import com.brokencircuits.kissad.kafka.KeyValue;
 import com.brokencircuits.kissad.kafka.Topic;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -52,7 +51,7 @@ public class KafkaBackedTable<K, V> implements ReadWriteTable<K, V> {
   }
 
   @PostConstruct
-  public void startConsumer() throws ExecutionException, InterruptedException {
+  public void initialize() throws ExecutionException, InterruptedException {
     TopicConsumerCatchupService catchupService = new TopicConsumerCatchupService(consumer,
         topic.getName());
 

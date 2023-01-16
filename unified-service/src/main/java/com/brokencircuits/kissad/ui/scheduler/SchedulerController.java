@@ -1,7 +1,7 @@
 package com.brokencircuits.kissad.ui.scheduler;
 
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
+import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.util.Uuid;
@@ -24,7 +24,7 @@ public class SchedulerController {
   private final Map<ByteKey<ShowMsgKey>, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
   private final TaskScheduler taskScheduler;
   private final Consumer<Uuid> triggerShowCheckMethod;
-  private final KafkaBackedTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
+  private final ReadWriteTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
 
   @PostConstruct
   public void scheduleAll() {

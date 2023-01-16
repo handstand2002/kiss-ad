@@ -7,7 +7,7 @@ import com.brokencircuits.kissad.download.LocalDownloadApi;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadType;
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
+import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.EpisodeLink;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -44,8 +44,8 @@ public class DelegatorController {
   @Value("${delegator.download-folder}")
   private String downloadFolder;
 
-  private final KafkaBackedTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
-  private final KafkaBackedTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable;
+  private final ReadWriteTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
+  private final ReadWriteTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable;
 
   public void process(EpisodeMsg msg) throws ExecutionException, InterruptedException {
     ByteKey<EpisodeMsgKey> key = new ByteKey<>(msg.getKey());

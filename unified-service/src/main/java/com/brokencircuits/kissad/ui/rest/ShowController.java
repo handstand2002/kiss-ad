@@ -3,7 +3,7 @@ package com.brokencircuits.kissad.ui.rest;
 import com.brokencircuits.kissad.Translator;
 import com.brokencircuits.kissad.kafka.ByteKey;
 import com.brokencircuits.kissad.kafka.KeyValue;
-import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
+import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
@@ -51,8 +51,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequiredArgsConstructor
 public class ShowController {
 
-  private final KafkaBackedTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable;
-  private final KafkaBackedTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
+  private final ReadWriteTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable;
+  private final ReadWriteTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
   private final Translator<ShowObject, KeyValue<ByteKey<ShowMsgKey>, ShowMsg>> showLocalToMsgTranslator;
   private final Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator;
   private final Consumer<Uuid> triggerShowCheckMethod;

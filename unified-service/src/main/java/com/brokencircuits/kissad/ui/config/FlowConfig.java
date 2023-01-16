@@ -4,7 +4,7 @@ import com.brokencircuits.download.messages.DownloadType;
 import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
+import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsg;
@@ -81,7 +81,8 @@ public class FlowConfig {
 
   @Bean
   Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest(
-      DownloadController controller, KafkaBackedTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable) {
+      DownloadController controller,
+      ReadWriteTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable) {
     return request -> {
       try {
         DownloadRequestValue req = request.getValue();

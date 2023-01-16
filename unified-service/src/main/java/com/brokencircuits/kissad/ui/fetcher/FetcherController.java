@@ -1,7 +1,7 @@
 package com.brokencircuits.kissad.ui.fetcher;
 
 import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.table.KafkaBackedTable;
+import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.util.Uuid;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class FetcherController {
 
   private final SpFetcher spFetcher;
-  private final KafkaBackedTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
+  private final ReadWriteTable<ByteKey<ShowMsgKey>, ShowMsg> showTable;
 
   public void fetch(Uuid showUuid) {
 

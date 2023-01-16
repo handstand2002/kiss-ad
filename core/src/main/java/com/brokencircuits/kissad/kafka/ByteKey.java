@@ -18,6 +18,8 @@ public class ByteKey<T extends SpecificRecordBase> {
 
   @Getter
   private final byte[] innerBytes;
+  @Getter
+  private final T inner;
 
   public static <T extends SpecificRecordBase> ByteKey<T> from(T inner) {
     return new ByteKey<>(inner);
@@ -42,10 +44,12 @@ public class ByteKey<T extends SpecificRecordBase> {
       }
     }
     innerBytes = tuple.pack();
+    this.inner = inner;
   }
 
   public ByteKey(byte[] innerBytes) {
     this.innerBytes = innerBytes;
+    this.inner = null;
   }
 
   public byte[] getBytes() {
