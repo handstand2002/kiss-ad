@@ -1,13 +1,3 @@
-kiss.captcha.request.application-id: ad.kissCaptchaCapture
-
-messaging:
-# schema registry is environment specific, has to be in external yml
-#  schema-registry-url: http://192.168.0.254:8081
-
-#kafka:
-# bootstrap servers are environment specific, has to be in external yml
-#  global.'bootstrap.servers': 192.168.0.254:29092
-
 show.default:
   episode-name-pattern: S<SEASON_2>E<EPISODE_3>
   release-schedule-cron: 0 0 12 * * *
@@ -65,7 +55,7 @@ spring:
     password: password
     driverClassName: org.h2.Driver
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate.ddl-auto: update
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
 

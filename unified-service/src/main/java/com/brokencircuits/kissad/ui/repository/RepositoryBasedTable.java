@@ -1,7 +1,7 @@
 package com.brokencircuits.kissad.ui.repository;
 
-import com.brokencircuits.kissad.kafka.KeyValue;
-import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
+import com.brokencircuits.kissad.table.ReadWriteTable;
+import com.brokencircuits.kissad.util.KeyValue;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;

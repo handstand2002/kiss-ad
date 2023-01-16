@@ -3,23 +3,14 @@ package com.brokencircuits.kissad.download;
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
-import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
-import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
 import com.brokencircuits.kissad.download.domain.DownloadType;
-import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.Publisher;
 import com.brokencircuits.kissad.util.Uuid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +19,8 @@ public class LocalDownloadApi {
   private final Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest;
 
   public CompletableFuture<Boolean> submitDownload(String uri, DownloadType downloadType,
-                                       String destinationDir, String destinationFileName, BiConsumer<DownloadStatus, DownloadRequestMsg> onCompletion) {
+      String destinationDir, String destinationFileName,
+      BiConsumer<DownloadStatus, DownloadRequestMsg> onCompletion) {
     log.info("Submitting download:\n\tURI: {}\n\tType: {}\n\tDestinationDir: {}\n\tFileName: {}",
         uri, downloadType, destinationDir, destinationFileName);
 

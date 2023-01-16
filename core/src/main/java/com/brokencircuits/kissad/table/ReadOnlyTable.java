@@ -1,6 +1,6 @@
-package com.brokencircuits.kissad.kafka.table;
+package com.brokencircuits.kissad.table;
 
-import com.brokencircuits.kissad.kafka.KeyValue;
+import com.brokencircuits.kissad.util.KeyValue;
 import java.util.function.Consumer;
 
 public interface ReadOnlyTable<K, V> {

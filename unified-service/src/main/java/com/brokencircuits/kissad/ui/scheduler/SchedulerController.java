@@ -1,9 +1,9 @@
 package com.brokencircuits.kissad.ui.scheduler;
 
-import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
+import com.brokencircuits.kissad.table.ReadWriteTable;
+import com.brokencircuits.kissad.util.ByteKey;
 import com.brokencircuits.kissad.util.Uuid;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.brokencircuits.kissad.util.ByteKey;
 import java.util.Map;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.serialization.Deserializer;

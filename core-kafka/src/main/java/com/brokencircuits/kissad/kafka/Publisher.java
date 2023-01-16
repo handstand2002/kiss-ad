@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.kafka;
 
+import com.brokencircuits.kissad.util.KeyValue;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import lombok.EqualsAndHashCode;

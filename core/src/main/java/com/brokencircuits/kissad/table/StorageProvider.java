@@ -1,9 +1,8 @@
-package com.brokencircuits.kissad.kafka.table;
+package com.brokencircuits.kissad.table;
 
-import com.brokencircuits.kissad.kafka.KeyValue;
+import com.brokencircuits.kissad.util.KeyValue;
 import org.apache.kafka.common.serialization.Serde;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;

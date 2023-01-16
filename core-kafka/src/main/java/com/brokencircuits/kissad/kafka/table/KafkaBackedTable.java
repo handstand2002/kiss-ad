@@ -1,6 +1,8 @@
 package com.brokencircuits.kissad.kafka.table;
 
-import com.brokencircuits.kissad.kafka.KeyValue;
+import com.brokencircuits.kissad.table.ReadWriteTable;
+import com.brokencircuits.kissad.TableStorage;
+import com.brokencircuits.kissad.util.KeyValue;
 import com.brokencircuits.kissad.kafka.Topic;
 
 import java.util.Optional;

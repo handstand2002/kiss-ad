@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.kafka.table;
+package com.brokencircuits.kissad.table;
 
 public interface ReadWriteTable<K, V> extends ReadOnlyTable<K, V> {
 

@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.topics;
+package com.brokencircuits.kissad.kafka.topics;
 
 import com.brokencircuits.downloader.messages.DownloadRequestKey;
 import com.brokencircuits.downloader.messages.DownloadRequestMsg;
@@ -6,7 +6,7 @@ import com.brokencircuits.downloader.messages.DownloadStatusKey;
 import com.brokencircuits.downloader.messages.DownloadStatusMsg;
 import com.brokencircuits.downloader.messages.DownloaderStatusKey;
 import com.brokencircuits.downloader.messages.DownloaderStatusMsg;
-import com.brokencircuits.kissad.kafka.ByteKey;
+import com.brokencircuits.kissad.util.ByteKey;
 import com.brokencircuits.kissad.kafka.ByteKeySerde;
 import com.brokencircuits.kissad.kafka.Topic;
 import com.brokencircuits.kissad.kafka.Util;

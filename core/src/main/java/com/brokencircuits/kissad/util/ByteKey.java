@@ -1,4 +1,4 @@
-package com.brokencircuits.kissad.kafka;
+package com.brokencircuits.kissad.util;
 
 import com.apple.foundationdb.tuple.Tuple;
 import java.util.ArrayList;

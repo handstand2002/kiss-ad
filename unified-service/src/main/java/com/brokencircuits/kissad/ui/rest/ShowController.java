@@ -1,18 +1,18 @@
 package com.brokencircuits.kissad.ui.rest;
 
 import com.brokencircuits.kissad.Translator;
-import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.KeyValue;
-import com.brokencircuits.kissad.kafka.table.ReadWriteTable;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.EpisodeMsgValue;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.SourceName;
+import com.brokencircuits.kissad.table.ReadWriteTable;
 import com.brokencircuits.kissad.ui.rest.domain.EpisodeObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject.ShowObjectBuilder;
+import com.brokencircuits.kissad.util.ByteKey;
+import com.brokencircuits.kissad.util.KeyValue;
 import com.brokencircuits.kissad.util.Uuid;
 import java.text.SimpleDateFormat;
 import java.time.Instant;

@@ -2,12 +2,12 @@ package com.brokencircuits.kissad.ui.fetcher;
 
 import com.brokencircuits.download.messages.DownloadType;
 import com.brokencircuits.kissad.Extractor;
-import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.KeyValue;
 import com.brokencircuits.kissad.messages.*;
 import com.brokencircuits.kissad.ui.fetcher.domain.ShowEpisodeResponse;
 import com.brokencircuits.kissad.ui.fetcher.domain.SpEpisode;
 import com.brokencircuits.kissad.ui.fetcher.domain.SpEpisodeDownloadEntry;
+import com.brokencircuits.kissad.util.ByteKey;
+import com.brokencircuits.kissad.util.KeyValue;
 import com.brokencircuits.kissad.util.Uuid;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;

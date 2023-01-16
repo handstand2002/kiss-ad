@@ -1,14 +1,14 @@
 package com.brokencircuits.kissad.ui.config;
 
 import com.brokencircuits.kissad.Translator;
-import com.brokencircuits.kissad.kafka.ByteKey;
-import com.brokencircuits.kissad.kafka.KeyValue;
 import com.brokencircuits.kissad.messages.ShowMsg;
 import com.brokencircuits.kissad.messages.ShowMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsgValue;
 import com.brokencircuits.kissad.messages.SourceName;
 import com.brokencircuits.kissad.ui.rest.domain.HsShowObject;
 import com.brokencircuits.kissad.ui.rest.domain.ShowObject;
+import com.brokencircuits.kissad.util.ByteKey;
+import com.brokencircuits.kissad.util.KeyValue;
 import com.brokencircuits.kissad.util.Uuid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -70,7 +70,7 @@ public class TranslatorConfig {
   }
 
   @Bean
-  Translator<com.brokencircuits.kissad.kafka.KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator() {
+  Translator<KeyValue<ByteKey<ShowMsgKey>, ShowMsg>, ShowObject> showMsgToLocalTranslator() {
     return pair -> {
       Map<String, String> sources = pair.getValue().getValue().getSources();
       Optional<Entry<String, String>> firstSource = sources.entrySet().stream().findFirst();
