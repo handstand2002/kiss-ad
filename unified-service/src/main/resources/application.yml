@@ -65,4 +65,7 @@ spring:
     password: password
     driverClassName: org.h2.Driver
   jpa:
+    show-sql: true
+    hibernate.ddl-auto: update
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
+
