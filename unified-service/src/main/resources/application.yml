@@ -11,6 +11,8 @@ show:
     max-times: 8
 
 download:
+  mock-download: false
+  mock-success: true
   rename:
     retry-count: 30
     retry-delay: 10s

@@ -4,8 +4,8 @@ import static com.brokencircuits.kissad.util.PathUtil.addTrailingSlashToPath;
 
 import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.kissad.download.LocalDownloadApi;
-import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadType;
+import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import com.brokencircuits.kissad.messages.EpisodeLink;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +39,7 @@ public class DelegatorController {
   private static final Pattern EPISODE_PATTERN = Pattern.compile("<EPISODE_(\\d+)>");
 
   private final LocalDownloadApi downloadApi;
-  private final Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest;
+  private final Function<DownloadRequestMsg, CompletableFuture<SimpleDownloadResult>> onDownloadRequest;
   @Value("${delegator.min-quality}")
   private long minQualityGoal;
   @Value("${delegator.download-folder}")
@@ -61,24 +62,13 @@ public class DelegatorController {
       return;
     }
 
-    CompletableFuture<Boolean> future = submitDownload(key, msg);
-    // wait for download to complete
+    Future<Void> future = submitDownload(key, msg);
 
-    Boolean successful = future.get();
-    if (successful) {
-      EpisodeMsgValue completedValue = EpisodeMsgValue.newBuilder()
-          .setDownloadedQuality(msg.getValue().getDownloadedQuality())
-          .setLatestLinks(msg.getValue().getLatestLinks())
-          .setMessageId(Uuid.randomUUID())
-          .setDownloadTime(Instant.now())
-          .build();
-      episodeTable.put(new ByteKey<>(msg.getKey()),
-          EpisodeMsg.newBuilder().setValue(completedValue).setKey(msg.getKey()).build());
-      log.info("Marked episode complete: {}", msg.getKey());
-    }
+    // wait for download to complete
+    future.get();
   }
 
-  private CompletableFuture<Boolean> submitDownload(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
+  private Future<Void> submitDownload(ByteKey<EpisodeMsgKey> key, EpisodeMsg msg) {
     ByteKey<ShowMsgKey> showKey = new ByteKey<>(msg.getKey().getShowId());
     ShowMsg showMsg = showTable.get(showKey);
 
@@ -87,7 +77,7 @@ public class DelegatorController {
     if (showMsg == null) {
       log.error("Show with ID {} has no entry in GKT; Aborting download of episode {}",
           msg.getKey().getShowId(), destinationDir);
-      return CompletableFuture.completedFuture(false);
+      return CompletableFuture.completedFuture(null);
     } else {
       destinationDir += addTrailingSlashToPath(showMsg.getValue().getFolderName());
       destinationFileName = createFileName(showMsg.getValue().getEpisodeNamePattern(),
@@ -96,24 +86,27 @@ public class DelegatorController {
 
     EpisodeLink linkForBestQuality = selectLink(msg);
 
-    return downloadApi.submitDownload(
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    downloadApi.submitDownload(
         linkForBestQuality.getUrl(),
         DownloadType.valueOf(linkForBestQuality.getType().name()), destinationDir,
-        destinationFileName, (completedStatus, request) -> {
-          if (completedStatus.isFinished() && completedStatus.getErrorCode() == 0) {
-            episodeTable.put(key, completedValue(completedStatus, msg, linkForBestQuality));
-          } else if (completedStatus.getErrorCode() == 404) {
-            log.info("Episode failed to download, requesting retry for show {}",
-                msg.getKey().getRawTitle());
-            onDownloadRequest.apply(request);
+        destinationFileName, result -> {
+          future.complete(null);
+
+          if (result.getErrorCode() == 0) {
+            log.info("Marking episode complete: {}", msg);
+            episodeTable.put(key, completedValue(msg, linkForBestQuality));
+          } else {
+            log.error("Download failed with result {}", result);
           }
         });
+
+    return future;
   }
 
-  private EpisodeMsg completedValue(DownloadStatus completedStatus,
-      EpisodeMsg msg, EpisodeLink linkForBestQuality) {
+  private EpisodeMsg completedValue(EpisodeMsg msg, EpisodeLink linkForBestQuality) {
     EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
-        .setDownloadTime(completedStatus.getEndTime())
+        .setDownloadTime(Instant.now())
         .setDownloadedQuality(linkForBestQuality.getQuality())
         .setLatestLinks(msg.getValue().getLatestLinks())
         .setMessageId(Uuid.randomUUID())

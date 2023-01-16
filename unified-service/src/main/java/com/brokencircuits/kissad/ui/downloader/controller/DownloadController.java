@@ -4,18 +4,18 @@ import com.brokencircuits.kissad.ui.downloader.aria.AriaApi;
 import com.brokencircuits.kissad.ui.downloader.aria.AriaResponseStatus;
 import com.brokencircuits.kissad.ui.downloader.aria.AriaResponseUriSubmit;
 import com.brokencircuits.kissad.ui.downloader.domain.DownloadResult;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -36,6 +36,10 @@ public class DownloadController {
   private int renameRetryCount;
   @Value("${download.rename.retry-delay}")
   private Duration renameRetryDelay;
+  @Value("${download.mock-download}")
+  private boolean mockDownload;
+  @Value("${download.mock-success}")
+  private boolean mockSuccess;
 
   private final static Pattern FOLDER_PATH_PATTERN = Pattern.compile("[\\\\/]$");
 
@@ -47,9 +51,21 @@ public class DownloadController {
   }
 
   public void doDownload(String uri, String destinationDir, String filename, boolean isMagnet,
-                         Consumer<AriaResponseStatus> onStatusPoll,
-                         BiConsumer<File, AriaResponseStatus> onDownloadComplete)
+      Consumer<AriaResponseStatus> onStatusPoll,
+      BiConsumer<File, AriaResponseStatus> onDownloadComplete)
       throws IOException, InterruptedException {
+
+    if (mockDownload) {
+      log.info("Mocking download for {}", filename);
+      log.info("Mock success: {}", mockSuccess);
+      int errCode = mockSuccess ? 0 : 1;
+      String errMsg = "mock err msg";
+      onDownloadComplete.accept(new File("mock-file"), new AriaResponseStatus("00", "2.0",
+          new DownloadResult(100, 1, "mockDir", 1, errCode, errMsg,
+              Collections.emptyList(), Collections.emptyList(), "mockGid", "infoHash", 1, 1, 100,
+              "Status", 100, 100, 1)));
+      return;
+    }
 
     AriaResponseUriSubmit response = ariaApi.submitUri("test", uri);
     log.info("Response from request: {}", response);

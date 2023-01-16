@@ -3,6 +3,7 @@ package com.brokencircuits.kissad.ui.config;
 import com.brokencircuits.download.messages.DownloadType;
 import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
+import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import com.brokencircuits.kissad.messages.EpisodeMsg;
 import com.brokencircuits.kissad.messages.EpisodeMsgKey;
 import com.brokencircuits.kissad.messages.ShowMsg;
@@ -80,7 +81,7 @@ public class FlowConfig {
   }
 
   @Bean
-  Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest(
+  Function<DownloadRequestMsg, CompletableFuture<SimpleDownloadResult>> onDownloadRequest(
       DownloadController controller,
       ReadWriteTable<ByteKey<EpisodeMsgKey>, EpisodeMsg> episodeTable) {
     return request -> {
@@ -89,7 +90,7 @@ public class FlowConfig {
 
         boolean isMagnet = request.getKey().getDownloadType().equals(DownloadType.MAGNET);
 
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        CompletableFuture<SimpleDownloadResult> future = new CompletableFuture<>();
         Consumer<AriaResponseStatus> onStatusPoll = status -> {
           String pcntComplete = String.format("%.2f",
               (100 * ((double) status.getResult().getCompletedLength() / status.getResult()
@@ -102,21 +103,20 @@ public class FlowConfig {
               isMagnet, onStatusPoll, (f, s) -> {
                 if (s.getResult().getErrorCode() == 0) {
                   log.info("Download completed");
-                  future.complete(true);
                 } else {
                   log.info("Download failed");
-                  future.complete(false);
                 }
+                future.complete(new SimpleDownloadResult(s.getResult().getErrorCode()));
               });
         } catch (IOException | InterruptedException e) {
           log.error("Could not complete download: {}", request, e);
-          future.complete(false);
+          future.complete(null);
         }
         return future;
       } catch (Exception e) {
         log.error("Could not complete download of {} due to ", request, e);
       }
-      return CompletableFuture.completedFuture(false);
+      return CompletableFuture.completedFuture(null);
     };
   }
 }

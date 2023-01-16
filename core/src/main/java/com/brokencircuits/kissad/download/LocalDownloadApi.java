@@ -5,9 +5,11 @@ import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadType;
+import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import com.brokencircuits.kissad.util.Uuid;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class LocalDownloadApi {
 
-  private final Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest;
+  private final Function<DownloadRequestMsg, CompletableFuture<SimpleDownloadResult>> onDownloadRequest;
 
-  public CompletableFuture<Boolean> submitDownload(String uri, DownloadType downloadType,
+  public void submitDownload(String uri, DownloadType downloadType,
       String destinationDir, String destinationFileName,
-      BiConsumer<DownloadStatus, DownloadRequestMsg> onCompletion) {
+      Consumer<SimpleDownloadResult> onCompletion) {
     log.info("Submitting download:\n\tURI: {}\n\tType: {}\n\tDestinationDir: {}\n\tFileName: {}",
         uri, downloadType, destinationDir, destinationFileName);
 
@@ -46,7 +48,8 @@ public class LocalDownloadApi {
         .setValue(value)
         .build();
 
-    return onDownloadRequest.apply(requestMsg);
+    CompletableFuture<SimpleDownloadResult> future = onDownloadRequest.apply(requestMsg);
+    future.thenAccept(onCompletion);
   }
 
   public long getFreeDownloaderId() {
