@@ -7,18 +7,23 @@
 
   <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
   <link rel="stylesheet" href="/shows.css" media="screen"/>
+  <script src="/shows.js"></script>
 </head>
-<body>
+<body onload="updateDisabledShows()">
 <div class="container">
   <div class="page-header" id="banner">
     <div class="row">
       <div class="col-lg-8 col-md-7 col-sm-6">
         <div class="page-head">Shows</div>
+        <span><input type="checkbox"
+                     id="showHideShowsBox"
+                     onchange="updateDisabledShows()"
+                     onload="updateDisabledShows()"/> Show disabled</span>
         <hr/>
 
-        <table class="table table-striped">
+        <table id="show-list" class="table table-striped">
           <tbody>
-          <tr th:each="show : ${shows}">
+          <tr th:each="show : ${shows}" th:data-enabled="${show.isActive}">
             <td>
               <a th:href="@{/show/{id}(id=${show.showId})}" th:text="${show.title}"></a>
               <span th:text="${show.nextEpisode}" class="next-episode-time"></span>

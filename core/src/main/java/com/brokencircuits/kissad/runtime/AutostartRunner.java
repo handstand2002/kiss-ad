@@ -10,11 +10,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AutostartRunner {
 
-  @Autowired
+  @Autowired(required = false)
   private final Collection<AutostartService> services;
 
   @PostConstruct
   private void startAll() throws Exception {
+    if (services == null) {
+      return;
+    }
     for (AutostartService service : services) {
       service.start();
     }

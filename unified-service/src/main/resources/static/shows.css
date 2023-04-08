@@ -52,6 +52,10 @@ label {
   height: 3.2em;
 }
 
+form input[type='checkbox'] {
+  width: 85px;
+}
+
 button {
   background-color: #292929;
   border: none;

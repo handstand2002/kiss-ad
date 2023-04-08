@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
   <link rel="stylesheet" href="/shows.css" media="screen"/>
   <script src="/editShow.js"></script>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+        var message = /*[[${show}]]*/ 'default';
+        console.log(message);
+    /*]]>*/
+  </script>
 </head>
 <body>
 <div class="container">
@@ -44,6 +50,9 @@
           <label>Skip Episodes</label>
           <input type="text" class="form-control" th:value="${show.initialSkipEpisodeString}"
                  name="initialSkipEpisodeString"/>
+          <label>Active</label>
+          <input type="checkbox" class="form-control" checked th:if="${show.isActive}" name="isActive"/>
+          <input type="checkbox" class="form-control" th:unless="${show.isActive}" name="isActive"/>
           <div class="page-head">
             <button type="submit" name="button" style="margin-top: .4em;">保存</button>
           </div>
