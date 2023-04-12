@@ -22,12 +22,12 @@
       <div class="col-lg-8 col-md-7 col-sm-6">
         <div class="page-head" th:text="${show.title}"></div>
         <div style="width: 100%; margin: auto; text-align: center">
-          <a th:href="@{/showEpisodes/{id}(id=${show.showId})}">Downloaded Episodes</a>
+          <a th:href="@{/showEpisodes/{id}(id=${show.id})}">Downloaded Episodes</a>
         </div>
 
         <form class="form-horizontal edit-show-form" th:action="@{/addShow}" method="post"
               enctype="multipart/form-data">
-          <input type="hidden" th:value="${show.showId}" name="showId"/>
+          <input type="hidden" th:value="${show.id}" name="id"/>
           <label>HS URL</label>
           <input type="text" class="form-control" th:value="${show.url}" name="url"/>
           <label>Source</label>
@@ -48,8 +48,8 @@
           <input type="text" class="form-control" th:value="${show.episodeNamePattern}"
                  name="episodeNamePattern" value="S<SEASON_2>E<EPISODE_2>"/>
           <label>Skip Episodes</label>
-          <input type="text" class="form-control" th:value="${show.initialSkipEpisodeString}"
-                 name="initialSkipEpisodeString"/>
+          <input type="text" class="form-control" th:value="${show.skipEpisodeString}"
+                 name="skipEpisodeString"/>
           <label>Active</label>
           <input type="checkbox" class="form-control" checked th:if="${show.isActive}" name="isActive"/>
           <input type="checkbox" class="form-control" th:unless="${show.isActive}" name="isActive"/>
@@ -59,7 +59,7 @@
         </form>
 
         <hr>
-        <form th:action="@{/deleteShow/{id}(id=${show.showId})}" th:method="delete">
+        <form th:action="@{/deleteShow/{id}(id=${show.id})}" th:method="delete">
           <div class="page-head">
             <button type="button" name="button" onclick="confirmDelete(this)">消す</button>
           </div>

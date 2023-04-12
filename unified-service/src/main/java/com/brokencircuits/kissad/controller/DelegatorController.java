@@ -2,17 +2,18 @@ package com.brokencircuits.kissad.controller;
 
 import static com.brokencircuits.kissad.util.PathUtil.addTrailingSlashToPath;
 
+import com.brokencircuits.kissad.domain.EpisodeDto;
+import com.brokencircuits.kissad.domain.EpisodeId;
+import com.brokencircuits.kissad.domain.EpisodeLinkDto;
+import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.download.LocalDownloadApi;
 import com.brokencircuits.kissad.download.domain.DownloadType;
-import com.brokencircuits.kissad.messages.EpisodeLink;
-import com.brokencircuits.kissad.messages.EpisodeMsg;
-import com.brokencircuits.kissad.messages.EpisodeMsgKey;
-import com.brokencircuits.kissad.messages.EpisodeMsgValue;
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.table.ReadWriteTable;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.repository.EpisodeRepository;
+import com.brokencircuits.kissad.repository.ShowRepository;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -40,45 +41,50 @@ public class DelegatorController {
   @Value("${delegator.download-folder}")
   private String downloadFolder;
 
-  private final ReadWriteTable<ShowMsgKey, ShowMsg> showTable;
-  private final ReadWriteTable<EpisodeMsgKey, EpisodeMsg> episodeTable;
+  private final EpisodeRepository episodeRepository;
+  private final ShowRepository showRepository;
 
-  public void process(EpisodeMsg msg) throws ExecutionException, InterruptedException {
-    EpisodeMsg previousEpisodeDownload = episodeTable.get(msg.getKey());
-    boolean isDownloaded = Optional.ofNullable(previousEpisodeDownload)
-        .map(EpisodeMsg::getValue)
-        .map(EpisodeMsgValue::getDownloadTime).isPresent();
-    log.debug("Episode previously downloaded entry: {} | {}", msg.getKey(),
-        previousEpisodeDownload);
+  public void process(RequestEpisode msg) throws ExecutionException, InterruptedException {
+    Optional<EpisodeDto> previousEpisodeDownload = episodeRepository.findById(
+        EpisodeId.builder().showId(msg.getShowId()).episodeNumber(msg.getEpisodeNumber()).build());
+
+    boolean isDownloaded = previousEpisodeDownload
+        .map(EpisodeDto::getDownloadTime)
+        .isPresent();
+    log.debug("Episode previously downloaded entry: {} | {}", msg, previousEpisodeDownload);
 
     if (isDownloaded) {
       log.info("Episode has already been downloaded, skipping: ShowId {}, Episode {}",
-          msg.getKey().getShowId().getShowId(), msg.getKey().getEpisodeNumber());
+          msg.getShowId(), msg.getEpisodeNumber());
       return;
     }
+    /*
+    need:
+     */
 
-    Future<Void> future = submitDownload(msg.getKey(), msg);
+    Future<Void> future = submitDownload(msg);
 
     // wait for download to complete
     future.get();
   }
 
-  private Future<Void> submitDownload(EpisodeMsgKey key, EpisodeMsg msg) {
-    ShowMsg showMsg = showTable.get(msg.getKey().getShowId());
+  private Future<Void> submitDownload(RequestEpisode msg) {
+    Optional<ShowDto> show = showRepository.findById(msg.getShowId());
 
     String destinationDir = addTrailingSlashToPath(downloadFolder);
     String destinationFileName;
-    if (showMsg == null) {
+    if (!show.isPresent()) {
       log.error("Show with ID {} has no entry in GKT; Aborting download of episode {}",
-          msg.getKey().getShowId(), destinationDir);
+          msg.getShowId(), destinationDir);
       return CompletableFuture.completedFuture(null);
     } else {
-      destinationDir += addTrailingSlashToPath(showMsg.getValue().getFolderName());
-      destinationFileName = createFileName(showMsg.getValue().getEpisodeNamePattern(),
-          showMsg.getValue().getSeason(), msg.getKey().getEpisodeNumber());
+      ShowDto showDto = show.get();
+      destinationDir += addTrailingSlashToPath(showDto.getFolderName());
+      destinationFileName = createFileName(showDto.getEpisodeNamePattern(),
+          showDto.getSeason(), msg.getEpisodeNumber());
     }
 
-    EpisodeLink linkForBestQuality = selectLink(msg);
+    EpisodeLinkDto linkForBestQuality = selectLink(msg);
 
     CompletableFuture<Void> future = new CompletableFuture<>();
     downloadApi.submitDownload(
@@ -89,7 +95,7 @@ public class DelegatorController {
 
           if (result.getErrorCode() == 0) {
             log.info("Marking episode complete: {}", msg);
-            episodeTable.put(key, completedValue(msg, linkForBestQuality));
+            episodeRepository.save(completedValue(msg, linkForBestQuality));
           } else {
             log.error("Download failed with result {}", result);
           }
@@ -98,17 +104,18 @@ public class DelegatorController {
     return future;
   }
 
-  private EpisodeMsg completedValue(EpisodeMsg msg, EpisodeLink linkForBestQuality) {
-    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
-        .setDownloadTime(Instant.now())
-        .setDownloadedQuality(linkForBestQuality.getQuality())
-        .setLatestLinks(msg.getValue().getLatestLinks())
-        .setMessageId(Uuid.randomUUID())
+  private EpisodeDto completedValue(RequestEpisode msg, EpisodeLinkDto linkForBestQuality) {
+
+    return EpisodeDto.builder()
+        .showId(msg.getShowId())
+        .episodeNumber(msg.getEpisodeNumber())
+        .downloadTime(Instant.now())
+        .downloadedQuality(linkForBestQuality.getQuality())
+        .latestLinks(Collections.emptyList())
         .build();
-    return EpisodeMsg.newBuilder().setKey(msg.getKey()).setValue(value).build();
   }
 
-  private String createFileName(String episodeNamePattern, Integer seasonNum, Long episodeNum) {
+  private String createFileName(String episodeNamePattern, Integer seasonNum, int episodeNum) {
 
     Matcher matcher = SEASON_PATTERN.matcher(episodeNamePattern);
     if (matcher.find()) {
@@ -133,17 +140,20 @@ public class DelegatorController {
     return episodeNamePattern;
   }
 
-  private EpisodeLink selectLink(EpisodeMsg value) {
-    List<EpisodeLink> latestLinks = value.getValue().getLatestLinks();
-    latestLinks.sort(Comparator.comparingInt(EpisodeLink::getQuality));
-    EpisodeLink bestLink = null;
-    for (EpisodeLink latestLink : latestLinks) {
-      bestLink = latestLink;
-      if (bestLink.getQuality() > minQualityGoal) {
-        return bestLink;
-      }
-    }
-    return bestLink;
+  private EpisodeLinkDto selectLink(RequestEpisode value) {
+
+    List<EpisodeLinkDto> links = new ArrayList<>(value.getLinks());
+    links.sort(Comparator.comparingInt(EpisodeLinkDto::getQuality));
+    return links.stream()
+        .filter(link -> link.getQuality() > minQualityGoal)
+        .findFirst()
+        .orElseGet(() -> {
+          if (links.isEmpty()) {
+            return null;
+          }
+          // get last link, since it would be highest quality
+          return links.get(links.size() - 1);
+        });
   }
 
 }

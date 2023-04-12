@@ -1,11 +1,10 @@
 package com.brokencircuits.kissad.controller;
 
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.table.ReadWriteTable;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.domain.ShowDto;
+import com.brokencircuits.kissad.repository.ShowRepository;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.Consumer;
 import javax.annotation.PostConstruct;
@@ -20,36 +19,37 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SchedulerController {
 
-  private final Map<ShowMsgKey, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
+  private final Map<String, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
   private final TaskScheduler taskScheduler;
-  private final Consumer<Uuid> triggerShowCheckMethod;
-  private final ReadWriteTable<ShowMsgKey, ShowMsg> showTable;
+  private final Consumer<UUID> triggerShowCheckMethod;
+  private final ShowRepository showRepository;
 
   @PostConstruct
   public void scheduleAll() {
-    showTable.all(kv -> scheduleShow(kv.getKey(), kv.getValue()));
+    showRepository.findAll().forEach(this::scheduleShow);
   }
 
-  public synchronized void scheduleShow(ShowMsgKey key, ShowMsg msg) {
+  public synchronized void scheduleShow(ShowDto msg) {
     log.info("Handling update to show {}", msg);
-    ScheduledFuture<?> scheduledJob = scheduledJobs.get(key);
+    String showId = msg.getId();
+    ScheduledFuture<?> scheduledJob = scheduledJobs.get(showId);
     if (scheduledJob != null) {
       scheduledJob.cancel(false);
-      log.info("Cancelled job for show ID: {}", key);
-      scheduledJobs.remove(key);
+      log.info("Cancelled job for show ID: {}", showId);
+      scheduledJobs.remove(showId);
     }
 
-    if (msg != null && msg.getValue() != null && msg.getValue().getIsActive()) {
+    if (msg.getIsActive() != null && msg.getIsActive()) {
       log.info("Scheduling {}", msg);
       try {
         ScheduledFuture<?> job = taskScheduler.schedule(
-            () -> triggerShowCheckMethod.accept(msg.getKey().getShowId()),
-            new CronTrigger(msg.getValue().getReleaseScheduleCron()));
-        scheduledJobs.put(key, job);
-        log.info("Scheduled check for show {} on schedule {}", msg.getValue().getTitle(),
-            msg.getValue().getReleaseScheduleCron());
+            () -> triggerShowCheckMethod.accept(UUID.fromString(showId)),
+            new CronTrigger(msg.getReleaseScheduleCron()));
+        scheduledJobs.put(showId, job);
+        log.info("Scheduled check for show {} on schedule {}", msg.getTitle(),
+            msg.getReleaseScheduleCron());
       } catch (IllegalArgumentException e) {
-        log.warn("Illegal cron expression , not scheduling check for this show: {} | {}", key, msg);
+        log.warn("Illegal cron expression , not scheduling check for this show: {}", msg);
       }
     }
   }

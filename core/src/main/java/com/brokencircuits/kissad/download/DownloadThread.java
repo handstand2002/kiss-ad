@@ -6,14 +6,12 @@ import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.downloader.messages.DownloadStatusValue;
 import com.brokencircuits.kissad.download.domain.DownloadStatus;
 import com.brokencircuits.kissad.download.domain.DownloadStatusWrapper;
-import com.brokencircuits.kissad.util.Uuid;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,15 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 public class DownloadThread extends Thread {
 
   @Getter
-  private final Uuid uuid;
+  private final UUID uuid;
   private final DownloadStatusWrapper statusWrapper;
   private final BiConsumer<DownloadStatus, DownloadThread> onCompletion;
   private CompletableFuture<Boolean> downloadFuture;
 
   public DownloadThread(DownloadRequestMsg requestMsg, DownloadStatusWrapper statusWrapper,
-                        Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest,
-                        Duration startTimeout,
-                        BiConsumer<DownloadStatus, DownloadThread> onCompletion) {
+      Function<DownloadRequestMsg, CompletableFuture<Boolean>> onDownloadRequest,
+      Duration startTimeout,
+      BiConsumer<DownloadStatus, DownloadThread> onCompletion) {
     super(() -> {
       DownloadStatus status = statusWrapper.getStatus();
 
@@ -38,7 +36,8 @@ public class DownloadThread extends Thread {
 
       statusWrapper.setDownloaderId(key.getDownloaderId());
       statusWrapper.setStartTime(Instant.now());
-      CompletableFuture<Boolean> future = onDownloadRequest.apply(DownloadRequestMsg.newBuilder().setKey(key).setValue(value).build());
+      CompletableFuture<Boolean> future = onDownloadRequest.apply(
+          DownloadRequestMsg.newBuilder().setKey(key).setValue(value).build());
     });
     this.onCompletion = onCompletion;
     this.statusWrapper = statusWrapper;

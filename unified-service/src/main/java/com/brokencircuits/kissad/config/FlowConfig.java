@@ -1,23 +1,19 @@
 package com.brokencircuits.kissad.config;
 
-import com.brokencircuits.download.messages.DownloadType;
-import com.brokencircuits.downloader.messages.DownloadRequestMsg;
-import com.brokencircuits.downloader.messages.DownloadRequestValue;
 import com.brokencircuits.kissad.controller.DelegatorController;
 import com.brokencircuits.kissad.controller.DownloadController;
 import com.brokencircuits.kissad.controller.FetcherController;
 import com.brokencircuits.kissad.controller.SchedulerController;
+import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.ShowDto;
+import com.brokencircuits.kissad.download.domain.DownloadRequest;
+import com.brokencircuits.kissad.download.domain.DownloadType;
 import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import com.brokencircuits.kissad.downloader.aria.AriaResponseStatus;
-import com.brokencircuits.kissad.messages.EpisodeMsg;
-import com.brokencircuits.kissad.messages.EpisodeMsgKey;
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.table.ReadWriteTable;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.repository.EpisodeRepository;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
@@ -43,16 +39,16 @@ public class FlowConfig {
   }
 
   @Bean
-  BiConsumer<ShowMsgKey, ShowMsg> onShowUpdate(SchedulerController controller) {
-    return (key, msg) -> {
-      log.info("Show was updated, updating schedule for {}", key);
-      controller.scheduleShow(key, msg);
-      log.info("Finished updating schedule for show {}", key);
+  Consumer<ShowDto> onShowUpdate(SchedulerController controller) {
+    return msg -> {
+      log.info("Show was updated, updating schedule for {}", msg);
+      controller.scheduleShow(msg);
+      log.info("Finished updating schedule for show {}", msg);
     };
   }
 
   @Bean
-  Consumer<Uuid> triggerShowCheckMethod(FetcherController fetcherController) {
+  Consumer<UUID> triggerShowCheckMethod(FetcherController fetcherController) {
     return showUuid -> {
       try {
         log.info("Checking for new episodes for show {}", showUuid);
@@ -65,14 +61,14 @@ public class FlowConfig {
   }
 
   @Bean
-  Consumer<EpisodeMsg> notifyOfEpisode(DelegatorController controller) {
+  Consumer<RequestEpisode> notifyOfEpisode(DelegatorController controller) {
     return msg -> {
       try {
-        log.info("Found episode ShowId {}, Episode {}", msg.getKey().getShowId(),
-            msg.getKey().getEpisodeNumber());
+        log.info("Found episode ShowId {}, Episode {}", msg.getShowId(),
+            msg.getEpisodeNumber());
         controller.process(msg);
-        log.info("Finished processing ShowId {}, Episode {}", msg.getKey().getShowId(),
-            msg.getKey().getEpisodeNumber());
+        log.info("Finished processing ShowId {}, Episode {}", msg.getShowId(),
+            msg.getEpisodeNumber());
       } catch (Exception e) {
         log.error("Could not complete processing of {} due to ", msg, e);
       }
@@ -80,14 +76,13 @@ public class FlowConfig {
   }
 
   @Bean
-  Function<DownloadRequestMsg, CompletableFuture<SimpleDownloadResult>> onDownloadRequest(
+  Function<DownloadRequest, CompletableFuture<SimpleDownloadResult>> onDownloadRequest(
       DownloadController controller,
-      ReadWriteTable<EpisodeMsgKey, EpisodeMsg> episodeTable) {
+      EpisodeRepository episodeRepository) {
     return request -> {
       try {
-        DownloadRequestValue req = request.getValue();
 
-        boolean isMagnet = request.getKey().getDownloadType().equals(DownloadType.MAGNET);
+        boolean isMagnet = request.getType().equals(DownloadType.MAGNET);
 
         CompletableFuture<SimpleDownloadResult> future = new CompletableFuture<>();
         Consumer<AriaResponseStatus> onStatusPoll = status -> {
@@ -98,7 +93,8 @@ public class FlowConfig {
         };
 
         try {
-          controller.doDownload(req.getUri(), req.getDestinationDir(), req.getDestinationFileName(),
+          controller.doDownload(request.getUri(), request.getDestinationDir(),
+              request.getDestinationFileName(),
               isMagnet, onStatusPoll, (f, s) -> {
                 if (s.getResult().getErrorCode() == 0) {
                   log.info("Download completed");

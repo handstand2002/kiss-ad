@@ -1,8 +1,7 @@
 package com.brokencircuits.kissad.config.delegator;
 
-import com.brokencircuits.downloader.messages.DownloadRequestMsg;
 import com.brokencircuits.kissad.download.LocalDownloadApi;
-import com.brokencircuits.kissad.download.domain.DownloadStatus;
+import com.brokencircuits.kissad.download.domain.DownloadRequest;
 import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -14,7 +13,7 @@ public class DownloadApiConfig {
 
   @Bean
   LocalDownloadApi downloadApi(
-      Function<DownloadRequestMsg, CompletableFuture<SimpleDownloadResult>> onDownloadRequest) {
+      Function<DownloadRequest, CompletableFuture<SimpleDownloadResult>> onDownloadRequest) {
     return new LocalDownloadApi(onDownloadRequest);
   }
 }

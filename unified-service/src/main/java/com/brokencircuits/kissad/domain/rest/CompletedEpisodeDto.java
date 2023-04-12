@@ -1,6 +1,6 @@
 package com.brokencircuits.kissad.domain.rest;
 
-import com.brokencircuits.kissad.messages.SourceName;
+import com.brokencircuits.kissad.domain.rest.CompletedEpisodeDto.EpisodeObjectBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.AllArgsConstructor;
@@ -10,14 +10,16 @@ import lombok.Data;
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
-@JsonDeserialize(builder = ShowSource.ShowSourceBuilder.class)
-public class ShowSource {
+@JsonDeserialize(builder = EpisodeObjectBuilder.class)
+public class CompletedEpisodeDto {
 
-  private SourceName sourceName;
-  private String url;
+  private String downloadTime;
+  private int downloadedQuality;
+  private Long episodeNumber;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ShowSourceBuilder {
+  public static class EpisodeObjectBuilder {
 
   }
+
 }

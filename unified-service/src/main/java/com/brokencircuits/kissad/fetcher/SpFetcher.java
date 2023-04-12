@@ -1,19 +1,14 @@
 package com.brokencircuits.kissad.fetcher;
 
-import com.brokencircuits.download.messages.DownloadType;
 import com.brokencircuits.kissad.Extractor;
+import com.brokencircuits.kissad.domain.DownloadTypeDto;
+import com.brokencircuits.kissad.domain.EpisodeLinkDto;
+import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.domain.fetcher.ShowEpisodeResponse;
 import com.brokencircuits.kissad.domain.fetcher.SpEpisode;
 import com.brokencircuits.kissad.domain.fetcher.SpEpisodeDownloadEntry;
-import com.brokencircuits.kissad.messages.EpisodeLink;
-import com.brokencircuits.kissad.messages.EpisodeMsg;
-import com.brokencircuits.kissad.messages.EpisodeMsgKey;
-import com.brokencircuits.kissad.messages.EpisodeMsgValue;
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.SourceName;
-import com.brokencircuits.kissad.util.KeyValue;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.domain.rest.SourceName;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import java.io.IOException;
@@ -36,11 +31,17 @@ public class SpFetcher {
   private final WebClient webClient;
   private final Extractor<String, Long> showIdExtractor;
   private final SpShowEpisodeClient feignSpShowEpisodeFetcher;
-  private final Consumer<EpisodeMsg> notifyOfEpisode;
+  private final Consumer<RequestEpisode> notifyOfEpisode;
 
-  public void process(ShowMsgKey key, ShowMsg msg) {
-    log.info("Processing show: {} | {}", key, msg);
-    String url = msg.getValue().getSources().get(acceptSource.toString());
+  public void process(ShowDto show) {
+    log.info("Processing show: {}", show);
+
+    if (!show.getSourceName().equals(acceptSource.name())) {
+      log.warn("Fetcher received show for wrong source: {}", show);
+      return;
+    }
+
+    String url = show.getUrl();
     try {
       String htmlPage = fetchPageFromUrl(url);
       Long showId = showIdExtractor.extract(htmlPage);
@@ -60,7 +61,7 @@ public class SpFetcher {
                 episodeNumberString = episodeNumberString.substring(0, lastIndex);
               }
               Long epNumber = Long.parseLong(episodeNumberString);
-              return convertEpisodeObj(e.getValue(), epNumber, msg.getKey());
+              return convertEpisodeObj(e.getValue(), epNumber, show);
             } catch (Exception exception) {
               log.error("Unable to process episode {} | {} due to error", e.getKey(), e.getValue(),
                   exception);
@@ -68,37 +69,39 @@ public class SpFetcher {
             }
           })
           .filter(Objects::nonNull)
-          .sorted(Comparator.comparingLong(kv -> kv.getValue().getKey().getEpisodeNumber()))
-          .forEach(kv -> notifyOfEpisode.accept(kv.getValue()));
+          .sorted(Comparator.comparingLong(RequestEpisode::getEpisodeNumber))
+          .forEach(notifyOfEpisode);
 
     } catch (Exception e) {
-      log.error("Unable to process {} due to Exception", msg, e);
+      log.error("Unable to process {} due to Exception", show, e);
     }
   }
 
-  private KeyValue<EpisodeMsgKey, EpisodeMsg> convertEpisodeObj(
-      SpEpisode ep, Long epNumber, ShowMsgKey showKey) {
-    EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
-        .setEpisodeNumber(epNumber)
-        .setShowId(showKey)
+  private RequestEpisode convertEpisodeObj(
+      SpEpisode ep, Long epNumber, ShowDto showKey) {
+    return RequestEpisode.builder()
+        .episodeNumber(Math.toIntExact(epNumber))
+        .showId(showKey.getId())
+        .links(convertUrlList(ep.getDownloads()))
         .build();
-    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
-        .setDownloadedQuality(0)
-        .setLatestLinks(convertUrlList(ep.getDownloads()))
-        .setDownloadTime(null)
-        .setMessageId(Uuid.randomUUID())
-        .build();
-    return KeyValue.of(key, EpisodeMsg.newBuilder().setKey(key).setValue(value).build());
+//    EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
+//        .setEpisodeNumber(epNumber)
+//        .setShowId(showKey)
+//        .build();
+//    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
+//        .setDownloadedQuality(0)
+//        .setLatestLinks(convertUrlList(ep.getDownloads()))
+//        .setDownloadTime(null)
+//        .setMessageId(Uuid.randomUUID())
+//        .build();
+//    return KeyValue.of(key, EpisodeMsg.newBuilder().setKey(key).setValue(value).build());
   }
 
-  private List<EpisodeLink> convertUrlList(List<SpEpisodeDownloadEntry> urlList) {
-    List<EpisodeLink> output = new ArrayList<>();
+  private List<EpisodeLinkDto> convertUrlList(List<SpEpisodeDownloadEntry> urlList) {
+    List<EpisodeLinkDto> output = new ArrayList<>();
     for (SpEpisodeDownloadEntry downloadEntry : urlList) {
-      output.add(EpisodeLink.newBuilder()
-          .setType(DownloadType.MAGNET)
-          .setQuality(downloadEntry.getRes())
-          .setUrl(downloadEntry.getMagnet())
-          .build());
+      output.add(new EpisodeLinkDto(downloadEntry.getRes(), DownloadTypeDto.MAGNET,
+          downloadEntry.getMagnet()));
     }
     return output;
   }

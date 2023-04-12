@@ -15,14 +15,14 @@
 
     <dependency>
       <groupId>com.brokencircuits</groupId>
-      <artifactId>core-message</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.brokencircuits</groupId>
       <artifactId>core</artifactId>
       <version>1.0.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.brokencircuits</groupId>
+          <artifactId>core-message</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

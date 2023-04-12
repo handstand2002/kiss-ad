@@ -25,12 +25,12 @@
           <tbody>
           <tr th:each="show : ${shows}" th:data-enabled="${show.isActive}">
             <td>
-              <a th:href="@{/show/{id}(id=${show.showId})}" th:text="${show.title}"></a>
+              <a th:href="@{/show/{id}(id=${show.id})}" th:text="${show.title}"></a>
               <span th:text="${show.nextEpisode}" class="next-episode-time"></span>
             </td>
             <td>
               <span>
-                <a th:href="@{/checkShow/{id}(id=${show.showId})}">チエック</a>
+                <a th:href="@{/checkShow/{id}(id=${show.id})}">チエック</a>
               </span>
             </td>
           </tr>

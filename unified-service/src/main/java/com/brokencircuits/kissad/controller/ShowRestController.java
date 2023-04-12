@@ -1,32 +1,27 @@
 package com.brokencircuits.kissad.controller;
 
-import com.brokencircuits.kissad.Translator;
-import com.brokencircuits.kissad.domain.rest.EpisodeObject;
-import com.brokencircuits.kissad.domain.rest.ShowObject;
-import com.brokencircuits.kissad.domain.rest.ShowObject.ShowObjectBuilder;
-import com.brokencircuits.kissad.messages.EpisodeMsg;
-import com.brokencircuits.kissad.messages.EpisodeMsgKey;
-import com.brokencircuits.kissad.messages.EpisodeMsgValue;
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.messages.SourceName;
-import com.brokencircuits.kissad.table.ReadWriteTable;
-import com.brokencircuits.kissad.util.KeyValue;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.domain.EpisodeDto;
+import com.brokencircuits.kissad.domain.EpisodeId;
+import com.brokencircuits.kissad.domain.ShowDto;
+import com.brokencircuits.kissad.domain.ShowDto.ShowDtoBuilder;
+import com.brokencircuits.kissad.domain.rest.CompletedEpisodeDto;
+import com.brokencircuits.kissad.domain.rest.SourceName;
+import com.brokencircuits.kissad.repository.EpisodeRepository;
+import com.brokencircuits.kissad.repository.ShowRepository;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,12 +44,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequiredArgsConstructor
 public class ShowRestController {
 
-  private final ReadWriteTable<EpisodeMsgKey, EpisodeMsg> episodeTable;
-  private final ReadWriteTable<ShowMsgKey, ShowMsg> showTable;
-  private final Translator<ShowObject, KeyValue<ShowMsgKey, ShowMsg>> showLocalToMsgTranslator;
-  private final Translator<KeyValue<ShowMsgKey, ShowMsg>, ShowObject> showMsgToLocalTranslator;
-  private final Consumer<Uuid> triggerShowCheckMethod;
-  private final BiConsumer<ShowMsgKey, ShowMsg> onShowUpdate;
+  private final EpisodeRepository episodeRepository;
+  private final ShowRepository showRepository;
+  private final Consumer<UUID> triggerShowCheckMethod;
+  private final Consumer<ShowDto> onShowUpdate;
   private final TaskExecutor taskExecutor;
 
   private static final SimpleDateFormat NEXT_EPISODE_DATE_FORMAT = new SimpleDateFormat(
@@ -68,75 +61,64 @@ public class ShowRestController {
   private String defaultReleaseScheduleCron;
 
   @RequestMapping("/show/{id}")
-  public String show(@PathVariable Uuid id, Model model) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
-    ShowMsg showMessage = showTable.get(lookupKey);
-    if (showMessage == null) {
-      AtomicLong counter = new AtomicLong(0);
-      showTable.all(kv -> counter.incrementAndGet());
-      log.info("showTable has {} entries", counter.get());
+  public String show(@PathVariable UUID id, Model model) {
+
+    Optional<ShowDto> showDto = showRepository.findById(id.toString());
+    if (!showDto.isPresent()) {
       throw new IllegalStateException("Could not find show");
     }
 
-    log.info("Show: {}", showMessage);
+    ShowDto show = showDto.get();
+    log.info("Show: {}", show);
 
     model.addAttribute("sourceTypes", SourceName.values());
-    model.addAttribute("show",
-        showMsgToLocalTranslator.translate(KeyValue.of(lookupKey, showMessage)));
+    model.addAttribute("show", show);
     return "show";
   }
 
   @RequestMapping("/showEpisodes/{id}")
-  public String showEpisodes(@PathVariable Uuid id, Model model) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+  public String showEpisodes(@PathVariable UUID id, Model model) {
 
-    ShowMsg showMessage = showTable.get(lookupKey);
+    Optional<ShowDto> showDto = showRepository.findById(id.toString());
 
     model.addAttribute("sourceTypes", SourceName.values());
+    showDto.ifPresent(showDbDto -> model.addAttribute("show", showDbDto));
 
-    if (showMessage != null) {
-      model.addAttribute("show",
-          showMsgToLocalTranslator.translate(KeyValue.of(lookupKey, showMessage)));
-    }
+    Map<Long, CompletedEpisodeDto> downloadedEpisodes = new HashMap<>();
 
-    Map<Long, EpisodeObject> downloadedEpisodes = new HashMap<>();
+    episodeRepository.findByShowId(id.toString())
+        .forEach(dto -> downloadedEpisodes.put((long) dto.getEpisodeNumber(),
+            CompletedEpisodeDto.builder()
+                .downloadedQuality(dto.getDownloadedQuality())
+                .downloadTime(dto.getDownloadTime()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+                    .format(downloadTimeFormatter))
+                .episodeNumber((long) dto.getEpisodeNumber())
+                .build()));
 
-    episodeTable.all(kv -> {
-      if (kv.getValue().getKey().getShowId().getShowId().equals(id)) {
-        downloadedEpisodes.put(kv.getValue().getKey().getEpisodeNumber(), EpisodeObject.builder()
-            .episodeNumber(kv.getValue().getKey().getEpisodeNumber())
-            .downloadedQuality(kv.getValue().getValue().getDownloadedQuality())
-            .downloadTime(kv.getValue().getValue().getDownloadTime()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime()
-                .format(downloadTimeFormatter))
-            .build());
-      }
-    });
     model.addAttribute("episodes", downloadedEpisodes.values().stream()
-        .sorted(Comparator.comparingLong(EpisodeObject::getEpisodeNumber).reversed())
+        .sorted(Comparator.comparingLong(CompletedEpisodeDto::getEpisodeNumber).reversed())
         .collect(Collectors.toList()));
     return "showEpisodes";
   }
 
   @RequestMapping(value = "/shows", method = RequestMethod.GET)
   public void showsList(Model model) {
-    List<ShowObject> outputList = new ArrayList<>();
-    showTable.all(pair -> {
-      outputList.add(showMsgToLocalTranslator.translate(pair));
-    });
-    log.info("Found {} shows", outputList.size());
 
-    List<ShowObject> sortedShows = outputList.stream().sorted(getShowScheduleComparator())
-        .map(showObject -> {
-          ShowObjectBuilder builder = showObject.toBuilder();
-          Date nextRun = nextRunTime(showObject.getReleaseScheduleCron());
+    List<ShowDto> sortedShows = showRepository.findAll().stream()
+        .sorted(getShowScheduleComparator())
+        .map(showDto -> {
+          ShowDtoBuilder builder = showDto.toBuilder();
+          Date nextRun = nextRunTime(showDto.getReleaseScheduleCron());
           if (nextRun != null) {
             builder.nextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
           }
           return builder.build();
         })
         .collect(Collectors.toList());
+
+    log.info("Found {} shows", sortedShows.size());
 
     model.addAttribute("shows", sortedShows);
   }
@@ -152,7 +134,7 @@ public class ShowRestController {
     return date;
   }
 
-  private static Comparator<ShowObject> getShowScheduleComparator() {
+  private static Comparator<ShowDto> getShowScheduleComparator() {
     return (o1, o2) -> {
       Date nextTrigger1 = nextRunTime(o1.getReleaseScheduleCron());
       Date nextTrigger2 = nextRunTime(o2.getReleaseScheduleCron());
@@ -177,46 +159,48 @@ public class ShowRestController {
   }
 
   @RequestMapping(value = "/addShow", method = RequestMethod.POST)
-  public String addShow(ShowObject showObject, Model model) {
+  public String addShow(ShowDto showDto, Model model) {
 
-    log.info("Raw show: {}", showObject);
-    if (showObject.getIsActive() == null) {
+    log.info("Raw show: {}", showDto);
+    if (showDto.getIsActive() == null) {
       // if isActive is not present, it should be interpreted as being false
-      showObject.setIsActive(false);
+      showDto.setIsActive(false);
     }
 
-    if (showObject.getShowId() == null) {
-      showObject.setShowId(Uuid.randomUUID());
+    if (showDto.getId() == null) {
+      showDto.setId(UUID.randomUUID().toString());
     }
 
-    if (showObject.getEpisodeNamePattern() == null) {
-      showObject.setEpisodeNamePattern(defaultEpisodeNamePattern);
+    if (showDto.getEpisodeNamePattern() == null) {
+      showDto.setEpisodeNamePattern(defaultEpisodeNamePattern);
     }
 
-    if (showObject.getReleaseScheduleCron() == null) {
-      showObject.setReleaseScheduleCron(defaultReleaseScheduleCron);
+    if (showDto.getReleaseScheduleCron() == null) {
+      showDto.setReleaseScheduleCron(defaultReleaseScheduleCron);
     }
 
-    KeyValue<ShowMsgKey, ShowMsg> msg = showLocalToMsgTranslator.translate(showObject);
-
-    String skipEpisodeString = msg.getValue().getValue().getSkipEpisodeString();
+    String skipEpisodeString = showDto.getSkipEpisodeString();
     if (!StringUtils.isEmpty(skipEpisodeString)) {
 
-      Uuid showUuid = showObject.getShowId();
       Set<Long> episodesToPublish = episodesFromRangeCsv(skipEpisodeString);
 
       episodesToPublish.forEach(episodeNum -> {
-        KeyValue<EpisodeMsgKey, EpisodeMsg> kvPair = downloadedEpisodeMsg(showUuid,
-            episodeNum);
-        episodeTable.put(kvPair.getKey(), kvPair.getValue());
+
+        episodeRepository.save(EpisodeDto.builder()
+            .showId(showDto.getId())
+            .episodeNumber(Math.toIntExact(episodeNum))
+            .downloadTime(Instant.now())
+            .downloadedQuality(-1)
+            .build());
       });
 
-      msg.getValue().getValue().setSkipEpisodeString(null);
+      showDto.setSkipEpisodeString(null);
     }
 
-    log.info("Updating show: {}", msg.getValue());
-    showTable.put(msg.getKey(), msg.getValue());
-    onShowUpdate.accept(msg.getKey(), msg.getValue());
+    log.info("Updating show: {}", showDto);
+
+    showRepository.save(showDto);
+    onShowUpdate.accept(showDto);
     return "redirect:/shows";
   }
 
@@ -241,63 +225,39 @@ public class ShowRestController {
     return episodesToPublish;
   }
 
-  private KeyValue<EpisodeMsgKey, EpisodeMsg> downloadedEpisodeMsg(Uuid showUuid,
-      Long episodeNum) {
-    EpisodeMsgKey key = EpisodeMsgKey.newBuilder()
-        .setEpisodeNumber(episodeNum)
-        .setShowId(ShowMsgKey.newBuilder().setShowId(showUuid).build())
-        .build();
-    EpisodeMsgValue value = EpisodeMsgValue.newBuilder()
-        .setMessageId(Uuid.randomUUID())
-        .setLatestLinks(new ArrayList<>())
-        .setDownloadTime(Instant.now())
-        .setDownloadedQuality(-1)
-        .build();
-    EpisodeMsg msg = EpisodeMsg.newBuilder()
-        .setKey(key)
-        .setValue(value)
-        .build();
-    return KeyValue.of(key, msg);
-  }
-
   @RequestMapping(path = "/deleteShow/{id}")
-  public String deleteShow(@PathVariable final Uuid id, Model model) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
+  public String deleteShow(@PathVariable final UUID id, Model model) {
 
-    ShowMsg showMessage = showTable.get(lookupKey);
-    ShowObject showObject = null;
-    if (showMessage != null && showMessage.getValue() != null) {
-      showObject = showMsgToLocalTranslator
-          .translate(KeyValue.of(lookupKey, showMessage));
-    }
-    if (showObject != null) {
-      showTable.put(lookupKey, null);
+    Optional<ShowDto> show = showRepository.findById(id.toString());
+    if (show.isPresent()) {
+      showRepository.delete(show.get());
+      List<EpisodeDto> showId = episodeRepository.findByShowId(show.get().getId());
       AtomicLong episodeCounter = new AtomicLong(0);
-      episodeTable.all(kv -> {
-        if (kv.getValue().getKey().getShowId().getShowId().equals(id)) {
-          episodeCounter.incrementAndGet();
-          episodeTable.put(kv.getKey(), null);
-        }
-      });
-      onShowUpdate.accept(lookupKey, null);
+      for (EpisodeDto episodeDto : showId) {
+        episodeCounter.incrementAndGet();
+        episodeRepository.delete(episodeDto);
+      }
+      onShowUpdate.accept(show.get());
       log.info("Deleted show {} and removed {} associated episodes", id, episodeCounter.get());
     }
+
     return "redirect:/shows";
   }
 
   @RequestMapping(path = "/checkShow")
   public String checkShow() {
-    showTable.all(pair -> checkShow(pair.getValue().getKey().getShowId()));
+    for (ShowDto show : showRepository.findAll()) {
+      checkShow(UUID.fromString(show.getId()));
+    }
 
     return "redirect:/shows";
   }
 
   @RequestMapping(path = "/checkShow/{id}")
-  public String checkShow(@PathVariable final Uuid id) {
-    ShowMsgKey lookupKey = ShowMsgKey.newBuilder().setShowId(id).build();
-    ShowMsg showMessage = showTable.get(lookupKey);
+  public String checkShow(@PathVariable final UUID id) {
+    Optional<ShowDto> show = showRepository.findById(id.toString());
 
-    if (showMessage != null) {
+    if (show.isPresent()) {
       taskExecutor.execute(() -> triggerShowCheckMethod.accept(id));
     }
 
@@ -305,15 +265,13 @@ public class ShowRestController {
   }
 
   @RequestMapping(path = "/deleteEpisode/{showId}/{epNum}")
-  public String deleteShow(@PathVariable final Uuid showId, @PathVariable final Long epNum) {
-    EpisodeMsgKey epKey = EpisodeMsgKey.newBuilder()
-        .setShowId(ShowMsgKey.newBuilder()
-            .setShowId(showId)
-            .build())
-        .setEpisodeNumber(epNum)
-        .build();
+  public String deleteEpisode(@PathVariable final UUID showId, @PathVariable final Long epNum) {
 
-    episodeTable.put(epKey, null);
+    Optional<EpisodeDto> episode = episodeRepository.findById(EpisodeId.builder()
+        .showId(showId.toString())
+        .episodeNumber(Math.toIntExact(epNum))
+        .build());
+    episode.ifPresent(episodeRepository::delete);
 
     return "redirect:/showEpisodes/" + showId;
   }

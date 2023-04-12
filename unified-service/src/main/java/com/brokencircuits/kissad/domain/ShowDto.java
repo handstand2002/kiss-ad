@@ -1,20 +1,28 @@
 package com.brokencircuits.kissad.domain;
 
+import com.brokencircuits.kissad.domain.ShowDto.ShowDtoBuilder;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 
 @Entity
 @Table(name = "show")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-@Builder
+@Builder(toBuilder = true)
+@JsonDeserialize(builder = ShowDtoBuilder.class)
 public class ShowDto {
 
   @Id
@@ -32,9 +40,17 @@ public class ShowDto {
   @Column(name = "folderName")
   private String folderName;
   @Column(name = "sourceType")
-  private String sourceType;
+  private String sourceName;
   @Column(name = "source")
-  private String source;
+  private String url;
   @Column(name = "active", columnDefinition = "boolean default true")
+  @Nullable
   private Boolean isActive = true;
+  @Transient
+  private String nextEpisode;
+
+  @JsonPOJOBuilder(withPrefix = "")
+  public static class ShowDtoBuilder {
+
+  }
 }

@@ -23,7 +23,7 @@
             <td style="white-space: nowrap" th:text="${episode.downloadTime}"></td>
             <td th:text="${episode.downloadedQuality}"></td>
             <td><a
-                th:href="@{/deleteEpisode/{id}/{episodeNum}(episodeNum=${episode.episodeNumber},id=${show.showId})}"
+                th:href="@{/deleteEpisode/{id}/{episodeNum}(episodeNum=${episode.episodeNumber},id=${show.id})}"
                 th:text="消す"></a></td>
           </tr>
           </tbody>

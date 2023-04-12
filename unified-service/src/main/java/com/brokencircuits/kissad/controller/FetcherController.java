@@ -1,11 +1,11 @@
 package com.brokencircuits.kissad.controller;
 
 
+import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.fetcher.SpFetcher;
-import com.brokencircuits.kissad.messages.ShowMsg;
-import com.brokencircuits.kissad.messages.ShowMsgKey;
-import com.brokencircuits.kissad.table.ReadWriteTable;
-import com.brokencircuits.kissad.util.Uuid;
+import com.brokencircuits.kissad.repository.ShowRepository;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,22 +16,20 @@ import org.springframework.stereotype.Component;
 public class FetcherController {
 
   private final SpFetcher spFetcher;
-  private final ReadWriteTable<ShowMsgKey, ShowMsg> showTable;
+  private final ShowRepository showRepository;
 
-  public void fetch(Uuid showUuid) {
+  public void fetch(UUID showUuid) {
 
-    ShowMsgKey showKey = ShowMsgKey.newBuilder()
-        .setShowId(showUuid)
-        .build();
-    ShowMsg showMsg = showTable.get(showKey);
-    if (showMsg == null) {
+    Optional<ShowDto> show = showRepository.findById(showUuid.toString());
+    if (!show.isPresent()) {
       log.error("Show doesn't exist for Uuid: {}", showUuid);
       return;
     }
-    if (showMsg.getValue().getSources().containsKey(SpFetcher.SOURCE_IDENTIFIER)) {
-      spFetcher.process(showKey, showMsg);
+    ShowDto showDto = show.get();
+    if (showDto.getSourceName().equals(SpFetcher.SOURCE_IDENTIFIER)) {
+      spFetcher.process(showDto);
     } else {
-      log.error("Received message for fetchers: {}", showMsg.getValue().getSources().keySet());
+      log.error("Received message for fetcher: {}", showDto.getSourceName());
     }
   }
 }

@@ -3,7 +3,8 @@ function updateDisabledShows() {
 
   let evalRow = function(row) {
     let showEnabledString = row.getAttribute("data-enabled")
-    let showEnabled = showEnabledString.toLowerCase() === "true";
+    let showEnabled = showEnabledString != null && showEnabledString.toLowerCase() === "true";
+
     if (showEnabled || btn.checked) {
       row.hidden = false
     } else {
