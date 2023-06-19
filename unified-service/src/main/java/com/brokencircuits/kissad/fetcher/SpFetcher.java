@@ -1,9 +1,12 @@
 package com.brokencircuits.kissad.fetcher;
 
 import com.brokencircuits.kissad.Extractor;
+import com.brokencircuits.kissad.domain.CheckShowResult;
 import com.brokencircuits.kissad.domain.DownloadTypeDto;
 import com.brokencircuits.kissad.domain.EpisodeLinkDto;
 import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.RequestEpisodeOperation;
+import com.brokencircuits.kissad.domain.RequestEpisodeResult;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.domain.fetcher.ShowEpisodeResponse;
 import com.brokencircuits.kissad.domain.fetcher.SpEpisode;
@@ -16,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,14 +34,14 @@ public class SpFetcher {
   private final WebClient webClient;
   private final Extractor<String, Long> showIdExtractor;
   private final SpShowEpisodeClient feignSpShowEpisodeFetcher;
-  private final Consumer<RequestEpisode> notifyOfEpisode;
+  private final RequestEpisodeOperation notifyOfEpisode;
 
-  public void process(ShowDto show) {
+  public CheckShowResult process(ShowDto show) {
     log.info("Processing show: {}", show);
 
     if (!show.getSourceName().equals(acceptSource.name())) {
       log.warn("Fetcher received show for wrong source: {}", show);
-      return;
+      return new CheckShowResult(0, true);
     }
 
     String url = show.getUrl();
@@ -49,7 +52,7 @@ public class SpFetcher {
       ShowEpisodeResponse episodeResponse = feignSpShowEpisodeFetcher
           .findAll(String.valueOf(showId));
 
-      episodeResponse.getEpisode().entrySet().stream()
+      List<RequestEpisodeResult> results = episodeResponse.getEpisode().entrySet().stream()
           .map(e -> {
             try {
               String episodeNumberString = e.getValue().getEpisode();
@@ -70,10 +73,15 @@ public class SpFetcher {
           })
           .filter(Objects::nonNull)
           .sorted(Comparator.comparingLong(RequestEpisode::getEpisodeNumber))
-          .forEach(notifyOfEpisode);
+          .map(notifyOfEpisode::run)
+          .collect(Collectors.toList());
+      int completedEpisodes = results.stream().mapToInt(r -> r.isDownloadComplete() ? 1 : 0).sum();
+
+      return new CheckShowResult(completedEpisodes, false);
 
     } catch (Exception e) {
       log.error("Unable to process {} due to Exception", show, e);
+      return new CheckShowResult(0, true);
     }
   }
 

@@ -1,15 +1,18 @@
 package com.brokencircuits.kissad.controller;
 
+import com.brokencircuits.kissad.domain.CheckShowOperation;
+import com.brokencircuits.kissad.domain.CheckShowResult;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.repository.ShowRepository;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
-import java.util.function.Consumer;
 import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -21,8 +24,12 @@ public class SchedulerController {
 
   private final Map<String, ScheduledFuture<?>> scheduledJobs = new HashMap<>();
   private final TaskScheduler taskScheduler;
-  private final Consumer<UUID> triggerShowCheckMethod;
+  private final CheckShowOperation triggerShowCheckMethod;
   private final ShowRepository showRepository;
+  @Value("${scheduler.retry.interval}")
+  private Duration retryInterval;
+  @Value("${scheduler.retry.count}")
+  private int retryCount;
 
   @PostConstruct
   public void scheduleAll() {
@@ -43,7 +50,23 @@ public class SchedulerController {
       log.info("Scheduling {}", msg);
       try {
         ScheduledFuture<?> job = taskScheduler.schedule(
-            () -> triggerShowCheckMethod.accept(UUID.fromString(showId)),
+            () -> {
+              log.info("Checking show for new episodes: {}", msg.getTitle());
+              CheckShowResult result;
+              int currentTry = 0;
+              do {
+                if (currentTry > 0) {
+                  log.info("Could not find new episodes, waiting {} and trying again for {}",
+                      retryInterval, msg.getTitle());
+                  sleepThread(retryInterval.toMillis());
+                }
+                currentTry++;
+                result = triggerShowCheckMethod.run(UUID.fromString(showId));
+              } while (result.getNewEpisodes() == 0 && currentTry < retryCount);
+              log.info("Scheduled job complete - Found {} new episodes for show {}",
+                  result.getNewEpisodes(), msg.getTitle());
+
+            },
             new CronTrigger(msg.getReleaseScheduleCron()));
         scheduledJobs.put(showId, job);
         log.info("Scheduled check for show {} on schedule {}", msg.getTitle(),
@@ -51,6 +74,14 @@ public class SchedulerController {
       } catch (IllegalArgumentException e) {
         log.warn("Illegal cron expression , not scheduling check for this show: {}", msg);
       }
+    }
+  }
+
+  private void sleepThread(long millis) {
+    try {
+      Thread.sleep(millis);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
   }
 }

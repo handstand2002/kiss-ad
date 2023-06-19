@@ -6,6 +6,7 @@ import com.brokencircuits.kissad.domain.EpisodeDto;
 import com.brokencircuits.kissad.domain.EpisodeId;
 import com.brokencircuits.kissad.domain.EpisodeLinkDto;
 import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.RequestEpisodeResult;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.download.LocalDownloadApi;
 import com.brokencircuits.kissad.download.domain.DownloadType;
@@ -44,7 +45,7 @@ public class DelegatorController {
   private final EpisodeRepository episodeRepository;
   private final ShowRepository showRepository;
 
-  public void process(RequestEpisode msg) throws ExecutionException, InterruptedException {
+  public RequestEpisodeResult process(RequestEpisode msg) throws ExecutionException, InterruptedException {
     Optional<EpisodeDto> previousEpisodeDownload = episodeRepository.findById(
         EpisodeId.builder().showId(msg.getShowId()).episodeNumber(msg.getEpisodeNumber()).build());
 
@@ -56,19 +57,16 @@ public class DelegatorController {
     if (isDownloaded) {
       log.info("Episode has already been downloaded, skipping: ShowId {}, Episode {}",
           msg.getShowId(), msg.getEpisodeNumber());
-      return;
+      return new RequestEpisodeResult(false, false);
     }
-    /*
-    need:
-     */
 
-    Future<Void> future = submitDownload(msg);
+    Future<RequestEpisodeResult> future = submitDownload(msg);
 
     // wait for download to complete
-    future.get();
+    return future.get();
   }
 
-  private Future<Void> submitDownload(RequestEpisode msg) {
+  private Future<RequestEpisodeResult> submitDownload(RequestEpisode msg) {
     Optional<ShowDto> show = showRepository.findById(msg.getShowId());
 
     String destinationDir = addTrailingSlashToPath(downloadFolder);
@@ -86,18 +84,19 @@ public class DelegatorController {
 
     EpisodeLinkDto linkForBestQuality = selectLink(msg);
 
-    CompletableFuture<Void> future = new CompletableFuture<>();
+    CompletableFuture<RequestEpisodeResult> future = new CompletableFuture<>();
     downloadApi.submitDownload(
         linkForBestQuality.getUrl(),
         DownloadType.valueOf(linkForBestQuality.getType().name()), destinationDir,
         destinationFileName, result -> {
-          future.complete(null);
 
           if (result.getErrorCode() == 0) {
             log.info("Marking episode complete: {}", msg);
             episodeRepository.save(completedValue(msg, linkForBestQuality));
+            future.complete(new RequestEpisodeResult(true, false));
           } else {
             log.error("Download failed with result {}", result);
+            future.complete(new RequestEpisodeResult(false, true));
           }
         });
 

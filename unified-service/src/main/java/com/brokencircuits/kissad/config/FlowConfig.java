@@ -4,7 +4,10 @@ import com.brokencircuits.kissad.controller.DelegatorController;
 import com.brokencircuits.kissad.controller.DownloadController;
 import com.brokencircuits.kissad.controller.FetcherController;
 import com.brokencircuits.kissad.controller.SchedulerController;
-import com.brokencircuits.kissad.domain.RequestEpisode;
+import com.brokencircuits.kissad.domain.CheckShowOperation;
+import com.brokencircuits.kissad.domain.CheckShowResult;
+import com.brokencircuits.kissad.domain.RequestEpisodeOperation;
+import com.brokencircuits.kissad.domain.RequestEpisodeResult;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.download.domain.DownloadRequest;
 import com.brokencircuits.kissad.download.domain.DownloadType;
@@ -12,7 +15,6 @@ import com.brokencircuits.kissad.download.domain.SimpleDownloadResult;
 import com.brokencircuits.kissad.downloader.aria.AriaResponseStatus;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -48,29 +50,33 @@ public class FlowConfig {
   }
 
   @Bean
-  Consumer<UUID> triggerShowCheckMethod(FetcherController fetcherController) {
+  CheckShowOperation triggerShowCheckMethod(FetcherController fetcherController) {
     return showUuid -> {
       try {
         log.info("Checking for new episodes for show {}", showUuid);
-        fetcherController.fetch(showUuid);
+        CheckShowResult result = fetcherController.fetch(showUuid);
         log.info("Finished checking for new episodes for {}", showUuid);
+        return result;
       } catch (Exception e) {
         log.error("Could not checking for new episodes for {} due to ", showUuid, e);
+        return new CheckShowResult(0, true);
       }
     };
   }
 
   @Bean
-  Consumer<RequestEpisode> notifyOfEpisode(DelegatorController controller) {
+  RequestEpisodeOperation notifyOfEpisode(DelegatorController controller) {
     return msg -> {
       try {
         log.info("Found episode ShowId {}, Episode {}", msg.getShowId(),
             msg.getEpisodeNumber());
-        controller.process(msg);
+        RequestEpisodeResult result = controller.process(msg);
         log.info("Finished processing ShowId {}, Episode {}", msg.getShowId(),
             msg.getEpisodeNumber());
+        return result;
       } catch (Exception e) {
         log.error("Could not complete processing of {} due to ", msg, e);
+        return new RequestEpisodeResult(false, true);
       }
     };
   }

@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.controller;
 
+import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.EpisodeDto;
 import com.brokencircuits.kissad.domain.EpisodeId;
 import com.brokencircuits.kissad.domain.ShowDto;
@@ -46,7 +47,7 @@ public class ShowRestController {
 
   private final EpisodeRepository episodeRepository;
   private final ShowRepository showRepository;
-  private final Consumer<UUID> triggerShowCheckMethod;
+  private final CheckShowOperation triggerShowCheckMethod;
   private final Consumer<ShowDto> onShowUpdate;
   private final TaskExecutor taskExecutor;
 
@@ -258,7 +259,7 @@ public class ShowRestController {
     Optional<ShowDto> show = showRepository.findById(id.toString());
 
     if (show.isPresent()) {
-      taskExecutor.execute(() -> triggerShowCheckMethod.accept(id));
+      taskExecutor.execute(() -> triggerShowCheckMethod.run(id));
     }
 
     return "redirect:/shows";

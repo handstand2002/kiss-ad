@@ -10,6 +10,11 @@ show:
     interval: 15m
     max-times: 8
 
+scheduler:
+  retry:
+    interval: PT2M
+    count: 30
+
 download:
   mock-download: false
   mock-success: true

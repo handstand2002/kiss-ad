@@ -1,6 +1,7 @@
 package com.brokencircuits.kissad.controller;
 
 
+import com.brokencircuits.kissad.domain.CheckShowResult;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.fetcher.SpFetcher;
 import com.brokencircuits.kissad.repository.ShowRepository;
@@ -18,18 +19,19 @@ public class FetcherController {
   private final SpFetcher spFetcher;
   private final ShowRepository showRepository;
 
-  public void fetch(UUID showUuid) {
+  public CheckShowResult fetch(UUID showUuid) {
 
     Optional<ShowDto> show = showRepository.findById(showUuid.toString());
     if (!show.isPresent()) {
       log.error("Show doesn't exist for Uuid: {}", showUuid);
-      return;
+      return new CheckShowResult(0, true);
     }
     ShowDto showDto = show.get();
     if (showDto.getSourceName().equals(SpFetcher.SOURCE_IDENTIFIER)) {
-      spFetcher.process(showDto);
+      return spFetcher.process(showDto);
     } else {
       log.error("Received message for fetcher: {}", showDto.getSourceName());
+      return new CheckShowResult(0, true);
     }
   }
 }
