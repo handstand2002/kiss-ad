@@ -13,6 +13,7 @@ import com.brokencircuits.kissad.repository.ShowRepository;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -113,16 +114,16 @@ public class ShowRestController {
   public void showsList(Model model) {
 
     Collection<ShowDto> showsForCurrentDay = new LinkedList<>();
-    Instant oneDayAgo = Instant.now().minus(Duration.ofDays(1));
-    Date previousDayDate = Date.from(oneDayAgo);
+    Instant midnightToday = LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+    Instant midnightTonight = midnightToday.plus(Duration.ofDays(1));
 
     List<ShowDto> sortedShows = showRepository.findAll().stream()
         .sorted(getShowScheduleComparator())
         .map(showDto -> {
-          Date nextRunStartingYesterday = nextRunTimeFromTime(showDto.getReleaseScheduleCron(), previousDayDate);
+          Date nextRunStartingMidnight = nextRunTimeFromTime(showDto.getReleaseScheduleCron(), Date.from(midnightToday));
           boolean showActive = showDto.getIsActive() == null || showDto.getIsActive();
-          if (showActive && nextRunStartingYesterday.before(new Date())) {
-            // if true, this show was scheduled to release in the past 24h
+          if (showActive && nextRunStartingMidnight.before(Date.from(midnightTonight))) {
+            // this show is scheduled to release today (between midnight last night and midnight tonight)
             showsForCurrentDay.add(showDto);
           }
           ShowDtoBuilder builder = showDto.toBuilder();
@@ -139,16 +140,22 @@ public class ShowRestController {
     model.addAttribute("shows", sortedShows);
 
     List<RecentShowDto> recentShows = showsForCurrentDay.stream()
+
+        // order the shows by what time they were scheduled to update today
+        .sorted(Comparator.comparingLong(show -> {
+          Date nextRunStartingMidnight = nextRunTimeFromTime(show.getReleaseScheduleCron(), Date.from(midnightToday));
+          return nextRunStartingMidnight.getTime();
+        }))
         .map(show -> {
           Comparator<EpisodeDto> comparator = Comparator.comparingLong(
               dto -> dto.getDownloadTime().toEpochMilli());
-          boolean downloadedToday = episodeRepository.findByShowId(show.getId()).stream()
+          boolean downloadededToday = episodeRepository.findByShowId(show.getId()).stream()
               .filter(dto -> dto.getDownloadTime() != null)
-              .filter(dto -> dto.getDownloadTime().isAfter(oneDayAgo))
+              .filter(dto -> dto.getDownloadTime().isAfter(midnightToday))
               .max(comparator)
               .isPresent();
 
-          return new RecentShowDto(downloadedToday ? "✓" : "", show.getTitle());
+          return new RecentShowDto(downloadededToday ? "✓" : "", show.getTitle());
         })
         .collect(Collectors.toList());
 
