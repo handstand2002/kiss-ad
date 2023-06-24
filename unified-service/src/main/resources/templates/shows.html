@@ -10,6 +10,23 @@
   <script src="/shows.js"></script>
 </head>
 <body onload="updateDisabledShows()">
+<div style="position: absolute; z-index:100">
+  <button style="padding: 6px" onclick="toggleActivity(this)">最近</button>
+</div>
+<div style="visibility: hidden; position: absolute; background-color: #2b59a9; padding: 4px; z-index: 30" id="recent-activity">
+  <table>
+    <tbody>
+    <tr th:each="show : ${recentShows}">
+      <td style="padding-right: 7px">
+        <span th:text="${show.downloaded}"></span>
+      </td>
+      <td>
+        <span th:text="${show.name}"></span>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
 <div class="container">
   <div class="page-header" id="banner">
     <div class="row">

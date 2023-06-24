@@ -14,4 +14,6 @@ public class AriaProps {
   private int ariaRpcPort;
   @Value("${download.aria.temp-download-dir}")
   private String ariaTempDownloadDir;
+  @Value("${download.aria.enabled}")
+  private boolean enabled;
 }

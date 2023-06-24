@@ -24,8 +24,12 @@ public class RuntimeConfig {
   }
 
   @Bean
-  CommandLineRunner startAria(ProcessBuilder ariaProcess) {
+  CommandLineRunner startAria(ProcessBuilder ariaProcess, AriaProps ariaProps) {
     return args -> {
+      if (!ariaProps.isEnabled()) {
+        log.info("Not starting aria since it is disabled in config. Downloading will not work");
+        return;
+      }
       log.info("Starting Aria");
       Instant startTime = Instant.now();
       Instant changeLoggingTime = startTime.plus(Duration.ofSeconds(30));

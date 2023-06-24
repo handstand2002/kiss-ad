@@ -3,6 +3,7 @@ package com.brokencircuits.kissad.controller;
 import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.EpisodeDto;
 import com.brokencircuits.kissad.domain.EpisodeId;
+import com.brokencircuits.kissad.domain.RecentShowDto;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.domain.ShowDto.ShowDtoBuilder;
 import com.brokencircuits.kissad.domain.rest.CompletedEpisodeDto;
@@ -10,13 +11,17 @@ import com.brokencircuits.kissad.domain.rest.SourceName;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -107,9 +112,19 @@ public class ShowRestController {
   @RequestMapping(value = "/shows", method = RequestMethod.GET)
   public void showsList(Model model) {
 
+    Collection<ShowDto> showsForCurrentDay = new LinkedList<>();
+    Instant oneDayAgo = Instant.now().minus(Duration.ofDays(1));
+    Date previousDayDate = Date.from(oneDayAgo);
+
     List<ShowDto> sortedShows = showRepository.findAll().stream()
         .sorted(getShowScheduleComparator())
         .map(showDto -> {
+          Date nextRunStartingYesterday = nextRunTimeFromTime(showDto.getReleaseScheduleCron(), previousDayDate);
+          boolean showActive = showDto.getIsActive() == null || showDto.getIsActive();
+          if (showActive && nextRunStartingYesterday.before(new Date())) {
+            // if true, this show was scheduled to release in the past 24h
+            showsForCurrentDay.add(showDto);
+          }
           ShowDtoBuilder builder = showDto.toBuilder();
           Date nextRun = nextRunTime(showDto.getReleaseScheduleCron());
           if (nextRun != null) {
@@ -122,13 +137,34 @@ public class ShowRestController {
     log.info("Found {} shows", sortedShows.size());
 
     model.addAttribute("shows", sortedShows);
+
+    List<RecentShowDto> recentShows = showsForCurrentDay.stream()
+        .map(show -> {
+          Comparator<EpisodeDto> comparator = Comparator.comparingLong(
+              dto -> dto.getDownloadTime().toEpochMilli());
+          boolean downloadedToday = episodeRepository.findByShowId(show.getId()).stream()
+              .filter(dto -> dto.getDownloadTime() != null)
+              .filter(dto -> dto.getDownloadTime().isAfter(oneDayAgo))
+              .max(comparator)
+              .isPresent();
+
+          return new RecentShowDto(downloadedToday ? "✓" : "", show.getTitle());
+        })
+        .collect(Collectors.toList());
+
+    model.addAttribute("recentShows", recentShows);
   }
 
   private static Date nextRunTime(String cron) {
+    return nextRunTimeFromTime(cron, null);
+  }
+
+  private static Date nextRunTimeFromTime(String cron, Date fromTime) {
     Date date = null;
     try {
       CronTrigger trigger1 = new CronTrigger(cron);
-      date = trigger1.nextExecutionTime(new SimpleTriggerContext());
+
+      date = trigger1.nextExecutionTime(new SimpleTriggerContext(fromTime, fromTime, fromTime));
     } catch (IllegalArgumentException ignored) {
 
     }

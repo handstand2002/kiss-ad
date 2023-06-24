@@ -45,7 +45,7 @@ public class ShowDto {
   private String url;
   @Column(name = "active", columnDefinition = "boolean default true")
   @Nullable
-  private Boolean isActive = true;
+  private Boolean isActive;
   @Transient
   private String nextEpisode;
 
