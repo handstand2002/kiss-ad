@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -114,24 +114,31 @@ public class ShowRestController {
   public void showsList(Model model) {
 
     Collection<ShowDto> showsForCurrentDay = new LinkedList<>();
-    Instant midnightToday = LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+    Instant midnightToday = LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault())
+        .toInstant();
     Instant midnightTonight = midnightToday.plus(Duration.ofDays(1));
 
     List<ShowDto> sortedShows = showRepository.findAll().stream()
         .sorted(getShowScheduleComparator())
-        .map(showDto -> {
-          Date nextRunStartingMidnight = nextRunTimeFromTime(showDto.getReleaseScheduleCron(), Date.from(midnightToday));
-          boolean showActive = showDto.getIsActive() == null || showDto.getIsActive();
-          if (showActive && nextRunStartingMidnight.before(Date.from(midnightTonight))) {
-            // this show is scheduled to release today (between midnight last night and midnight tonight)
-            showsForCurrentDay.add(showDto);
-          }
+        .flatMap(showDto -> {
           ShowDtoBuilder builder = showDto.toBuilder();
-          Date nextRun = nextRunTime(showDto.getReleaseScheduleCron());
-          if (nextRun != null) {
-            builder.nextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
+          try {
+            Date nextRunStartingMidnight = nextRunTimeFromTime(showDto.getReleaseScheduleCron(),
+                Date.from(midnightToday));
+            boolean showActive = showDto.getIsActive() == null || showDto.getIsActive();
+            if (showActive && nextRunStartingMidnight.before(Date.from(midnightTonight))) {
+              // this show is scheduled to release today (between midnight last night and midnight tonight)
+              showsForCurrentDay.add(showDto);
+            }
+            Date nextRun = nextRunTime(showDto.getReleaseScheduleCron());
+            if (nextRun != null) {
+              builder.nextEpisode(NEXT_EPISODE_DATE_FORMAT.format(nextRun));
+            }
+
+          } catch (Exception e) {
+            builder.nextEpisode("ERR");
           }
-          return builder.build();
+          return Stream.of(builder.build());
         })
         .collect(Collectors.toList());
 
@@ -143,19 +150,25 @@ public class ShowRestController {
 
         // order the shows by what time they were scheduled to update today
         .sorted(Comparator.comparingLong(show -> {
-          Date nextRunStartingMidnight = nextRunTimeFromTime(show.getReleaseScheduleCron(), Date.from(midnightToday));
+          Date nextRunStartingMidnight = nextRunTimeFromTime(show.getReleaseScheduleCron(),
+              Date.from(midnightToday));
           return nextRunStartingMidnight.getTime();
         }))
-        .map(show -> {
-          Comparator<EpisodeDto> comparator = Comparator.comparingLong(
-              dto -> dto.getDownloadTime().toEpochMilli());
-          boolean downloadededToday = episodeRepository.findByShowId(show.getId()).stream()
-              .filter(dto -> dto.getDownloadTime() != null)
-              .filter(dto -> dto.getDownloadTime().isAfter(midnightToday))
-              .max(comparator)
-              .isPresent();
+        .flatMap(show -> {
+          try {
+            Comparator<EpisodeDto> comparator = Comparator.comparingLong(
+                dto -> dto.getDownloadTime().toEpochMilli());
+            boolean downloadededToday = episodeRepository.findByShowId(show.getId()).stream()
+                .filter(dto -> dto.getDownloadTime() != null)
+                .filter(dto -> dto.getDownloadTime().isAfter(midnightToday))
+                .max(comparator)
+                .isPresent();
 
-          return new RecentShowDto(downloadededToday ? "✓" : "", show.getTitle());
+            return Stream.of(new RecentShowDto(downloadededToday ? "✓" : "", show.getTitle()));
+          } catch (Exception e) {
+            log.info("Could not add to recentShows: {}: ", show, e);
+            return Stream.empty();
+          }
         })
         .collect(Collectors.toList());
 
@@ -167,30 +180,31 @@ public class ShowRestController {
   }
 
   private static Date nextRunTimeFromTime(String cron, Date fromTime) {
-    Date date = null;
-    try {
-      CronTrigger trigger1 = new CronTrigger(cron);
-
-      date = trigger1.nextExecutionTime(new SimpleTriggerContext(fromTime, fromTime, fromTime));
-    } catch (IllegalArgumentException ignored) {
-
+    if (fromTime == null) {
+      fromTime = new Date();
     }
-    return date;
+    CronTrigger trigger1 = new CronTrigger(cron);
+
+    return trigger1.nextExecutionTime(new SimpleTriggerContext(fromTime, fromTime, fromTime));
   }
 
   private static Comparator<ShowDto> getShowScheduleComparator() {
     return (o1, o2) -> {
-      Date nextTrigger1 = nextRunTime(o1.getReleaseScheduleCron());
-      Date nextTrigger2 = nextRunTime(o2.getReleaseScheduleCron());
-
-      if (nextTrigger1 == null && nextTrigger2 == null) {
+      try {
+        Date nextTrigger1 = nextRunTime(o1.getReleaseScheduleCron());
+        Date nextTrigger2 = nextRunTime(o2.getReleaseScheduleCron());
+        if (nextTrigger1 == null && nextTrigger2 == null) {
+          return 0;
+        } else if (nextTrigger1 == null) {
+          return -1;
+        } else if (nextTrigger2 == null) {
+          return 1;
+        } else {
+          return nextTrigger1.compareTo(nextTrigger2);
+        }
+      } catch (Exception e) {
+        log.info("Could not compare shows {} and {} due to ", o1, o2, e);
         return 0;
-      } else if (nextTrigger1 == null) {
-        return -1;
-      } else if (nextTrigger2 == null) {
-        return 1;
-      } else {
-        return nextTrigger1.compareTo(nextTrigger2);
       }
     };
   }
