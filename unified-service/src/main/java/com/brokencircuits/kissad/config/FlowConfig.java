@@ -95,7 +95,9 @@ public class FlowConfig {
           String pcntComplete = String.format("%.2f",
               (100 * ((double) status.getResult().getCompletedLength() / status.getResult()
                   .getTotalLength())));
-          log.info("{} {}% complete", status.getResult().getFiles().get(0).getPath(), pcntComplete);
+          log.info("{} {}% complete ({} connections)",
+              status.getResult().getFiles().get(0).getPath(), pcntComplete,
+              status.getResult().getConnections());
         };
 
         try {
