@@ -100,7 +100,7 @@ public class DownloadController {
       // if gid is updated, query the new one next time
       downloadGid = result.getGid();
 
-      if (result.getCompletedLength() == result.getTotalLength()) {
+      if (result.getCompletedLength() == result.getTotalLength() && result.getTotalLength() > 0) {
         complete = true;
         if (result.getFiles() != null && result.getFiles().size() > 0) {
           downloadedToFilename = result.getFiles().get(0).getPath();
