@@ -52,8 +52,9 @@ public class SchedulerController {
         ScheduledFuture<?> job = taskScheduler.schedule(
             () -> {
               log.info("Checking show for new episodes: {}", msg.getTitle());
-              CheckShowResult result;
+              CheckShowResult result = null;
               int currentTry = 0;
+              int foundEpisodes = 0;
               do {
                 if (currentTry > 0) {
                   log.info("Could not find new episodes, waiting {} and trying again for {}",
@@ -61,11 +62,17 @@ public class SchedulerController {
                   sleepThread(retryInterval.toMillis());
                 }
                 currentTry++;
-                result = triggerShowCheckMethod.run(UUID.fromString(showId));
-              } while (result.getNewEpisodes() == 0 && currentTry < retryCount);
-              log.info("Scheduled job complete - Found {} new episodes for show {}",
-                  result.getNewEpisodes(), msg.getTitle());
+                try {
+                  result = triggerShowCheckMethod.run(UUID.fromString(showId));
+                  foundEpisodes = result.getNewEpisodes();
+                } catch (Exception e) {
+                  log.error("Exception checking for new episodes ", e);
+                }
 
+              } while (currentTry < retryCount && (result == null || foundEpisodes == 0));
+
+              log.info("Scheduled job complete - Found {} new episodes for show {}",
+                  foundEpisodes, msg.getTitle());
             },
             new CronTrigger(msg.getReleaseScheduleCron()));
         scheduledJobs.put(showId, job);
