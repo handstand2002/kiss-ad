@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -68,7 +69,7 @@ public class DownloadController {
       return;
     }
 
-    AriaResponseUriSubmit response = ariaApi.submitUri("test", uri);
+    AriaResponseUriSubmit response = ariaApi.submitUri(UUID.randomUUID().toString(), uri);
     log.info("Response from request: {}", response);
 
     String downloadGid = response.getGid();
@@ -100,7 +101,7 @@ public class DownloadController {
       // if gid is updated, query the new one next time
       downloadGid = result.getGid();
 
-      if (result.getCompletedLength() == result.getTotalLength() && result.getTotalLength() > 0) {
+      if (result.getCompletedLength() == result.getTotalLength() && result.getTotalLength() > 100) {
         complete = true;
         if (result.getFiles() != null && result.getFiles().size() > 0) {
           downloadedToFilename = result.getFiles().get(0).getPath();
@@ -109,6 +110,7 @@ public class DownloadController {
                 result.getFiles());
           }
         }
+        log.info("Download complete with result {}", result);
       }
     }
     if (isMagnet) {
