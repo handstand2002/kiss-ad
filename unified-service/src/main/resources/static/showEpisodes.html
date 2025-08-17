@@ -7,17 +7,21 @@
 
   <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
   <link rel="stylesheet" href="/shows.css" media="screen"/>
-  <script src="/editShow.js"></script>
+  <script src="/showEpisodes.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="/stomp.js"></script>
 </head>
 <body>
 <div class="container">
   <div class="page-header" id="banner">
     <div class="row">
       <div class="col-lg-8 col-md-7 col-sm-6">
-        <div class="page-head" th:text="${show.title}"></div>
+        <div class="page-head" id="show-title"></div>
 
         <table class="table table-striped">
-          <tbody>
+          <tbody id="ep-list">
           <tr th:each="episode : ${episodes}">
             <td th:text="${episode.episodeNumber}"></td>
             <td style="white-space: nowrap" th:text="${episode.downloadTime}"></td>

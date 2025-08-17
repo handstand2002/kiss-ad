@@ -22,5 +22,5 @@ logging:
       springframework:
         web:
           socket:
-            messaging: INFO
-        messaging: INFO
+            messaging: TRACE
+        messaging: TRACE

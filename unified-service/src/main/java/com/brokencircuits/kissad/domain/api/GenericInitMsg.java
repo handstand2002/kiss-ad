@@ -3,9 +3,8 @@ package com.brokencircuits.kissad.domain.api;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
-public class ShowUpdateMsg implements ServerMsg {
-
-  private ShowListingMsg details;
-}
+public class GenericInitMsg {}

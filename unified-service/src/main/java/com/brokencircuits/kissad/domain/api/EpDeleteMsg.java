@@ -4,11 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
-public class InitMsg implements ServerMsg {
-  private UiPage page;
-  private Map<String, Object> params;
+public class EpDeleteMsg {
+  private String showId;
+  private int episodeNumber;
 }

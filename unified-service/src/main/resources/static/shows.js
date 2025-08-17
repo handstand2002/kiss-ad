@@ -10,8 +10,8 @@ function initPage() {
   $("#show-list").html("") // clear show table
 
   stompClient.publish({
-    destination: "/app/requests",
-    body: JSON.stringify({'type': "INIT", 'page': 'SHOWS'})
+    destination: "/app/shows/init",
+    body: JSON.stringify({})
   });
   console.log("Published init msg");
 }
@@ -97,29 +97,3 @@ function upsertShow(msg) {
 
   updateDisabledShows()
 }
-
-/*
-<tr data-enabled="false">
-            <td>
-              <span>
-                <a href="/checkShow/ab610d04-41a6-4f24-9923-f72aee4701ad">チエック</a>
-              </span>
-            </td>
-          </tr>
- */
-
-//<table id="show-list" class="table table-striped">
-//           <tbody>
-//           <tr th:each="show : ${shows}" th:data-enabled="${show.isActive}">
-//             <td>
-//               <a th:href="@{/show/{id}(id=${show.id})}" th:text="${show.title}"></a>
-//               <span th:text="${show.nextEpisode}" class="next-episode-time"></span>
-//             </td>
-//             <td>
-//               <span>
-//                 <a th:href="@{/checkShow/{id}(id=${show.id})}">チエック</a>
-//               </span>
-//             </td>
-//           </tr>
-//           </tbody>
-//         </table>
