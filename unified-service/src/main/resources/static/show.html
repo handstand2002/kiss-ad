@@ -19,14 +19,14 @@
   <div class="page-header" id="banner">
     <div class="row">
       <div class="col-lg-8 col-md-7 col-sm-6">
-        <div class="page-head" th:text="${show.title}"></div>
+        <div class="page-head" id="header-show-title"></div>
         <div style="width: 100%; margin: auto; text-align: center">
           <a id="downloaded-ep-link">Downloaded Episodes</a>
         </div>
 
         <form class="form-horizontal edit-show-form" id="show-form" onsubmit="submitChange()" method="post" enctype="multipart/form-data">
           <input type="hidden" name="id"/>
-          <label>HS URL</label>
+          <label>URL</label>
           <input type="text" class="form-control" name="url" oninput="deriveShowName(this)"/>
           <label>Source</label>
           <select name="sourceName" class="form-control">

@@ -19,9 +19,9 @@ public class FetcherController {
   private final SpFetcher spFetcher;
   private final ShowRepository showRepository;
 
-  public CheckShowResult fetch(UUID showUuid) {
+  public CheckShowResult fetch(String showUuid) {
 
-    Optional<ShowDto> show = showRepository.findById(showUuid.toString());
+    Optional<ShowDto> show = showRepository.findById(showUuid);
     if (!show.isPresent()) {
       log.error("Show doesn't exist for Uuid: {}", showUuid);
       return new CheckShowResult(0, true);

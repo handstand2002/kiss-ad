@@ -14,6 +14,7 @@ function initPage() {
     console.log("New episode page")
     autofillCronTime(document.getElementsByTagName("form")[0].releaseScheduleCron)
     $('#show-form [name="isActive"]').prop('checked', true)
+    $("#header-show-title").html("New Show")
     return;
   }
 
@@ -43,6 +44,7 @@ function redirectBackToMainPage() {
 
 function populatePage(msg) {
   console.log("Msg to populate page:", msg)
+  $("#header-show-title").html(msg.title)
   $("#downloaded-ep-link").attr("href", "/showEpisodes.html?id=" + msg.id);
   $('#show-form [name="id"]').val(msg.id)
   $('#show-form [name="url"]').val(msg.url)

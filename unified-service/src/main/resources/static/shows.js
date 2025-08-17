@@ -76,7 +76,7 @@ function upsertShow(msg) {
 
   // 2nd column
   rowContents += "<td>"
-  rowContents += "<span><a href='/checkShow/" + showId + "'>チエック</a></span>"
+  rowContents += "<span><a href='javascript:void(0)' onclick='checkShow(\"" + showId + "\")'>チエック</a></span>"
   rowContents += "</td>"
 
   let existingListings = $("#show-listing-" + showId)
@@ -96,4 +96,11 @@ function upsertShow(msg) {
   }
 
   updateDisabledShows()
+}
+
+function checkShow(showId) {
+  stompClient.publish({
+    destination: "/app/show/check-new",
+    body: JSON.stringify({'showId': showId})
+  });
 }

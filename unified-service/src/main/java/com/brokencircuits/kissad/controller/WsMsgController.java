@@ -1,5 +1,6 @@
 package com.brokencircuits.kissad.controller;
 
+import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.EpisodeId;
 import com.brokencircuits.kissad.domain.RequestEpisodeOperation;
 import com.brokencircuits.kissad.domain.ShowDto;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.support.CronTrigger;
@@ -33,6 +35,8 @@ public class WsMsgController {
   private final ShowRepository showRepository;
   private final EpisodeRepository episodeRepository;
   private final RequestEpisodeOperation requestEpisodeOperation;
+  private final CheckShowOperation triggerShowCheckMethod;
+  private final TaskExecutor taskExecutor;
 
   @MessageMapping("/shows/init")
   public void handleInit(GenericInitMsg request, Principal principal) {
@@ -121,11 +125,26 @@ public class WsMsgController {
     updateShow(request, ctx);
   }
 
-  @MessageMapping("/delete-episode")
+  @MessageMapping("/show/episode/delete")
   public void handleEpDelete(EpDeleteMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
     HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
     deleteEpisode(request, ctx);
+  }
+
+  @MessageMapping("/show/check-new")
+  public void handleCheckNewRequest(CheckShowRequestMsg request, Principal principal) {
+    log.info("Received msg from {}: {}", principal.getName(), request);
+    HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
+    handleCheckNewEpisodes(request.getShowId(), ctx);
+  }
+
+  private void handleCheckNewEpisodes(String showId, HandlerCtx ctx) {
+    Optional<ShowDto> show = showRepository.findById(showId);
+
+    if (show.isPresent()) {
+      taskExecutor.execute(() -> triggerShowCheckMethod.run(showId));
+    }
   }
 
   private void deleteEpisode(EpDeleteMsg request, HandlerCtx ctx) {

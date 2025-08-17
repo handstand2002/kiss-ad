@@ -27,7 +27,7 @@ function populateTitle(msg) {
 
 function deleteEpisode(epNumber) {
     stompClient.publish({
-        destination: "/app/delete-episode",
+        destination: "/app/show/episode/delete",
         body: JSON.stringify({'showId': SHOW_ID, 'episodeNumber': epNumber})
     });
 }
@@ -53,7 +53,7 @@ function populateEpisodeList(msg) {
     // 3rd column
     rowContents += "<td>" + downloadedQuality + "</td>"
     // 4th column
-    rowContents += "<td><a onclick='deleteEpisode(" + episodeNumber +")'>消す</a></td>"
+    rowContents += "<td><a href='javascript:void(0)' onclick='deleteEpisode(" + episodeNumber +")'>消す</a></td>"
 
     if (existingListings.length > 0) {
         console.log("Updating existing row:", existingListings)
