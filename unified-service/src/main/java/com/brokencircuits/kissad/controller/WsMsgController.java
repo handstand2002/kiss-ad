@@ -10,7 +10,6 @@ import com.brokencircuits.kissad.repository.ShowRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -20,6 +19,8 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -215,35 +216,35 @@ public class WsMsgController {
         .url(showDto.getUrl())
         .isActive(showDto.getIsActive());
 
-    String nextEpisodeString = getNextEpisodeString(showDto.getReleaseScheduleCron());
+    String nextEpisodeString;
+    long secondsToNextCheck;
+    try {
+      Instant nextRun = nextRunTime(showDto.getReleaseScheduleCron());
+      nextEpisodeString = nextRun.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE h:mma"));
+      secondsToNextCheck = nextRun.getEpochSecond() - Instant.now().getEpochSecond();
+    } catch (Exception e) {
+      nextEpisodeString = "ERR";
+      secondsToNextCheck = Duration.ofDays(15).getSeconds();
+    }
+
     builder.nextEpisode(nextEpisodeString);
+    builder.secondsToNextCheck(secondsToNextCheck);
 
     return builder.build();
   }
 
-  @NotNull
-  private static String getNextEpisodeString(String releaseScheduleCron) {
-    String nextEpisodeString;
-    try {
-      Date nextRun = nextRunTime(releaseScheduleCron);
-      nextEpisodeString = NEXT_EPISODE_DATE_FORMAT.format(nextRun);
-    } catch (Exception e) {
-      nextEpisodeString = "ERR";
-    }
-    return nextEpisodeString;
-  }
-
-  private static Date nextRunTime(String cron) {
+  private static Instant nextRunTime(String cron) {
     return nextRunTimeFromTime(cron, null);
   }
 
-  private static Date nextRunTimeFromTime(String cron, Date fromTime) {
+  private static Instant nextRunTimeFromTime(String cron, Date fromTime) {
     if (fromTime == null) {
       fromTime = new Date();
     }
     CronTrigger trigger1 = new CronTrigger(cron);
 
-    return trigger1.nextExecutionTime(new SimpleTriggerContext(fromTime, fromTime, fromTime));
+    Date date = trigger1.nextExecutionTime(new SimpleTriggerContext(fromTime, fromTime, fromTime));
+    return date.toInstant();
   }
 
 }

@@ -67,7 +67,7 @@ function submitChange() {
   inputs.each(i => {
     let input = inputs[i]
     if (input.type == 'checkbox') {
-      obj[input.name] = (input.value === 'on')
+      obj[input.name] = input.checked
     } else {
       obj[input.name] = input.value
     }
@@ -82,10 +82,4 @@ function submitChange() {
     destination: "/app/show/update",
     body: JSON.stringify(obj)
   });
-}
-
-function confirmDelete(button) {
-  if (confirm("Delete Show?")) {
-    button.form.submit();
-  }
 }

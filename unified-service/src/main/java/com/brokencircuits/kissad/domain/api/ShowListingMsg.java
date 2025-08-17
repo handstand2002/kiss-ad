@@ -22,4 +22,5 @@ public class ShowListingMsg implements UiMsg {
   private String url;
   private Boolean isActive;
   private String nextEpisode;
+  private long secondsToNextCheck;
 }

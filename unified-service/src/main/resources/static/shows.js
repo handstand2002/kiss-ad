@@ -85,6 +85,8 @@ function upsertShow(msg) {
     console.log("Updating existing row:", existingListings)
     // row already exists in UI, update it instead of creating new one
     existingListings.html(rowContents);
+    // TODO: validate this
+    existingListings.attr("data-enabled", isActive);
   } else {
     console.log("Creating new row in UI");
     // create new row in UI
@@ -95,7 +97,12 @@ function upsertShow(msg) {
     $("#show-list").append(rowFull);
   }
 
+  sortList();
   updateDisabledShows()
+}
+
+function sortList() {
+
 }
 
 function checkShow(showId) {
