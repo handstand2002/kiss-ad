@@ -62,12 +62,14 @@ function populateEpisodeList(msg) {
     } else {
         console.log("Creating new row in UI");
         // create new row in UI
-        let rowFull = "<tr id='ep-listing-" + episodeNumber + "'>"
+        let rowFull = "<tr id='ep-listing-" + episodeNumber + "' data-ep-number='" + episodeNumber + "'>"
         rowFull += rowContents
         rowFull += "</tr>"
 
         $("#ep-list").append(rowFull);
     }
+
+    sortList()
 }
 
 function updateUi(msg) {
@@ -79,4 +81,18 @@ function updateUi(msg) {
     } else {
         console.error("Unsupported message type: ", msg);
     }
+}
+
+function sortList() {
+    let allRows = $("#ep-list tr")
+    allRows.each(i => allRows[i].remove())
+
+    allRows.sort((a, b) => {
+        let aEp = parseInt(a.getAttribute("data-ep-number"))
+        let bEp = parseInt(b.getAttribute("data-ep-number"))
+        return bEp - aEp
+    });
+
+    let list = $("#ep-list")
+    allRows.each(i => list.append(allRows[i]))
 }

@@ -67,6 +67,7 @@ function upsertShow(msg) {
   let showId = msg.id
   let showTitle = msg.title
   let nextEpTime = msg.nextEpisode
+  let secondsToNextCheck = msg.secondsToNextCheck
 
   // First column
   let rowContents = "<td>"
@@ -85,12 +86,11 @@ function upsertShow(msg) {
     console.log("Updating existing row:", existingListings)
     // row already exists in UI, update it instead of creating new one
     existingListings.html(rowContents);
-    // TODO: validate this
     existingListings.attr("data-enabled", isActive);
   } else {
     console.log("Creating new row in UI");
     // create new row in UI
-    let rowFull = "<tr id='show-listing-" + showId + "' data-enabled='" + isActive + "'>"
+    let rowFull = "<tr id='show-listing-" + showId + "' data-enabled='" + isActive + "' data-seconds-to-next-check='" + secondsToNextCheck+ "'>"
     rowFull += rowContents
     rowFull += "</tr>"
 
@@ -102,7 +102,17 @@ function upsertShow(msg) {
 }
 
 function sortList() {
+  let allRows = $("#show-list tr")
+  allRows.each(i => allRows[i].remove())
 
+  allRows.sort((a, b) => {
+    let aSeconds = parseInt(a.getAttribute("data-seconds-to-next-check"))
+    let bSeconds = parseInt(b.getAttribute("data-seconds-to-next-check"))
+    return aSeconds - bSeconds
+  });
+
+  let list = $("#show-list")
+  allRows.each(i => list.append(allRows[i]))
 }
 
 function checkShow(showId) {
