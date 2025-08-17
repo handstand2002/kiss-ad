@@ -1,0 +1,26 @@
+download:
+  mock-download: false
+  mock-success: true
+  download-folder-root: "/mnt/serenity_media/"
+  aria:
+    enabled: false
+    temp-download-dir: "/mnt/serenity_media/Unsorted/temp/downloading"
+    path: "/usr/bin/aria2c"
+
+state-dir: /Users/grantwade/Downloads/kissad-db/kiss-ad2
+
+delegator:
+  min-quality: 9999
+  download-folder: Anime
+
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans: true
+
+logging:
+  level:
+
+    org:
+      springframework:
+        web:
+          socket:
+            messaging: INFO
+        messaging: INFO

@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
   <link rel="stylesheet" href="/shows.css" media="screen"/>
   <script src="/shows.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="/stomp.js"></script>
 </head>
 <body onload="updateDisabledShows()">
 <div style="position: absolute; z-index:100">
@@ -37,20 +41,8 @@
                      onchange="updateDisabledShows()"
                      onload="updateDisabledShows()"/> Show disabled</span>
         <hr/>
-
-        <table id="show-list" class="table table-striped">
-          <tbody>
-          <tr th:each="show : ${shows}" th:data-enabled="${show.isActive}">
-            <td>
-              <a th:href="@{/show/{id}(id=${show.id})}" th:text="${show.title}"></a>
-              <span th:text="${show.nextEpisode}" class="next-episode-time"></span>
-            </td>
-            <td>
-              <span>
-                <a th:href="@{/checkShow/{id}(id=${show.id})}">チエック</a>
-              </span>
-            </td>
-          </tr>
+        <table class="table table-striped">
+          <tbody id="show-list" >
           </tbody>
         </table>
       </div>
