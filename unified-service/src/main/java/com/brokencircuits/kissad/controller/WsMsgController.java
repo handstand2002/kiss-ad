@@ -2,14 +2,15 @@ package com.brokencircuits.kissad.controller;
 
 import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.EpisodeId;
-import com.brokencircuits.kissad.domain.RequestEpisodeOperation;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.domain.api.*;
+import com.brokencircuits.kissad.domain.internal.DownloadStatusUpdatedEvent;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,7 +19,6 @@ import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -29,13 +29,12 @@ import java.util.*;
 @Controller
 @RequiredArgsConstructor
 public class WsMsgController {
-  private static final SimpleDateFormat NEXT_EPISODE_DATE_FORMAT = new SimpleDateFormat("EEE h:mma");
-  private static final DateTimeFormatter downloadTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd h:mm a");
+  public static final DateTimeFormatter NEXT_RELEASE_FORMATTER = DateTimeFormatter.ofPattern("EEE h:mma");
+  private static final DateTimeFormatter DOWNLOAD_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd h:mm a");
 
   private final SimpMessagingTemplate messagingTemplate;
   private final ShowRepository showRepository;
   private final EpisodeRepository episodeRepository;
-  private final RequestEpisodeOperation requestEpisodeOperation;
   private final CheckShowOperation triggerShowCheckMethod;
   private final TaskExecutor taskExecutor;
 
@@ -110,7 +109,7 @@ public class WsMsgController {
                 .downloadTime(epDto.getDownloadTime()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime()
-                    .format(downloadTimeFormatter))
+                    .format(DOWNLOAD_TIME_FORMATTER))
                 .episodeNumber(epDto.getEpisodeNumber())
                 .build()));
 
@@ -140,6 +139,11 @@ public class WsMsgController {
     handleCheckNewEpisodes(request.getShowId(), ctx);
   }
 
+  @EventListener
+  public void handleDownloadStatusUpdate(DownloadStatusUpdatedEvent event) {
+    messagingTemplate.convertAndSend(WebSocketTopics.TOPIC_DL_STATUS, event);
+  }
+
   private void handleCheckNewEpisodes(String showId, HandlerCtx ctx) {
     Optional<ShowDto> show = showRepository.findById(showId);
 
@@ -156,8 +160,8 @@ public class WsMsgController {
 
     String sendUpdateToTopic = WebSocketTopics.episodeUpdates(request.getShowId());
     ctx.broadcast(sendUpdateToTopic, ShowEpisodeListingMsg.builder()
-            .isDelete(true)
-            .episodeNumber(request.getEpisodeNumber())
+        .isDelete(true)
+        .episodeNumber(request.getEpisodeNumber())
         .build());
   }
 
@@ -220,7 +224,7 @@ public class WsMsgController {
     long secondsToNextCheck;
     try {
       Instant nextRun = nextRunTime(showDto.getReleaseScheduleCron());
-      nextEpisodeString = nextRun.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE h:mma"));
+      nextEpisodeString = nextRun.atZone(ZoneId.systemDefault()).format(NEXT_RELEASE_FORMATTER);
       secondsToNextCheck = nextRun.getEpochSecond() - Instant.now().getEpochSecond();
     } catch (Exception e) {
       nextEpisodeString = "ERR";

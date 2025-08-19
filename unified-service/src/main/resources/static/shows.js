@@ -5,15 +5,94 @@ Requirements for every page:
 - updateUi(msg) function, which handles updating the UI with whatever message was received from server
  */
 const PAGE_TOPIC = "/topic/shows"
+const TOPIC_DOWNLOADER_STATUS = "/topic/downloader/status"
 
 function initPage() {
   $("#show-list").html("") // clear show table
+
+  stompClient.subscribe(TOPIC_DOWNLOADER_STATUS, handleDownloaderUpdate);
 
   stompClient.publish({
     destination: "/app/shows/init",
     body: JSON.stringify({})
   });
   console.log("Published init msg");
+}
+
+var progressBarMovementSchedule = null
+function hideProgressBar() {
+  if (progressBarPosition === -50) {
+    return
+  }
+  if (progressBarMovementSchedule != null) {
+    clearInterval(progressBarMovementSchedule)
+    progressBarMovementSchedule = null
+  }
+  progressBarMovementSchedule = setInterval(() => moveProgressBar(-1), 10)
+}
+
+function showProgressBar() {
+  if (progressBarPosition === 0) {
+    return
+  }
+  if (progressBarMovementSchedule != null) {
+    clearInterval(progressBarMovementSchedule)
+    progressBarMovementSchedule = null
+  }
+  progressBarMovementSchedule = setInterval(() => moveProgressBar(1), 10)
+}
+
+var progressBarPosition = -50
+
+function moveProgressBar(verticalMovement) {
+  progressBarPosition += verticalMovement;
+  if (progressBarPosition < -50) {
+    progressBarPosition = -50;
+  } else if (progressBarPosition > 0) {
+    progressBarPosition = 0;
+  }
+  $("#download-bar").css({bottom: progressBarPosition});
+
+  if (progressBarMovementSchedule != null && progressBarPosition === -50) {
+    clearInterval(progressBarMovementSchedule)
+  } else if (progressBarMovementSchedule != null && progressBarPosition === 0) {
+    clearInterval(progressBarMovementSchedule)
+  }
+}
+
+const ONE_KB = 1024
+const ONE_MB = 1024 * 1024
+
+function handleDownloaderUpdate(msg) {
+  let body = JSON.parse(msg.body)
+
+  let txt = body.filename
+  txt += " - "
+  let rateNumber
+  let rateUnit
+  let rateBytes = body.bytesPerSec
+  if (rateBytes < ONE_KB) {
+    rateNumber = rateBytes;
+    rateUnit = "b"
+  } else if (rateBytes < ONE_MB) {
+    rateNumber = (rateBytes / ONE_KB).toFixed(2)
+    rateUnit = "kb"
+  } else {
+    rateNumber = (rateBytes / ONE_MB).toFixed(2)
+    rateUnit = "Mb"
+  }
+  txt += rateNumber + " " + rateUnit + "/s"
+
+  $("#downloading-file-name").html(txt)
+  $( "#progressbar" ).progressbar({
+    value: (body.pcntComplete * 100)
+  });
+
+  if (body.complete) {
+    hideProgressBar()
+  } else {
+    showProgressBar()
+  }
 }
 
 function updateUi(msg) {
@@ -53,13 +132,13 @@ function toggleActivity(btn) {
   y = y + btnLoc.height
 
   let activityDiv = document.getElementById("recent-activity")
-    activityDiv.style.marginTop = y + "px"
-    activityDiv.style.marginLeft = x + "px"
-    if (activityDiv.style.visibility == "hidden") {
-      activityDiv.style.visibility = "visible"
-    } else {
-      activityDiv.style.visibility = "hidden"
-    }
+  activityDiv.style.marginTop = y + "px"
+  activityDiv.style.marginLeft = x + "px"
+  if (activityDiv.style.visibility == "hidden") {
+    activityDiv.style.visibility = "visible"
+  } else {
+    activityDiv.style.visibility = "hidden"
+  }
 }
 
 function upsertShow(msg) {

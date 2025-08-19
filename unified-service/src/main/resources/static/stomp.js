@@ -1,5 +1,6 @@
+window.location.host
 const stompClient = new StompJs.Client({
-    brokerURL: 'ws://localhost:15001/websocket'
+    brokerURL: 'ws://' + window.location.host + '/websocket'
 });
 
 stompClient.onConnect = (frame) => {

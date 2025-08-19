@@ -81,3 +81,11 @@ button {
   margin-left: 10px;
   white-space: nowrap;
 }
+
+.ui-progressbar {
+  height: 1em
+}
+
+.ui-progressbar-value {
+  background-color: #9393e6
+}
