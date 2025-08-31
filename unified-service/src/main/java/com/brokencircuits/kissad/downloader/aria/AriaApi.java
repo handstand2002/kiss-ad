@@ -26,8 +26,10 @@ public class AriaApi {
 
   private final AriaProps ariaProps;
 
-  public AriaResponseUriSubmit submitUri(String requestId, String uri)
-      throws IOException {
+  public AriaResponseUriSubmit submitUri(String requestId, String uri, String downloadToDir) throws IOException {
+    if (!downloadToDir.endsWith("/")) {
+      downloadToDir = downloadToDir + "/";
+    }
 
     JsonArray parameters = new JsonArray();
     JsonArray uriList = new JsonArray();
@@ -35,11 +37,16 @@ public class AriaApi {
     parameters.add(uriList);
 
     JsonObject options = new JsonObject();
-    options.add("dir", new JsonPrimitive(ariaProps.getAriaTempDownloadDir()));
+    options.add("dir", new JsonPrimitive(downloadToDir));
     parameters.add(options);
     log.debug("Parameters: {}", new Gson().toJson(parameters));
 
     return submitRequest("aria2.addUri", requestId, parameters, AriaResponseUriSubmit.class);
+  }
+
+  public AriaResponseUriSubmit submitUri(String requestId, String uri)
+      throws IOException {
+    return submitUri(requestId, uri, ariaProps.getAriaTempDownloadDir());
   }
 
   public void removeDownload(String downloadId) throws IOException {

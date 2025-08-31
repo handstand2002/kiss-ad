@@ -1,5 +1,5 @@
 download:
-  mock-download: false
+  mock-download: true
   mock-success: true
   download-folder-root: "/mnt/serenity_media/"
   aria:

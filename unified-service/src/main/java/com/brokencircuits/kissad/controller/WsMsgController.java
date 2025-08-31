@@ -4,9 +4,11 @@ import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.EpisodeId;
 import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.domain.api.*;
+import com.brokencircuits.kissad.domain.downloader.DownloadStatus;
 import com.brokencircuits.kissad.domain.internal.DownloadStatusUpdatedEvent;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import com.brokencircuits.kissad.repository.ShowRepository;
+import com.brokencircuits.kissad.service.DownloaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +20,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
@@ -37,6 +40,7 @@ public class WsMsgController {
   private final EpisodeRepository episodeRepository;
   private final CheckShowOperation triggerShowCheckMethod;
   private final TaskExecutor taskExecutor;
+  private final DownloaderService downloaderService;
 
   @MessageMapping("/shows/init")
   public void handleInit(GenericInitMsg request, Principal principal) {
@@ -137,6 +141,24 @@ public class WsMsgController {
     log.info("Received msg from {}: {}", principal.getName(), request);
     HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
     handleCheckNewEpisodes(request.getShowId(), ctx);
+  }
+
+  @MessageMapping("/downloads/new")
+  public void handleNewDownloadRequest(NewDownloadRequestMsg request, Principal principal) {
+    log.info("Received msg from {}: {}", principal.getName(), request);
+    HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
+
+    try {
+      downloaderService.submitDownload(request.getUrl(), request.getDestination());
+    } catch (IOException | InterruptedException e) {
+      log.error("Exception submitting download to aria: {}", request, e);
+    }
+  }
+
+  @EventListener
+  public void handleDownloadServiceStatusUpdate(DownloadStatus status) {
+    log.info("Publishing to UI: {}", status);
+    messagingTemplate.convertAndSend(WebSocketTopics.TOPIC_DL_SVC_STATUS, status);
   }
 
   @EventListener

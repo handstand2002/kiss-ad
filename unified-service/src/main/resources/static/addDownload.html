@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Downloads</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="/addDownload.css" media="screen"/>
+
+  <script src="/addDownload.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="/stomp.js"></script>
+  <script>
+
+    var DIALOG;
+    $( function() {
+      initDownloadTable()
+      DIALOG = $( "#newDownloadDialog" );
+      DIALOG.dialog({
+        autoOpen: false,
+        width: "90%",
+        buttons: [
+          {
+            text: "Save",
+            click: function() {
+              saveDownload()
+              $( this ).dialog( "close" );
+            }
+          }
+        ]
+      });
+      let btn = $( "button" );
+      btn.button();
+      btn.on( "click", function( event ) {
+        event.preventDefault();
+      } );
+    } );
+
+  </script>
+</head>
+<body>
+<div class="container">
+  <div class="page-header" id="banner">
+    <div class="row">
+      <div class="col-lg-8 col-md-7 col-sm-6">
+        <div class="page-head">Downloads</div>
+        <div style="text-align: center" onclick="DIALOG.dialog('open');"><button>New</button></div>
+      </div>
+    </div>
+    <table>
+      <tbody id="download-list" >
+      </tbody>
+    </table>
+
+    <div id="download-table"></div>
+    <div id="newDownloadDialog" title="New Download">
+      <form>
+        <table>
+          <tr>
+            <td>URL:</td>
+            <td><input name="url" /></td>
+          </tr>
+          <tr>
+            <td>Destination</td>
+            <td><input name="destination" value="/mnt/serenity_media/Unsorted/"/></td>
+          </tr>
+        </table>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
