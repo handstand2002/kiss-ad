@@ -6,6 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class DownloadStatusUpdatedEvent {
+//  String showTitle;
   String filename;
   float pcntComplete;
   long bytesPerSec;

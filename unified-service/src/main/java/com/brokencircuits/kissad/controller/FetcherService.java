@@ -6,7 +6,7 @@ import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.fetcher.SpFetcher;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import java.util.Optional;
-import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class FetcherController {
+public class FetcherService {
 
   private final SpFetcher spFetcher;
   private final ShowRepository showRepository;

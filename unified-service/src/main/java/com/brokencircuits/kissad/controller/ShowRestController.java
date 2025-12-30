@@ -258,7 +258,8 @@ public class ShowRestController {
     log.info("Updating show: {}", showDto);
 
     showRepository.save(showDto);
-    onShowUpdate.accept(showDto);
+//    onShowUpdate.accept(showDto);
+    
     return "redirect:/shows";
   }
 

@@ -39,13 +39,13 @@ function updateUi(msg) {
 }
 
 function redirectBackToMainPage() {
-  window.location.href = "/shows.html";
+  window.location.href = "shows.html";
 }
 
 function populatePage(msg) {
   console.log("Msg to populate page:", msg)
   $("#header-show-title").html(msg.title)
-  $("#downloaded-ep-link").attr("href", "/showEpisodes.html?id=" + msg.id);
+  $("#downloaded-ep-link").attr("href", "showEpisodes.html?id=" + msg.id);
   $('#show-form [name="id"]').val(msg.id)
   $('#show-form [name="url"]').val(msg.url)
   $('#show-form [name="sourceName"]').val(msg.sourceName)

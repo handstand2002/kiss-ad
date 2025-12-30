@@ -9,6 +9,7 @@ import com.brokencircuits.kissad.domain.internal.DownloadStatusUpdatedEvent;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import com.brokencircuits.kissad.service.DownloaderService;
+import com.brokencircuits.kissad.service.ShowDownloaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +42,7 @@ public class WsMsgController {
   private final CheckShowOperation triggerShowCheckMethod;
   private final TaskExecutor taskExecutor;
   private final DownloaderService downloaderService;
+//  private final ShowDownloaderService showDownloaderService;
 
   @MessageMapping("/shows/init")
   public void handleInit(GenericInitMsg request, Principal principal) {
@@ -140,6 +142,7 @@ public class WsMsgController {
   public void handleCheckNewRequest(CheckShowRequestMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
     HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
+//    showDownloaderService.checkNewEpisodes(request.getShowId());
     handleCheckNewEpisodes(request.getShowId(), ctx);
   }
 

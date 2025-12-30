@@ -99,6 +99,7 @@ public class DownloadController {
         pcntComplete = (float) statusResult.getCompletedLength() / statusResult.getTotalLength();
       }
       eventPublisher.publishEvent(DownloadStatusUpdatedEvent.builder()
+//              .showTitle("")
           .filename(filename)
           .pcntComplete(pcntComplete)
           .bytesPerSec(statusResult.getDownloadSpeed())

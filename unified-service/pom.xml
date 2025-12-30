@@ -12,7 +12,6 @@
   <artifactId>unified-service</artifactId>
 
   <dependencies>
-
     <dependency>
       <groupId>com.brokencircuits</groupId>
       <artifactId>core</artifactId>

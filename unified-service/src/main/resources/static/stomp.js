@@ -1,6 +1,14 @@
-window.location.host
+var wsUrl;
+var prefix = window.location.pathname.substr(0, window.location.pathname.lastIndexOf('/'))
+
+if (window.location.protocol == 'https:') {
+ wsUrl = 'wss://' + window.location.host + prefix + '/websocket'
+} else {
+ wsUrl = 'ws://' + window.location.host + prefix + '/websocket'
+}
+
 const stompClient = new StompJs.Client({
-    brokerURL: 'ws://' + window.location.host + '/websocket'
+    brokerURL: wsUrl
 });
 
 stompClient.onConnect = (frame) => {

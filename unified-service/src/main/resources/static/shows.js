@@ -66,6 +66,7 @@ const ONE_MB = 1024 * 1024
 function handleDownloaderUpdate(msg) {
   let body = JSON.parse(msg.body)
 
+  // TODO: include show title
   let txt = body.filename
   txt += " - "
   let rateNumber
@@ -150,7 +151,7 @@ function upsertShow(msg) {
 
   // First column
   let rowContents = "<td>"
-  rowContents += "<a href='/show.html?id=" + showId + "'>" + showTitle + "</a>"
+  rowContents += "<a href='show.html?id=" + showId + "'>" + showTitle + "</a>"
   rowContents += "<span class='next-episode-time'>" + nextEpTime + "</span>"
   rowContents += "</td>"
 
