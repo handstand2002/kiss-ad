@@ -113,8 +113,13 @@ public class DownloadController {
         lastPollCompletedLength = statusResult.getCompletedLength();
       } else {
         if (lastActivity.plus(inactivityTimeout).isBefore(Instant.now())) {
+          log.warn("Timeout: no activity detected since {}; removing download from aria", lastActivity);
           // timed out
-          ariaApi.removeDownload(downloadGid);
+          try {
+            ariaApi.removeDownload(downloadGid);
+          } catch (Exception e) {
+            log.error("Exception removing download", e);
+          }
           return;
         }
       }

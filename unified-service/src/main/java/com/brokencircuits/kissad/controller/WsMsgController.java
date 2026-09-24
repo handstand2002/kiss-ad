@@ -9,7 +9,7 @@ import com.brokencircuits.kissad.domain.internal.DownloadStatusUpdatedEvent;
 import com.brokencircuits.kissad.repository.EpisodeRepository;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import com.brokencircuits.kissad.service.DownloaderService;
-import com.brokencircuits.kissad.service.ShowDownloaderService;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Controller
@@ -47,6 +48,14 @@ public class WsMsgController {
   @MessageMapping("/shows/init")
   public void handleInit(GenericInitMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
+
+    String principalName = principal.getName();
+    for (Map.Entry<MsgKey, Object> entry : latestMessages.entrySet()) {
+      MsgKey k = entry.getKey();
+      Object v = entry.getValue();
+      messagingTemplate.convertAndSendToUser(principalName, WebSocketTopics.USER_QUEUE, v);
+    }
+
     HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
     List<ShowDto> allShows = showRepository.findAll();
     for (ShowDto dto : allShows) {
@@ -134,22 +143,18 @@ public class WsMsgController {
   @MessageMapping("/show/episode/delete")
   public void handleEpDelete(EpDeleteMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
-    HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
-    deleteEpisode(request, ctx);
+    deleteEpisode(request);
   }
 
   @MessageMapping("/show/check-new")
   public void handleCheckNewRequest(CheckShowRequestMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
-    HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
-//    showDownloaderService.checkNewEpisodes(request.getShowId());
-    handleCheckNewEpisodes(request.getShowId(), ctx);
+    handleCheckNewEpisodes(request.getShowId());
   }
 
   @MessageMapping("/downloads/new")
   public void handleNewDownloadRequest(NewDownloadRequestMsg request, Principal principal) {
     log.info("Received msg from {}: {}", principal.getName(), request);
-    HandlerCtx ctx = new HandlerCtx(messagingTemplate, principal.getName());
 
     try {
       downloaderService.submitDownload(request.getUrl(), request.getDestination());
@@ -161,15 +166,15 @@ public class WsMsgController {
   @EventListener
   public void handleDownloadServiceStatusUpdate(DownloadStatus status) {
     log.info("Publishing to UI: {}", status);
-    messagingTemplate.convertAndSend(WebSocketTopics.TOPIC_DL_SVC_STATUS, status);
+    updateUiStatus(new MsgKey(WebSocketTopics.TOPIC_DL_SVC_STATUS, MsgType.DOWNLOADER_STATUS, null), status);
   }
 
   @EventListener
   public void handleDownloadStatusUpdate(DownloadStatusUpdatedEvent event) {
-    messagingTemplate.convertAndSend(WebSocketTopics.TOPIC_DL_STATUS, event);
+    updateUiStatus(new MsgKey(WebSocketTopics.TOPIC_DL_STATUS, MsgType.DOWNLOADER_STATUS, null), event);
   }
 
-  private void handleCheckNewEpisodes(String showId, HandlerCtx ctx) {
+  private void handleCheckNewEpisodes(String showId) {
     Optional<ShowDto> show = showRepository.findById(showId);
 
     if (show.isPresent()) {
@@ -177,17 +182,25 @@ public class WsMsgController {
     }
   }
 
-  private void deleteEpisode(EpDeleteMsg request, HandlerCtx ctx) {
-    episodeRepository.deleteById(EpisodeId.builder()
+  private void deleteEpisode(EpDeleteMsg request) {
+    EpisodeId episodeId = EpisodeId.builder()
         .showId(request.getShowId())
         .episodeNumber(request.getEpisodeNumber())
-        .build());
+        .build();
+    episodeRepository.deleteById(episodeId);
 
     String sendUpdateToTopic = WebSocketTopics.episodeUpdates(request.getShowId());
-    ctx.broadcast(sendUpdateToTopic, ShowEpisodeListingMsg.builder()
+    ShowEpisodeListingMsg episodeEntryMsg = ShowEpisodeListingMsg.builder()
         .isDelete(true)
         .episodeNumber(request.getEpisodeNumber())
-        .build());
+        .build();
+
+    updateUiStatus(new MsgKey(sendUpdateToTopic, MsgType.EPISODE_ENTRY, episodeId), episodeEntryMsg);
+  }
+
+  private void updateUiStatus(MsgKey key, Object msg) {
+    latestMessages.put(key, msg);
+    messagingTemplate.convertAndSend(key.topic, msg);
   }
 
   private void updateShow(ShowListingMsg message, HandlerCtx ctx) {
@@ -211,8 +224,24 @@ public class WsMsgController {
     showRepository.save(dto);
     ShowListingMsg msg = createListingMsg(dto);
 
-    ctx.broadcast(WebSocketTopics.SHOWS_TOPIC, msg);
-    ctx.sendToUser(msg);
+    updateUiStatus(new MsgKey(WebSocketTopics.SHOWS_TOPIC, MsgType.SHOW_ENTRY, message.getId()), msg);
+
+//    ctx.broadcast(WebSocketTopics.SHOWS_TOPIC, msg);
+//    ctx.sendToUser(msg);
+  }
+
+  private final Map<MsgKey, Object> latestMessages = new ConcurrentHashMap<>();
+
+  @RequiredArgsConstructor
+  @EqualsAndHashCode
+  private static class MsgKey {
+    private final String topic;
+    private final MsgType type;
+    private final Object id;
+  }
+
+  private enum MsgType {
+    SHOW_ENTRY, EPISODE_ENTRY, DOWNLOADER_STATUS
   }
 
   @RequiredArgsConstructor
