@@ -225,9 +225,7 @@ public class WsMsgController {
     ShowListingMsg msg = createListingMsg(dto);
 
     updateUiStatus(new MsgKey(WebSocketTopics.SHOWS_TOPIC, MsgType.SHOW_ENTRY, message.getId()), msg);
-
-//    ctx.broadcast(WebSocketTopics.SHOWS_TOPIC, msg);
-//    ctx.sendToUser(msg);
+    ctx.sendToUser(msg);
   }
 
   private final Map<MsgKey, Object> latestMessages = new ConcurrentHashMap<>();
