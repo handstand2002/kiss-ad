@@ -19,6 +19,9 @@
     $( function() {
       $( "#progressbar" ).progressbar({value: 0});
     } );
+    addEventListener("pageshow", (event) => {
+      $("#show-list").html("") // clear show table
+    })
   </script>
 </head>
 <body onload="updateDisabledShows()">

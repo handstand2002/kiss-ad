@@ -60,7 +60,6 @@ function populateEpisodeList(msg) {
         // row already exists in UI, update it instead of creating new one
         existingListings.html(rowContents);
     } else {
-        console.log("Creating new row in UI");
         // create new row in UI
         let rowFull = "<tr id='ep-listing-" + episodeNumber + "' data-ep-number='" + episodeNumber + "'>"
         rowFull += rowContents
@@ -74,7 +73,6 @@ function populateEpisodeList(msg) {
 
 function updateUi(msg) {
     if (msg.type === 'SHOW_LISTING') {
-        console.log("Updating UI with msg: ", msg);
         populateTitle(msg);
     } else if (msg.type === 'EPISODE_LISTING') {
         populateEpisodeList(msg);

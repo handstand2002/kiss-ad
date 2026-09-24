@@ -8,14 +8,14 @@ if (window.location.protocol == 'https:') {
 }
 
 const stompClient = new StompJs.Client({
-    brokerURL: wsUrl
+    brokerURL: wsUrl,
+    reconnectDelay: 1000,
 });
 
 stompClient.onConnect = (frame) => {
     setConnected(true);
     console.log('Connected: ' + frame);
     let handleServerMsg = (msg) => {
-        console.log("Raw msg: ", msg)
         let parsed = JSON.parse(msg.body)
         updateUi(parsed);
     }

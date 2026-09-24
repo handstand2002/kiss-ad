@@ -27,7 +27,6 @@ function initPage() {
 
 function updateUi(msg) {
   if (msg.type === 'SHOW_LISTING') {
-    console.log("Updating UI with msg: ", msg);
     if (!waitingForSaveAck) {
       populatePage(msg);
     } else {

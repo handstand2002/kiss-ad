@@ -98,7 +98,6 @@ function handleDownloaderUpdate(msg) {
 
 function updateUi(msg) {
   if (msg.type === 'SHOW_LISTING') {
-    console.log("Updating UI with msg: ", msg);
     upsertShow(msg);
   } else {
     console.error("Unsupported message type: ", msg);
@@ -161,14 +160,11 @@ function upsertShow(msg) {
   rowContents += "</td>"
 
   let existingListings = $("#show-listing-" + showId)
-  console.log("Listings for show " + showId, existingListings)
   if (existingListings.length > 0) {
-    console.log("Updating existing row:", existingListings)
     // row already exists in UI, update it instead of creating new one
     existingListings.html(rowContents);
     existingListings.attr("data-enabled", isActive);
   } else {
-    console.log("Creating new row in UI");
     // create new row in UI
     let rowFull = "<tr id='show-listing-" + showId + "' data-enabled='" + isActive + "' data-seconds-to-next-check='" + secondsToNextCheck+ "'>"
     rowFull += rowContents
