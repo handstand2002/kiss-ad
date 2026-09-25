@@ -2,7 +2,7 @@ package com.brokencircuits.kissad.config;
 
 import com.brokencircuits.kissad.controller.DelegatorController;
 import com.brokencircuits.kissad.controller.DownloadController;
-import com.brokencircuits.kissad.controller.FetcherController;
+import com.brokencircuits.kissad.controller.FetcherService;
 import com.brokencircuits.kissad.controller.SchedulerController;
 import com.brokencircuits.kissad.domain.CheckShowOperation;
 import com.brokencircuits.kissad.domain.CheckShowResult;
@@ -50,11 +50,11 @@ public class FlowConfig {
   }
 
   @Bean
-  CheckShowOperation triggerShowCheckMethod(FetcherController fetcherController) {
+  CheckShowOperation triggerShowCheckMethod(FetcherService fetcherService) {
     return showUuid -> {
       try {
         log.info("Checking for new episodes for show {}", showUuid);
-        CheckShowResult result = fetcherController.fetch(showUuid);
+        CheckShowResult result = fetcherService.fetch(showUuid);
         log.info("Finished checking for new episodes for {}", showUuid);
         return result;
       } catch (Exception e) {

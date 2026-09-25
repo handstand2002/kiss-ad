@@ -258,7 +258,8 @@ public class ShowRestController {
     log.info("Updating show: {}", showDto);
 
     showRepository.save(showDto);
-    onShowUpdate.accept(showDto);
+//    onShowUpdate.accept(showDto);
+    
     return "redirect:/shows";
   }
 
@@ -305,15 +306,15 @@ public class ShowRestController {
   @RequestMapping(path = "/checkShow")
   public String checkShow() {
     for (ShowDto show : showRepository.findAll()) {
-      checkShow(UUID.fromString(show.getId()));
+      checkShow(show.getId());
     }
 
     return "redirect:/shows";
   }
 
   @RequestMapping(path = "/checkShow/{id}")
-  public String checkShow(@PathVariable final UUID id) {
-    Optional<ShowDto> show = showRepository.findById(id.toString());
+  public String checkShow(@PathVariable final String id) {
+    Optional<ShowDto> show = showRepository.findById(id);
 
     if (show.isPresent()) {
       taskExecutor.execute(() -> triggerShowCheckMethod.run(id));

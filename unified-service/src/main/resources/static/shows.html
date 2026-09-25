@@ -5,9 +5,24 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <link rel="stylesheet" href="/bootstrap.min.css" media="screen"/>
-  <link rel="stylesheet" href="/shows.css" media="screen"/>
-  <script src="/shows.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css" media="screen"/>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="shows.css" media="screen"/>
+
+  <script src="shows.js"></script>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+  <script src="stomp.js"></script>
+  <script>
+    $( function() {
+      $( "#progressbar" ).progressbar({value: 0});
+    } );
+    addEventListener("pageshow", (event) => {
+      $("#show-list").html("") // clear show table
+    })
+  </script>
 </head>
 <body onload="updateDisabledShows()">
 <div style="position: absolute; z-index:100">
@@ -37,20 +52,8 @@
                      onchange="updateDisabledShows()"
                      onload="updateDisabledShows()"/> Show disabled</span>
         <hr/>
-
-        <table id="show-list" class="table table-striped">
-          <tbody>
-          <tr th:each="show : ${shows}" th:data-enabled="${show.isActive}">
-            <td>
-              <a th:href="@{/show/{id}(id=${show.id})}" th:text="${show.title}"></a>
-              <span th:text="${show.nextEpisode}" class="next-episode-time"></span>
-            </td>
-            <td>
-              <span>
-                <a th:href="@{/checkShow/{id}(id=${show.id})}">チエック</a>
-              </span>
-            </td>
-          </tr>
+        <table class="table table-striped">
+          <tbody id="show-list" >
           </tbody>
         </table>
       </div>
@@ -58,11 +61,17 @@
     <div class="row">
       <div class="col-lg-6 col-md-7 col-sm-6">
         <hr/>
-        <div class="page-head"><a th:href="@{/addShow}">
+        <div class="page-head"><a href="show.html">
           <button>新</button>
         </a></div>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="download-bar" style="position: fixed;left: 50%;bottom: -50px; width:50%">
+  <div style="position: relative; left: -50%; background-color: #202827; padding-left: 10px; padding-right: 10px">Downloading <span id="downloading-file-name"></span><br>
+    <div id="progressbar"></div>
   </div>
 </div>
 

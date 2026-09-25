@@ -6,12 +6,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Configuration
@@ -40,7 +40,8 @@ public class RuntimeConfig {
         BufferedReader br = new BufferedReader(isr);
         String line;
 
-        try {
+        try (BufferedWriter ariaLogger = new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream("aria.log", false), StandardCharsets.UTF_8))) {
           while ((line = br.readLine()) != null) {
             if (!line.trim().isEmpty()) {
               if (Instant.now().isBefore(changeLoggingTime)) {
@@ -48,10 +49,14 @@ public class RuntimeConfig {
               } else {
                 log.debug("Aria: {}", line);
               }
+
+              ariaLogger.write(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ": " + line);
+              ariaLogger.newLine();
+              ariaLogger.flush();
             }
           }
         } catch (IOException e) {
-          log.error("Exception while trying to read from Aria:", e);
+          log.error("Exception while trying to read from Aria or writing to aria log:", e);
         }
       }).start();
 

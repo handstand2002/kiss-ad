@@ -63,7 +63,7 @@ public class SchedulerController {
                 }
                 currentTry++;
                 try {
-                  result = triggerShowCheckMethod.run(UUID.fromString(showId));
+                  result = triggerShowCheckMethod.run(showId);
                   foundEpisodes = result.getNewEpisodes();
                 } catch (Exception e) {
                   log.error("Exception checking for new episodes ", e);

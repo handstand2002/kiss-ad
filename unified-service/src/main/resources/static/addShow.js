@@ -5,8 +5,13 @@ function deriveShowName(urlField) {
   var showName = getTrailingPath(currentUrl);
   showName = capitalizeEachWord(showName);
 
-  urlField.form.title.value=showName;
-  urlField.form.folderName.value=showName;
+  if (urlField.form.title.value.length == 0) {
+    urlField.form.title.value=showName;
+  }
+  if (urlField.form.folderName.value.length == 0) {
+    urlField.form.folderName.value=showName;
+  }
+
   urlField.value=currentUrl;
 
   var isSubsPlease = urlField.value.match(/subsplease/i) != null;
@@ -70,7 +75,4 @@ function autofillCronTime(field) {
   }
 
   field.value = `0 ${cronMinutes} ${cronHours} * * ${cronDayOfWeek}`;
-}
-window.onload = function() {
- autofillCronTime(document.getElementsByTagName("form")[0].releaseScheduleCron)
 }

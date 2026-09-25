@@ -6,7 +6,7 @@ import com.brokencircuits.kissad.domain.ShowDto;
 import com.brokencircuits.kissad.fetcher.SpFetcher;
 import com.brokencircuits.kissad.repository.ShowRepository;
 import java.util.Optional;
-import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,14 +14,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class FetcherController {
+public class FetcherService {
 
   private final SpFetcher spFetcher;
   private final ShowRepository showRepository;
 
-  public CheckShowResult fetch(UUID showUuid) {
+  public CheckShowResult fetch(String showUuid) {
 
-    Optional<ShowDto> show = showRepository.findById(showUuid.toString());
+    Optional<ShowDto> show = showRepository.findById(showUuid);
     if (!show.isPresent()) {
       log.error("Show doesn't exist for Uuid: {}", showUuid);
       return new CheckShowResult(0, true);

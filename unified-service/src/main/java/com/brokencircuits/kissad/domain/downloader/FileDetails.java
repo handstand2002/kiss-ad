@@ -5,7 +5,7 @@ import lombok.Value;
 @Value
 public class FileDetails {
 
-  String completedLength;
+  long completedLength;
   int index;
   long length;
   String path;

@@ -1,10 +1,12 @@
 package com.brokencircuits.kissad.controller;
 
+import com.brokencircuits.kissad.domain.internal.DownloadStatusUpdatedEvent;
 import com.brokencircuits.kissad.downloader.aria.AriaApi;
 import com.brokencircuits.kissad.downloader.aria.AriaResponseStatus;
 import com.brokencircuits.kissad.downloader.aria.AriaResponseUriSubmit;
 import com.brokencircuits.kissad.domain.downloader.DownloadResult;
 import com.brokencircuits.kissad.downloader.FileMoveThread;
+
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
@@ -14,9 +16,11 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -42,6 +46,7 @@ public class DownloadController {
   private boolean mockDownload;
   @Value("${download.mock-success}")
   private boolean mockSuccess;
+  private final ApplicationEventPublisher eventPublisher;
 
   private final static Pattern FOLDER_PATH_PATTERN = Pattern.compile("[\\\\/]$");
 
@@ -53,8 +58,8 @@ public class DownloadController {
   }
 
   public void doDownload(String uri, String destinationDir, String filename, boolean isMagnet,
-      Consumer<AriaResponseStatus> onStatusPoll,
-      BiConsumer<File, AriaResponseStatus> onDownloadComplete)
+                         Consumer<AriaResponseStatus> onStatusPoll,
+                         BiConsumer<File, AriaResponseStatus> onDownloadComplete)
       throws IOException, InterruptedException {
 
     if (mockDownload) {
@@ -85,19 +90,41 @@ public class DownloadController {
       latestStatus = queryStatus(downloadGid);
       onStatusPoll.accept(latestStatus);
 
+      DownloadResult statusResult = latestStatus.getResult();
+
+      float pcntComplete;
+      if (statusResult.getTotalLength() == 0) {
+        pcntComplete = 0;
+      } else {
+        pcntComplete = (float) statusResult.getCompletedLength() / statusResult.getTotalLength();
+      }
+      eventPublisher.publishEvent(DownloadStatusUpdatedEvent.builder()
+//              .showTitle("")
+          .filename(filename)
+          .pcntComplete(pcntComplete)
+          .bytesPerSec(statusResult.getDownloadSpeed())
+          .isComplete(statusResult.getTotalLength() != 0
+              && statusResult.getCompletedLength() == statusResult.getTotalLength())
+          .build());
+
       // update values used to make sure it doesn't sit doing nothing forever
-      if (lastPollCompletedLength != latestStatus.getResult().getCompletedLength()) {
+      if (lastPollCompletedLength != statusResult.getCompletedLength()) {
         lastActivity = Instant.now();
-        lastPollCompletedLength = latestStatus.getResult().getCompletedLength();
+        lastPollCompletedLength = statusResult.getCompletedLength();
       } else {
         if (lastActivity.plus(inactivityTimeout).isBefore(Instant.now())) {
+          log.warn("Timeout: no activity detected since {}; removing download from aria", lastActivity);
           // timed out
-          ariaApi.removeDownload(downloadGid);
+          try {
+            ariaApi.removeDownload(downloadGid);
+          } catch (Exception e) {
+            log.error("Exception removing download", e);
+          }
           return;
         }
       }
 
-      DownloadResult result = latestStatus.getResult();
+      DownloadResult result = statusResult;
       // if gid is updated, query the new one next time
       downloadGid = result.getGid();
 
